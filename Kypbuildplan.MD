@@ -24,13 +24,22 @@ Contract drafted: [`KYPCommitment.sol`](./KYPCommitment.sol). Test suite drafted
 - [x] Write verify function: checks status + deadline, callable only by `verifier` (backend wallet), returns stake to user
 - [x] Write slash logic: callable only by `verifier`, only after deadline passes, forfeits stake to contract's pool (not burned — sits as withdrawable balance)
 - [x] Add `withdrawForfeited(amount, to)`: owner-only, can only pull from forfeited balance (`contract balance − activeStakedTotal`), so active user stakes can never be touched
-- [ ] Set up Foundry project locally (`forge init`), drop in `KYPCommitment.sol` under `src/` and `KYPCommitment.t.sol` under `test/`
-- [ ] Run `forge test -vv` — all 9 tests should pass before deploying anywhere
-- [ ] Generate a verifier wallet (separate from your deployer wallet) — this is the backend's signing key, keep its private key server-side only
-- [ ] Deploy to Monad Testnet: `forge create src/KYPCommitment.sol:KYPCommitment --constructor-args <VERIFIER_ADDRESS> --rpc-url <MONAD_TESTNET_RPC> --private-key <DEPLOYER_KEY>`
-- [ ] Verify contract on the Monad explorer (per the "How to verify a smart contract" guide in hackathon resources)
-- [ ] Test manually on testnet with 2–3 real transactions (stake, verify pass, verify fail → slash, owner withdraw) — confirms the deployed bytecode behaves like the local test suite
-- [ ] Save contract address + ABI (from Foundry's `out/KYPCommitment.sol/KYPCommitment.json`) somewhere both frontend and backend can reference — e.g. a shared `contracts/` folder or a small npm package
+- [x] Set up Foundry project locally, drop in `KYPCommitment.sol` under `src/` and `KYPCommitment.t.sol` under `test/`
+- [x] Run `forge test -vv` — all 9 tests pass
+- [x] Generate a verifier wallet separate from deployer, kept server-side only
+- [x] Deploy to Monad Testnet (chain 10143) via `forge script` — deploy tx in block 45071659
+- [x] Verify contract on Monad explorer via Sourcify (MonadVision) — exact match confirmed: https://testnet.monadvision.com/address/0xc5ebd0c77a1fd749bc2661e82c9682a1d53136e0
+- [x] Test manually on testnet: `stake()` ✅, `verify()` ✅ (0.01 MON returned to staker)
+- [x] Test manually on testnet: `slash()` ✅ — via `KYPCommitmentDemo` (5-min window twin contract), stake → deadline expiry → slash → `forfeitedBalance()` confirmed 0.01 MON forfeited
+- [x] Save contract address + ABI: `KYP_CONTRACT_ADDRESS` in `.env`, ABI exported to `contract/abi/KYPCommitment.json`
+- [x] Push repo to GitHub: https://github.com/tobiawolaju/KYP (public, clean logical commit history)
+
+**Contract address (official submission, testnet):** `0xc5ebd0c77a1fd749bc2661e82c9682a1d53136e0`
+**Demo contract (5-min window, slash-path footage only):** `0x98c3e4594ecfa1c45e8056932652b04cdea64e5d`
+
+### Phase 1 — COMPLETE ✅
+
+All contract work done: written, tested (20/20 including demo twin), deployed, verified on explorer, exercised live on testnet (stake, verify, and slash all confirmed with real tx hashes), and pushed to a public GitHub repo with clean commit history.
 
 ## Phase 2 — Backend (tonight/tomorrow AM)
 
