@@ -4,6 +4,8 @@
 
 Built for the BuildAnything "Spark" hackathon on Monad.
 
+![KYP UI Flow](kyp_ui_flow.png)
+
 ---
 
 ## Inspiration
