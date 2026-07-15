@@ -59,4 +59,18 @@ Built solo, in public, during the Spark hackathon window (Jul 13–19, 2026).
 
 - Live app: _[add on ship]_
 - Demo video: _[add on ship]_
-- Contract address (Monad Testnet): _[add on deploy]_
+## Deployed Contracts (Monad Testnet)
+
+### `KYPCommitment` — Official Submission
+- File: `contract/src/KYPCommitment.sol`
+- Address: `0xc5ebd0c77a1fd749bc2661e82c9682a1d53136e0`
+- Explorer: https://testnet.monadvision.com/address/0xc5ebd0c77a1fd749bc2661e82c9682a1d53136e0
+- Verify window: **72 hours**
+- The real contract used in the KYP protocol. Deployed once and left untouched.
+
+### `KYPCommitmentDemo` — Demo Only
+- File: `contract/src/KYPCommitmentDemo.sol`
+- Address: `0x98c3e4594ecfa1c45e8056932652b04cdea64e5d`
+- Explorer: https://testnet.monadvision.com/address/0x98c3e4594ecfa1c45e8056932652b04cdea64e5d
+- Verify window: **5 minutes**
+- Identical logic to `KYPCommitment` but with a short verify window so the slash path can be exercised in a live demo video. **Not part of the actual submission.**_
