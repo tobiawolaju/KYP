@@ -13,8 +13,8 @@
   let path = $derived(location.pathname);
   let needsWallet = $derived(
     path.startsWith("/protocol/") ||
-    path === "/dashboard" ||
-    path.startsWith("/dashboard/commit/")
+    path === "/myprotocols" ||
+    path.startsWith("/myprotocols/commit/")
   );
 </script>
 
@@ -29,23 +29,20 @@
     <Research />
   {:else if path === "/protocols"}
     <Explore />
-  {:else if path.startsWith("/dashboard/commit/")}
+  {:else if path.startsWith("/myprotocols/commit/")}
     <CommitDetail />
-  {:else if path === "/dashboard"}
+  {:else if path === "/myprotocols"}
     <Dashboard />
   {:else if path.startsWith("/protocol/")}
     <Protocol />
   {/if}
 </main>
 
-<footer class="app-footer"></footer>
+
 
 <style>
   .main-content {
     flex: 1;
   }
-  .app-footer {
-    height: 100px;
-    background: transparent;
-  }
+
 </style>

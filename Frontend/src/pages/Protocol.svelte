@@ -228,7 +228,7 @@
           <p class="modal-desc" style="text-align:center;">Your stake of {stakeAmount} MON has been committed to {protocol.name}.</p>
           <p class="modal-deadline">Resolves automatically on {deadlineTimestamp}</p>
           <div class="modal-actions" style="justify-content:center;">
-            <Link to="/dashboard" class="modal-confirm" onclick={() => { showStakeModal = false; stakeConfirmed = false; }}>View in Dashboard</Link>
+            <Link to="/myprotocols" class="modal-confirm" onclick={() => { showStakeModal = false; stakeConfirmed = false; }}>View in My Protocols</Link>
           </div>
         {/if}
       </div>

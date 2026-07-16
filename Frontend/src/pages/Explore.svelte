@@ -1,7 +1,6 @@
 <script>
   import Link from "../lib/Link.svelte";
   import { protocols } from "../data/dummyData.js";
-  import ScoreBadge from "../lib/ScoreBadge.svelte";
 
   let categories = $derived([...new Set(protocols.map((p) => p.category))]);
 
@@ -61,19 +60,12 @@
               <span class="card-category">{protocol.category}</span>
             </div>
           </div>
-          <ScoreBadge score={protocol.score} size="sm" />
         </div>
         <p class="card-summary">{protocol.summary}</p>
-        <div class="card-footer">
-          <span class="card-network">
-            <span class="material-symbols-outlined">dns</span>
-            {protocol.network}
-          </span>
-          <div class="card-tags">
-            {#each protocol.use_cases.slice(0, 2) as uc}
-              <span class="tag">{uc}</span>
-            {/each}
-          </div>
+        <div class="card-tags">
+          {#each protocol.use_cases.slice(0, 2) as uc}
+            <span class="tag">{uc}</span>
+          {/each}
         </div>
       </Link>
     {/each}
@@ -118,7 +110,7 @@
     padding: 16px 20px;
     background: var(--surface);
     border: 1px solid var(--border-light);
-    border-radius: var(--radius-lg);
+    border-radius: 0;
   }
   .filter-group {
     display: flex;
@@ -136,7 +128,7 @@
     font-family: var(--sans);
     font-size: 14px;
     padding: 6px 10px;
-    border-radius: var(--radius-sm);
+    border-radius: 0;
     border: 1px solid var(--border);
     background: var(--bg);
     color: var(--text);
@@ -156,7 +148,7 @@
     font-size: 13px;
     color: var(--text-muted);
     padding: 6px 12px;
-    border-radius: var(--radius-full);
+    border-radius: 0;
     background: var(--accent-bg);
     color: var(--accent);
     font-weight: 600;
@@ -170,7 +162,7 @@
   :global(.protocol-card) {
     background: var(--surface);
     border: 1px solid var(--border-light);
-    border-radius: var(--radius-lg);
+    border-radius: 0;
     padding: 22px;
     text-decoration: none;
     color: inherit;
@@ -199,7 +191,7 @@
   .card-logo {
     width: 28px;
     height: 28px;
-    border-radius: var(--radius-sm);
+    border-radius: 0;
     object-fit: cover;
     flex-shrink: 0;
   }

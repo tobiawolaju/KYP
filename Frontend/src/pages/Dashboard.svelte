@@ -187,8 +187,7 @@
 <div class="dashboard">
   <div class="dash-header">
     <div class="dash-title-group">
-      <h1 class="dash-title">Dashboard</h1>
-      <p class="dash-subtitle">{wallet.authenticated ? "Your onchain activity overview" : "Connect your wallet to get started"}</p>
+      <h1 class="dash-title">My Protocols</h1>
     </div>
     {#if wallet.authenticated}
       <button class="disconnect-btn" onclick={handleDisconnect} aria-label="Disconnect Wallet">
@@ -284,7 +283,7 @@
                 <span class="commit-deadline">due {formatTimestamp(entry.commitment.verify_deadline)}</span>
               </div>
 
-              <Link to={`/dashboard/commit/${entry.commitment.id}`} class="commit-graph-link">
+              <Link to={`/myprotocols/commit/${entry.commitment.id}`} class="commit-graph-link">
                 <CommitGraph
                   events={entry.events}
                   size="mini"
@@ -331,7 +330,7 @@
     gap: 4px;
   }
   .dash-title {
-    font-size: 32px;
+    font-size: 16px;
     font-weight: 800;
     margin: 0;
     color: var(--text);

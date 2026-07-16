@@ -53,9 +53,9 @@
 
 {#if commitment && protocol}
   <div class="commit-detail">
-    <Link to="/dashboard" class="back-link">
+    <Link to="/myprotocols" class="back-link">
       <span class="material-symbols-outlined">arrow_back</span>
-      Dashboard
+      My Protocols
     </Link>
 
     <div class="detail-header">
@@ -153,7 +153,7 @@
   <div class="not-found">
     <span class="material-symbols-outlined not-found-icon">search_off</span>
     <h2>Commitment not found</h2>
-    <Link to="/dashboard" class="back-link">← Dashboard</Link>
+    <Link to="/myprotocols" class="back-link">← My Protocols</Link>
   </div>
 {/if}
 

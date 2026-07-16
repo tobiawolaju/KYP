@@ -32,7 +32,7 @@
   <div class="desktop-links">
     <Link to="/research" class="nav-link">Research</Link>
     <Link to="/protocols" class="nav-link">Explore Protocols</Link>
-    <Link to="/dashboard" class="nav-link">Dashboard</Link>
+    <Link to="/myprotocols" class="nav-link">My Protocols</Link>
   </div>
   <button class="hamburger" onclick={toggleDrawer} aria-label="Menu">
     <span class="material-symbols-outlined">menu</span>
@@ -51,7 +51,7 @@
       <div class="drawer-links">
         <Link to="/research" class="drawer-link" onclick={closeDrawer}>Research</Link>
         <Link to="/protocols" class="drawer-link" onclick={closeDrawer}>Explore Protocols</Link>
-        <Link to="/dashboard" class="drawer-link" onclick={closeDrawer}>Dashboard</Link>
+        <Link to="/myprotocols" class="drawer-link" onclick={closeDrawer}>My Protocols</Link>
       </div>
     </div>
   </div>
@@ -127,7 +127,7 @@
   .hamburger {
     display: none;
     background: none;
-    border: 1px solid var(--border);
+    border: none;
     color: var(--text);
     cursor: pointer;
     padding: 6px;
@@ -172,7 +172,7 @@
   }
   .close-btn {
     background: none;
-    border: 1px solid var(--border);
+    border: none;
     color: var(--text);
     cursor: pointer;
     padding: 6px;
