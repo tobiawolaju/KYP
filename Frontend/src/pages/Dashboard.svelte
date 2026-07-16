@@ -6,6 +6,15 @@
 
   let wallet = getWallet();
 
+  const redactChars = [".", ":"];
+  function redact(len) {
+    let s = "";
+    for (let i = 0; i < len; i++) {
+      s += redactChars[Math.floor(Math.random() * redactChars.length)];
+    }
+    return s;
+  }
+
   function handleDisconnect() {
     wallet.logout?.();
   }
@@ -133,6 +142,7 @@
   );
 
   function gridColor(day) {
+    if (!wallet.authenticated) return "empty";
     let time = normalize(day).getTime();
     if (daysWithActivity.has(time)) return "event";
     if (daysWithSlash.has(time)) return "slash";
@@ -140,8 +150,9 @@
   }
 
   function gridTitle(day) {
-    let time = normalize(day).getTime();
     let ds = day.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    if (!wallet.authenticated) return ds + " — No activity";
+    let time = normalize(day).getTime();
     if (daysWithActivity.has(time)) return ds + " — Activity";
     if (daysWithSlash.has(time)) return ds + " — Slash";
     return ds + " — No activity";
@@ -205,19 +216,19 @@
     <div class="summary-cards">
       <div class="summary-card">
         <span class="summary-label">Wallet</span>
-        <span class="summary-value mono">{wallet.authenticated ? truncate(wallet.address) : "0x0000...0000"}</span>
+        <span class="summary-value mono">{wallet.authenticated ? truncate(wallet.address) : redact(12)}</span>
       </div>
       <div class="summary-card">
         <span class="summary-label">Total Staked</span>
-        <span class="summary-value mono">{wallet.authenticated ? totalStaked.toFixed(3) : "0.000"} MON</span>
+        <span class="summary-value mono">{wallet.authenticated ? totalStaked.toFixed(3) + " MON" : redact(8)}</span>
       </div>
       <div class="summary-card">
         <span class="summary-label">Current Streak</span>
-        <span class="summary-value">{wallet.authenticated ? currentStreak : 0} day{(!wallet.authenticated || currentStreak !== 1) ? "s" : ""}</span>
+        <span class="summary-value">{wallet.authenticated ? currentStreak + " day" + (currentStreak !== 1 ? "s" : "") : redact(6)}</span>
       </div>
       <div class="summary-card">
         <span class="summary-label">Longest Streak</span>
-        <span class="summary-value">{wallet.authenticated ? longestStreak : 0} day{(!wallet.authenticated || longestStreak !== 1) ? "s" : ""}</span>
+        <span class="summary-value">{wallet.authenticated ? longestStreak + " day" + (longestStreak !== 1 ? "s" : "") : redact(6)}</span>
       </div>
     </div>
   </div>
@@ -348,8 +359,8 @@
     background: var(--rose-bg);
     color: var(--rose);
     border: none;
-    border-radius: var(--radius-full);
-    width: 40px;
+    border-radius: 0;
+    width: 45px;
     height: 40px;
     cursor: pointer;
     transition: opacity 0.2s;
@@ -364,10 +375,10 @@
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    background: var(--accent);
-    color: #fff;
-    border: none;
-    border-radius: var(--radius-full);
+    background: transparent;
+    color: #000;
+    border: 1px solid var(--border);
+    border-radius: 0;
     padding: 10px 18px;
     font-size: 14px;
     font-weight: 600;
@@ -393,7 +404,7 @@
     padding: 12px 20px;
     background: var(--accent);
     color: #fff;
-    border-radius: var(--radius-full);
+    border-radius: 0;
     font-size: 14px;
     font-weight: 600;
     text-decoration: none;
