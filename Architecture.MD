@@ -18,15 +18,21 @@
     "github": "url | null"
   },
   "contract_address": "string | null",
+  "contract_verified": "boolean | null",
   "score": 0,
   "score_max": 50,
   "who_its_for": "1-2 sentence string",
+  "who_its_not_for": "1-2 sentence string | null",
   "use_cases": ["string", "string"],
   "risks": {
     "contract": "string | null",
     "community": "string | null",
     "structural": "string | null"
   },
+  "team": "string | null",
+  "team_as_of": "timestamp | null",
+  "deployed_date": "timestamp | null",
+  "age_summary": "string | null",
   "summary": "2-3 sentence string",
   "created_at": "timestamp",
   "created_by_wallet": "string"
@@ -57,6 +63,19 @@
 
 Same reasoning — `network` is hardcoded `"testnet"` for the hackathon build but present as a real field, not baked into logic, so switching to mainnet later is a config change, not a rewrite.
 
+### Favourites Record
+
+```json
+{
+  "user_wallet": "string",
+  "protocol_id": "uuid (fk -> research record)",
+  "favourited_at": "timestamp",
+  "auto_favourited": "boolean"
+}
+```
+
+`auto_favourited` tracks whether the favourite was added manually by the user or automatically (e.g. after committing to a protocol). This lets the UI distinguish bookmarked-from-research from committed-to protocols without a separate query.
+
 ---
 
 ## System Flow — Research → Commit → Dashboard
@@ -76,7 +95,7 @@ flowchart TD
     K --> L[POST /commit<br/>records tx hash]
     L --> M[(Commitment Record<br/>status: active)]
     M --> N[Dashboard: shows commitment<br/>with countdown to deadline]
-    N --> O[Background/manual: GET /verify]
+    N --> O[Scheduled job &#40;cron&#41;:<br/>scans active commitments<br/>past deadline]
     O --> P{Onchain check:<br/>tx from user_wallet to<br/>protocol_contract_address<br/>after commit_timestamp?}
     P -- Yes, before deadline --> Q[Contract: verify&#40;&#41;<br/>stake returned]
     P -- No, deadline passed --> R[Contract: slash&#40;&#41;<br/>stake forfeited]
@@ -97,6 +116,7 @@ sequenceDiagram
     participant B as Backend
     participant C as Smart Contract
     participant RPC as Monad RPC
+    participant Sched as Scheduler
 
     U->>F: Click "Commit" on profile card
     F->>U: Show stake input
@@ -109,8 +129,7 @@ sequenceDiagram
 
     Note over U,RPC: User goes and actually interacts<br/>with the protocol in the real world
 
-    U->>F: Opens Dashboard, clicks "Verify"
-    F->>B: GET /verify?commitment_id=X
+    Sched->>B: Cron trigger: scan active commitments<br/>past their verify_deadline
     B->>RPC: Query txs from user_wallet to protocol_contract_address<br/>after commit_timestamp
     RPC-->>B: tx found / not found
     alt Engagement found, before deadline
@@ -131,9 +150,31 @@ sequenceDiagram
 
 | Layer | Responsibility | Talks to |
 |---|---|---|
-| Frontend (Vercel) | Research input, profile card, commit flow, dashboard | Backend API, wallet (via wagmi/viem), Monad RPC (read-only for balance/tx display) |
-| Backend (Render) | `/research`, `/commit`, `/verify` endpoints; orchestrates LLM calls and RPC checks | LLM provider, Monad RPC, Firebase (auth), DB |
+| Frontend (Vercel) | Research input, profile card, commit flow, dashboard | Backend API, wallet (via Privy SDK), Monad RPC (read-only for balance/tx display) |
+| Backend (Render) | `/research`, `/commit`, `/verify` endpoints; orchestrates LLM calls and RPC checks; scheduled cron for auto-resolution | LLM provider, Monad RPC, Privy (wallet-only auth), DB |
 | Smart Contract (Monad Testnet) | `stake()`, `verify()`, `slash()` — holds funds, enforces state transitions | Called by backend (or directly by frontend wallet for `stake()`) |
 | DB (research + commitment records) | Persists profiles and commitments | Backend only |
+
+## Contracts
+
+KYP uses a dual-contract setup:
+
+- **`KYPCommitment`** — the official submission contract with a 72-hour verify window (`0xc5ebd0c77a1fd749bc2661e82c9682a1d53136e0`). Deployed once and used by all real commitments.
+- **`KYPCommitmentDemo`** — an identical twin with a 5-minute verify window (`0x98c3e4594ecfa1c45e8056932652b04cdea64e5d`). Exists solely for capturing slash-path footage in the demo video. Not part of the actual submission.
+
+Both contracts share the same ABI surface (`stake` / `verify` / `slash` / `withdrawForfeited`). The demo contract's shortened window makes it possible to show a full stake → wait → slash cycle without waiting 72 hours.
+
+## Explore / Protocols Route
+
+The app exposes a `/protocols` route — an explorable directory of all researched protocols. Supports the following query filters:
+
+| Parameter | Values | Behaviour |
+|---|---|---|
+| `network` | `mainnet`, `testnet`, `unknown` | Filter by deployment environment |
+| `category` | `lending`, `dex`, `infra`, `gaming`, etc. | Filter by use-case category |
+| `score_min` | 0–50 | Lower bound of score range |
+| `score_max` | 0–50 | Upper bound of score range |
+
+There is intentionally **no TVL filter** — there is no reliable real-time TVL data source wired in yet, so including the filter would either be perpetually empty or misleading. It is explicitly parked as a future addition.
 
 **One architectural decision to make explicitly:** does `verify()`/`slash()` get called by your backend (a trusted server wallet with permission to call these functions), or does the user call `verify()` themselves and the contract does the RPC check onchain via an oracle? For a 4-day build, **backend-triggered verify/slash is the right call** — a fully trustless onchain oracle is a rabbit hole you don't have time for, and "backend checks RPC, then calls the contract" is still a real, checkable onchain verification from the judge's perspective, not a self-report.

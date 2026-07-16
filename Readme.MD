@@ -31,7 +31,7 @@ KYP is a three-layer pipeline that takes you from a raw link to verified onchain
 ### 1. Research Layer
 Paste anything you have on a protocol — a link, an X handle, a Discord invite, whatever. An agent pulls together what it can find: team background, links, latest news, and onchain signal where available. This compiles into a single-page profile with:
 - A 0–50 score
-- Who the protocol is actually for
+- Who the protocol is actually for (and who it's not for)
 - Clear use cases
 - Risks flagged from what's visible onchain and structurally
 
@@ -39,18 +39,22 @@ Paste anything you have on a protocol — a link, an X handle, a Discord invite,
 Turns the research into concrete next steps — how to actually interact with the protocol, not just what it is (Information without action is Just Entertainment).
 
 ### 3. Consistency Layer
-You decide: commit or don't. On commit, you stake a small amount of MON on Monad Testnet to back your intention. No self-reporting after that — instead of asking what you got done, KYP checks your **registered wallet** against onchain activity to verify you actually engaged. Real stake, real verification, no honor system.
+You decide: commit or don't. On commit, you stake a small amount of MON on Monad Testnet to back your intention. No self-reporting and no manual "verify" button — a scheduled backend job automatically checks your wallet against onchain activity as the deadline approaches and resolves your commitment the moment the window closes or engagement is detected. Real stake, real verification, no honor system.
 
 ## Why Onchain
 
 The stake and the verification both live onchain by necessity — the entire point is replacing "trust me, I did it" with something checkable. A self-reported todo app doesn't solve the problem; a wallet that has to prove itself does.
 
+## Design / Visual Identity
+
+The app's colour palette and typography are inspired by Monad's official brand kit — a monochrome base with accent purple (`#6E54FF`), warm amber (`#FFAE45`), and rose (`#E24B4A`) for status signalling, paired with Inter (UI), Space Grotesk (headings), and Roboto Mono (data). No Monad logo or trademark is used.
+
 ## Tech Stack
 
-- **Frontend:** React, deployed on Vercel
+- **Frontend:** Svelte 5 + Vite, deployed on Vercel
 - **Backend:** Node.js, deployed on Render
 - **Research agent:** custom tooling for protocol research and profile generation
-- **Auth:** Firebase
+- **Auth:** Privy (wallet-only login, embedded wallets disabled)
 - **Smart contracts:** Solidity, deployed on Monad Testnet (stake / commit / verify / slash)
 
 ## Status
@@ -75,4 +79,4 @@ Built solo, in public, during the Spark hackathon window (Jul 13–19, 2026).
 - Address: `0x98c3e4594ecfa1c45e8056932652b04cdea64e5d`
 - Explorer: https://testnet.monadvision.com/address/0x98c3e4594ecfa1c45e8056932652b04cdea64e5d
 - Verify window: **5 minutes**
-- Identical logic to `KYPCommitment` but with a short verify window so the slash path can be exercised in a live demo video. **Not part of the actual submission.**_
+- Identical logic to `KYPCommitment` but with a short verify window so the slash path can be exercised in a live demo video. **Not part of the actual submission.**
