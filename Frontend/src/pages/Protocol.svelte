@@ -489,13 +489,12 @@
     background: var(--accent);
     color: #fff;
     border: none;
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-full);
     font-size: 16px;
     font-weight: 600;
     cursor: pointer;
     transition: opacity 0.2s, transform 0.15s;
     margin-top: 8px;
-    box-shadow: var(--shadow-accent);
   }
   .commit-btn:hover {
     opacity: 0.9;
@@ -649,7 +648,7 @@
     padding: 10px 18px;
     background: var(--surface-hover);
     border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-full);
     color: var(--text-secondary);
     font-size: 14px;
     font-weight: 500;
@@ -667,7 +666,7 @@
     background: var(--accent);
     color: #fff;
     border: none;
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-full);
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;

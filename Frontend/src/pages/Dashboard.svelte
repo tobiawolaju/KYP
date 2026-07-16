@@ -205,30 +205,18 @@
   <div class="summary-section">
     <div class="summary-cards">
       <div class="summary-card">
-        <div class="summary-icon" style="background: var(--accent-bg); color: var(--accent);">
-          <span class="material-symbols-outlined">account_balance_wallet</span>
-        </div>
         <span class="summary-label">Wallet</span>
         <span class="summary-value mono">{wallet.authenticated ? truncate(wallet.address) : "0x0000...0000"}</span>
       </div>
       <div class="summary-card">
-        <div class="summary-icon" style="background: var(--green-bg); color: var(--green);">
-          <span class="material-symbols-outlined">stacks</span>
-        </div>
         <span class="summary-label">Total Staked</span>
         <span class="summary-value mono">{wallet.authenticated ? totalStaked.toFixed(3) : "0.000"} MON</span>
       </div>
       <div class="summary-card">
-        <div class="summary-icon" style="background: var(--amber-bg); color: var(--amber);">
-          <span class="material-symbols-outlined">local_fire_department</span>
-        </div>
         <span class="summary-label">Current Streak</span>
         <span class="summary-value">{wallet.authenticated ? currentStreak : 0} day{(!wallet.authenticated || currentStreak !== 1) ? "s" : ""}</span>
       </div>
       <div class="summary-card">
-        <div class="summary-icon" style="background: var(--rose-bg); color: var(--rose);">
-          <span class="material-symbols-outlined">emoji_events</span>
-        </div>
         <span class="summary-label">Longest Streak</span>
         <span class="summary-value">{wallet.authenticated ? longestStreak : 0} day{(!wallet.authenticated || longestStreak !== 1) ? "s" : ""}</span>
       </div>
@@ -361,7 +349,7 @@
     background: var(--rose-bg);
     color: var(--rose);
     border: none;
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-full);
     width: 40px;
     height: 40px;
     cursor: pointer;
@@ -380,14 +368,13 @@
     background: var(--accent);
     color: #fff;
     border: none;
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-full);
     padding: 10px 18px;
     font-size: 14px;
     font-weight: 600;
     font-family: var(--sans);
     cursor: pointer;
     transition: opacity 0.2s, transform 0.15s;
-    box-shadow: var(--shadow-accent);
   }
   .login-btn:hover {
     opacity: 0.9;
@@ -407,14 +394,13 @@
     padding: 12px 20px;
     background: var(--accent);
     color: #fff;
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-full);
     font-size: 14px;
     font-weight: 600;
     text-decoration: none;
     white-space: nowrap;
     transition: opacity 0.2s, transform 0.15s;
     z-index: 50;
-    box-shadow: var(--shadow-accent);
   }
   :global(.research-fab:hover) {
     opacity: 0.9;

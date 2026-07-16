@@ -121,7 +121,7 @@
     width: 44px;
     height: 44px;
     border: none;
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-full);
     background: var(--accent);
     color: #fff;
     cursor: pointer;

@@ -45,11 +45,11 @@
     Know Your<br /><span class="accent-text">Protocol</span>
   </h1>
   <p class="hero-sub">
-    Research it. Act on it. Prove you did.
+    Information without action is entertainment.
   </p>
   <p class="hero-desc">
-    Paste a link, get a research-backed profile. Commit with a stake.<br />
-    Verify engagement onchain. No honor system.
+    You bookmark protocols. You read threads. You never follow through.<br />
+    KYP turns research into accountable onchain commitment — and your wallet proves it.
   </p>
 </section>
 
@@ -67,7 +67,7 @@
         </svg>
       </div>
       <h3 class="how-step-title">Research</h3>
-      <p class="how-step-desc">Paste a link. Get a clear breakdown — what it does, who it's for, and the risks.</p>
+      <p class="how-step-desc">Paste any protocol link. KYP breaks it down — what it does, who it's for, and where the risks are.</p>
     </div>
     <div class="how-step">
       <div class="how-icon-circle">
@@ -122,7 +122,7 @@
       </div>
 
       <div class="potd-cta">
-        <Link to="/protocol/{potd.id}" class="potd-more">Expand details....</Link>
+        <Link to="/protocol/{potd.id}" class="potd-more">View full breakdown</Link>
       </div>
 
       <div class="potd-fade"></div>
@@ -445,7 +445,7 @@
     width: 40px;
     height: 40px;
     border: none;
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-full);
     background: var(--accent);
     color: #fff;
     cursor: pointer;

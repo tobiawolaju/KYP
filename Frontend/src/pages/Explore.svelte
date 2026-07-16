@@ -46,9 +46,6 @@
       </select>
     </div>
 
-    <div class="filter-group result-count">
-      <span class="count-badge">{filtered.length} protocol{filtered.length !== 1 ? "s" : ""}</span>
-    </div>
   </div>
 
   <div class="protocol-grid">
