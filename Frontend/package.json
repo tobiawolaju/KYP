@@ -12,5 +12,12 @@
     "@sveltejs/vite-plugin-svelte": "^7.1.2",
     "svelte": "^5.56.4",
     "vite": "^8.1.1"
+  },
+  "dependencies": {
+    "@vitejs/plugin-react": "^6.0.3",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "viem": "^2.55.2",
+    "@privy-io/react-auth": "^1.0.0"
   }
 }
