@@ -54,8 +54,8 @@
   <div class="protocol-page">
     <div class="sticky-bar">
       <button class="fav-btn" onclick={toggleFavorite} title={isFavorited ? "Remove from Favourites" : "Add to Favourite"}>
-        <span class="fav-text">{isFavorited ? "Favourite" : "Add to Favourite"}</span>
         <span class="fav-star">{isFavorited ? "★" : "☆"}</span>
+        <span class="fav-text">{isFavorited ? "Favourite" : "Add to Favourite"}</span>
       </button>
     </div>
 
@@ -70,8 +70,11 @@
         <ScoreBadge score={protocol.score} />
       </div>
       <div class="header-meta">
-        <span class="network-badge">{protocol.network}</span>
-        <span class="chain-badge">{protocol.chain}</span>
+        <span class="meta-badge">
+          <span class="material-symbols-outlined">dns</span>
+          {protocol.network}
+        </span>
+        <span class="meta-badge chain">{protocol.chain}</span>
         {#if protocol.contract_address}
           <span class="contract-address" title={protocol.contract_address}>
             {protocol.contract_address.slice(0, 6)}...{protocol.contract_address.slice(-4)}
@@ -82,17 +85,26 @@
 
     <div class="profile-body">
       <div class="info-section">
-        <h3 class="section-label">Who It's For</h3>
+        <h3 class="section-label">
+          <span class="material-symbols-outlined">person</span>
+          Who It's For
+        </h3>
         <p class="section-text">{protocol.who_its_for}</p>
       </div>
 
       <div class="info-section">
-        <h3 class="section-label">Summary</h3>
+        <h3 class="section-label">
+          <span class="material-symbols-outlined">description</span>
+          Summary
+        </h3>
         <p class="section-text">{protocol.summary}</p>
       </div>
 
       <div class="info-section">
-        <h3 class="section-label">Use Cases</h3>
+        <h3 class="section-label">
+          <span class="material-symbols-outlined">use_cases</span>
+          Use Cases
+        </h3>
         <div class="use-cases">
           {#each protocol.use_cases as uc}
             <span class="use-case-tag">{uc}</span>
@@ -101,23 +113,35 @@
       </div>
 
       <div class="risks-section">
-        <h3 class="section-label">Risks</h3>
+        <h3 class="section-label">
+          <span class="material-symbols-outlined">warning</span>
+          Risks
+        </h3>
         <div class="risk-cards">
           {#if protocol.risks.contract}
             <div class="risk-card">
-              <span class="risk-type">Contract</span>
+              <div class="risk-header">
+                <span class="risk-icon contract">C</span>
+                <span class="risk-type">Contract</span>
+              </div>
               <p class="risk-text">{protocol.risks.contract}</p>
             </div>
           {/if}
           {#if protocol.risks.community}
             <div class="risk-card">
-              <span class="risk-type">Community</span>
+              <div class="risk-header">
+                <span class="risk-icon community">Co</span>
+                <span class="risk-type">Community</span>
+              </div>
               <p class="risk-text">{protocol.risks.community}</p>
             </div>
           {/if}
           {#if protocol.risks.structural}
             <div class="risk-card">
-              <span class="risk-type">Structural</span>
+              <div class="risk-header">
+                <span class="risk-icon structural">S</span>
+                <span class="risk-type">Structural</span>
+              </div>
               <p class="risk-text">{protocol.risks.structural}</p>
             </div>
           {/if}
@@ -125,25 +149,41 @@
       </div>
 
       <div class="links-section">
-        <h3 class="section-label">Links</h3>
+        <h3 class="section-label">
+          <span class="material-symbols-outlined">link</span>
+          Links
+        </h3>
         <div class="link-list">
           {#if protocol.links.project}
-            <a href={protocol.links.project} target="_blank" rel="noreferrer" class="link-item">Website ↗</a>
+            <a href={protocol.links.project} target="_blank" rel="noreferrer" class="link-item">
+              <span class="material-symbols-outlined">language</span>
+              Website
+            </a>
           {/if}
           {#if protocol.links.twitter}
-            <a href={protocol.links.twitter} target="_blank" rel="noreferrer" class="link-item">X ↗</a>
+            <a href={protocol.links.twitter} target="_blank" rel="noreferrer" class="link-item">
+              <span class="material-symbols-outlined">tag</span>
+              X
+            </a>
           {/if}
           {#if protocol.links.discord}
-            <a href={protocol.links.discord} target="_blank" rel="noreferrer" class="link-item">Discord ↗</a>
+            <a href={protocol.links.discord} target="_blank" rel="noreferrer" class="link-item">
+              <span class="material-symbols-outlined">chat</span>
+              Discord
+            </a>
           {/if}
           {#if protocol.links.github}
-            <a href={protocol.links.github} target="_blank" rel="noreferrer" class="link-item">GitHub ↗</a>
+            <a href={protocol.links.github} target="_blank" rel="noreferrer" class="link-item">
+              <span class="material-symbols-outlined">code</span>
+              GitHub
+            </a>
           {/if}
         </div>
       </div>
 
       <button class="commit-btn" onclick={handleCommit}>
-        Commit & Stake →
+        <span class="material-symbols-outlined">lock</span>
+        Commit & Stake
       </button>
     </div>
 
@@ -152,7 +192,10 @@
       <div class="similar-grid">
         {#each similar as sp}
           <Link to={`/protocol/${sp.id}`} class="similar-card">
-            <h4>{sp.name}</h4>
+            <div class="similar-info">
+              <h4>{sp.name}</h4>
+              <span class="similar-category">{sp.category}</span>
+            </div>
             <span class="card-score" style="color: {tierFromScore(sp.score).color}">{sp.score}/50</span>
           </Link>
         {/each}
@@ -164,8 +207,10 @@
     <div class="modal-overlay" onclick={() => { showStakeModal = false; stakeConfirmed = false; }} role="presentation">
       <div class="modal" onclick={(e) => e.stopPropagation()} onkeydown={(e) => { if (e.key === 'Escape') { showStakeModal = false; stakeConfirmed = false; } }} role="dialog" tabindex="-1">
         {#if !stakeConfirmed}
-          <h3 class="modal-title">Commit to {protocol.name}</h3>
-          <p class="modal-period">Commitment period: {VERIFY_WINDOW_HOURS} hours</p>
+          <div class="modal-header">
+            <h3 class="modal-title">Commit to {protocol.name}</h3>
+            <p class="modal-period">{VERIFY_WINDOW_HOURS}h commitment window</p>
+          </div>
           <p class="modal-desc">Stake MON to back your intention. You have {VERIFY_WINDOW_HOURS} hours to engage onchain with this protocol. Our system automatically checks your wallet and resolves your stake when the window closes — no action needed from you. Engaged in time → your stake is returned. Didn't engage → it's forfeited.</p>
           <div class="stake-input-group">
             <label for="stake-amount" class="stake-label">Stake Amount (MON)</label>
@@ -176,10 +221,13 @@
             <button class="modal-confirm" onclick={confirmCommit}>Confirm & Stake</button>
           </div>
         {:else}
-          <h3 class="modal-title">Stake Confirmed</h3>
-          <p class="modal-desc">Your stake of {stakeAmount} MON has been committed to {protocol.name}.</p>
+          <div class="modal-success-icon">
+            <span class="material-symbols-outlined">check_circle</span>
+          </div>
+          <h3 class="modal-title" style="text-align:center;">Stake Confirmed</h3>
+          <p class="modal-desc" style="text-align:center;">Your stake of {stakeAmount} MON has been committed to {protocol.name}.</p>
           <p class="modal-deadline">Resolves automatically on {deadlineTimestamp}</p>
-          <div class="modal-actions">
+          <div class="modal-actions" style="justify-content:center;">
             <Link to="/dashboard" class="modal-confirm" onclick={() => { showStakeModal = false; stakeConfirmed = false; }}>View in Dashboard</Link>
           </div>
         {/if}
@@ -188,6 +236,7 @@
   {/if}
 {:else}
   <div class="not-found">
+    <span class="material-symbols-outlined not-found-icon">search_off</span>
     <h2>Protocol not found</h2>
     <Link to="/" class="back-link">← Back to research</Link>
   </div>
@@ -200,46 +249,45 @@
     padding: 32px 24px 64px;
   }
   .sticky-bar {
-    position: sticky;
-    top: 0;
-    z-index: 100;
     display: flex;
     align-items: center;
-    justify-content: flex-end;
-    padding: 12px 0;
+    justify-content: center;
+    padding: 16px 0;
     margin-bottom: 20px;
     background: var(--bg);
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--border-light);
   }
   .fav-btn {
     display: flex;
+    flex-direction: column;
     align-items: center;
     gap: 4px;
     background: none;
     border: none;
-    padding: 0;
+    padding: 8px 20px;
     font-size: 14px;
     font-weight: 500;
-    color: var(--text);
+    color: var(--text-secondary);
     cursor: pointer;
     font-family: inherit;
-    white-space: nowrap;
-    height: 22px;
+    border-radius: var(--radius-md);
+    transition: background 0.2s, color 0.2s;
   }
   .fav-btn:hover {
-    opacity: 0.7;
+    background: var(--surface-hover);
+    color: var(--text);
   }
   .fav-text {
     line-height: 22px;
   }
   .fav-star {
-    font-size: 22px;
+    font-size: 55px;
     color: var(--amber);
     line-height: 1;
   }
 
   .profile-header {
-    margin-bottom: 32px;
+    margin-bottom: 36px;
   }
   .header-top {
     display: flex;
@@ -253,65 +301,86 @@
     min-width: 0;
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 14px;
   }
   .protocol-logo {
-    width: 36px;
-    height: 36px;
-    border-radius: 8px;
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-sm);
     object-fit: cover;
     flex-shrink: 0;
   }
   .protocol-name {
-    font-size: 42px;
-    font-weight: 700;
+    font-size: 36px;
+    font-weight: 800;
     margin: 0;
     color: var(--text);
     line-height: 1.1;
+    letter-spacing: -0.5px;
   }
   .header-meta {
     display: flex;
     gap: 8px;
     align-items: center;
-    margin-top: 10px;
+    margin-top: 12px;
     flex-wrap: wrap;
   }
-  .network-badge, .chain-badge {
+  .meta-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
     font-size: 12px;
-    padding: 2px 8px;
-    border-radius: 4px;
+    padding: 4px 10px;
+    border-radius: var(--radius-sm);
     background: var(--accent-bg);
     color: var(--accent);
     font-family: var(--mono);
+    font-weight: 600;
+  }
+  .meta-badge .material-symbols-outlined {
+    font-size: 14px;
+  }
+  .meta-badge.chain {
+    background: var(--surface-hover);
+    color: var(--text-secondary);
   }
   .contract-address {
     font-family: var(--mono);
     font-size: 12px;
     color: var(--text-muted);
+    padding: 4px 8px;
+    background: var(--surface-hover);
+    border-radius: var(--radius-sm);
   }
 
   .profile-body {
     display: flex;
     flex-direction: column;
-    gap: 24px;
+    gap: 28px;
   }
   .info-section {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 8px;
   }
   .section-label {
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.8px;
+    letter-spacing: 0.6px;
     color: var(--text-muted);
     margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .section-label .material-symbols-outlined {
+    font-size: 16px;
   }
   .section-text {
     font-size: 15px;
-    line-height: 1.6;
-    color: var(--text);
+    line-height: 1.65;
+    color: var(--text-secondary);
     margin: 0;
   }
   .use-cases {
@@ -321,16 +390,16 @@
   }
   .use-case-tag {
     font-size: 13px;
-    padding: 4px 12px;
-    border-radius: 6px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    color: var(--text);
+    padding: 5px 12px;
+    border-radius: var(--radius-sm);
+    background: var(--accent-bg);
+    color: var(--accent);
+    font-weight: 500;
   }
   .risks-section {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
   }
   .risk-cards {
     display: flex;
@@ -339,22 +408,46 @@
   }
   .risk-card {
     background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 12px 16px;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    padding: 16px;
+    transition: border-color 0.2s;
   }
+  .risk-card:hover {
+    border-color: var(--rose-bg);
+  }
+  .risk-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  .risk-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 700;
+    font-family: var(--mono);
+    color: #fff;
+    flex-shrink: 0;
+  }
+  .risk-icon.contract { background: var(--rose); }
+  .risk-icon.community { background: var(--amber); }
+  .risk-icon.structural { background: var(--blue); }
   .risk-type {
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.6px;
-    color: var(--rose);
+    color: var(--text);
   }
   .risk-text {
     font-size: 14px;
     color: var(--text-muted);
-    margin: 4px 0 0;
-    line-height: 1.5;
+    margin: 0;
+    line-height: 1.55;
   }
   .links-section {
     display: flex;
@@ -364,45 +457,62 @@
   .link-list {
     display: flex;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 8px;
   }
   .link-item {
-    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 500;
     color: var(--accent);
     text-decoration: none;
     padding: 6px 14px;
-    border: 1px solid var(--accent);
-    border-radius: 6px;
-    transition: background 0.2s;
+    border: 1px solid var(--accent-border);
+    border-radius: var(--radius-sm);
+    transition: background 0.2s, border-color 0.2s;
   }
   .link-item:hover {
     background: var(--accent-bg);
+    border-color: var(--accent);
+  }
+  .link-item .material-symbols-outlined {
+    font-size: 16px;
   }
   .commit-btn {
     width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
     padding: 14px;
     background: var(--accent);
-    color: var(--bg);
+    color: #fff;
     border: none;
-    border-radius: 8px;
+    border-radius: var(--radius-md);
     font-size: 16px;
     font-weight: 600;
     cursor: pointer;
-    transition: opacity 0.2s;
+    transition: opacity 0.2s, transform 0.15s;
     margin-top: 8px;
+    box-shadow: var(--shadow-accent);
   }
   .commit-btn:hover {
     opacity: 0.9;
+    transform: translateY(-1px);
+  }
+  .commit-btn .material-symbols-outlined {
+    font-size: 20px;
   }
 
   .similar-section {
     margin-top: 48px;
-    border-top: 1px solid var(--border);
+    border-top: 1px solid var(--border-light);
     padding-top: 32px;
   }
   .section-title {
     font-size: 20px;
-    font-weight: 600;
+    font-weight: 700;
     margin: 0 0 16px;
     color: var(--text);
   }
@@ -413,17 +523,19 @@
   }
   :global(.similar-card) {
     background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
     padding: 16px;
     text-decoration: none;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    transition: border-color 0.2s;
+    transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
   }
   :global(.similar-card:hover) {
-    border-color: var(--accent);
+    border-color: var(--accent-border);
+    box-shadow: var(--shadow-sm);
+    transform: translateY(-1px);
   }
   :global(.similar-card h4) {
     margin: 0;
@@ -431,16 +543,29 @@
     font-weight: 600;
     color: var(--text);
   }
+  .similar-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+  .similar-category {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
   .card-score {
     font-family: var(--mono);
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 700;
+    flex-shrink: 0;
   }
 
   .modal-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.6);
+    background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(4px);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -449,99 +574,138 @@
   .modal {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 12px;
+    border-radius: var(--radius-xl);
     padding: 32px;
     max-width: 420px;
     width: 90%;
+    box-shadow: var(--shadow-xl);
+  }
+  .modal-header {
+    margin-bottom: 12px;
   }
   .modal-title {
     font-size: 20px;
-    font-weight: 600;
-    margin: 0 0 8px;
+    font-weight: 700;
+    margin: 0 0 4px;
     color: var(--text);
-  }
-  .modal-desc {
-    font-size: 14px;
-    color: var(--text-muted);
-    line-height: 1.5;
-    margin: 0 0 20px;
   }
   .modal-period {
     font-size: 13px;
     font-weight: 600;
     color: var(--accent);
-    margin: 0 0 6px;
+    margin: 0;
+  }
+  .modal-desc {
+    font-size: 14px;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin: 0 0 20px;
   }
   .modal-deadline {
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 600;
     color: var(--text);
-    margin: -12px 0 20px;
+    margin: 0 0 20px;
     text-align: center;
+    padding: 10px;
+    background: var(--accent-bg);
+    border-radius: var(--radius-sm);
   }
   .stake-input-group {
     margin-bottom: 20px;
   }
   .stake-label {
     display: block;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
     color: var(--text-muted);
     margin-bottom: 6px;
   }
   .stake-input {
     width: 100%;
-    padding: 10px 12px;
+    padding: 12px 14px;
     background: var(--bg);
     border: 1px solid var(--border);
-    border-radius: 6px;
+    border-radius: var(--radius-sm);
     color: var(--text);
     font-size: 16px;
     font-family: var(--mono);
     box-sizing: border-box;
+    transition: border-color 0.2s;
   }
   .stake-input:focus {
     outline: none;
     border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
   }
   .modal-actions {
     display: flex;
-    gap: 12px;
+    gap: 10px;
     justify-content: flex-end;
   }
   .modal-cancel {
-    padding: 10px 20px;
-    background: transparent;
+    padding: 10px 18px;
+    background: var(--surface-hover);
     border: 1px solid var(--border);
-    border-radius: 6px;
-    color: var(--text-muted);
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
     font-size: 14px;
+    font-weight: 500;
     cursor: pointer;
+    font-family: var(--sans);
+    transition: background 0.2s;
   }
   .modal-cancel:hover {
-    border-color: var(--text-muted);
+    background: var(--border-light);
   }
   :global(.modal-confirm) {
-    padding: 10px 20px;
+    display: inline-flex;
+    align-items: center;
+    padding: 10px 18px;
     background: var(--accent);
-    color: var(--bg);
+    color: #fff;
     border: none;
-    border-radius: 6px;
+    border-radius: var(--radius-sm);
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
     text-decoration: none;
+    transition: opacity 0.2s;
   }
   :global(.modal-confirm:hover) {
     opacity: 0.9;
   }
+  .modal-success-icon {
+    text-align: center;
+    margin-bottom: 12px;
+  }
+  .modal-success-icon .material-symbols-outlined {
+    font-size: 48px;
+    color: var(--green);
+  }
 
   .not-found {
-    padding: 64px 24px;
+    padding: 80px 24px;
     text-align: center;
+  }
+  .not-found-icon {
+    font-size: 56px;
+    color: var(--border);
+    display: block;
+    margin-bottom: 16px;
   }
   .not-found h2 {
     color: var(--text-muted);
     margin-bottom: 16px;
+  }
+  :global(.back-link) {
+    color: var(--accent);
+    font-weight: 500;
+    text-decoration: none;
+  }
+  :global(.back-link:hover) {
+    opacity: 0.8;
   }
 </style>

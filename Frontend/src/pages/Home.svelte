@@ -134,6 +134,7 @@
 
 <div class="floating-search">
   <div class="search-bar">
+    <span class="material-symbols-outlined search-icon">search</span>
     <input
       type="text"
       class="search-input"
@@ -142,10 +143,7 @@
       onkeydown={handleTopKeydown}
     />
     <button class="search-btn" onclick={handleTopSearch} aria-label="Search">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="11" cy="11" r="8" />
-        <line x1="21" y1="21" x2="16.65" y2="16.65" />
-      </svg>
+      <span class="material-symbols-outlined">arrow_forward</span>
     </button>
   </div>
 </div>
@@ -208,90 +206,6 @@
     color: var(--text-muted);
     margin: 0 0 32px;
     line-height: 1.6;
-  }
-  .search-bar {
-    display: flex;
-    align-items: center;
-    max-width: 420px;
-    margin: 0 auto;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 4px 4px 4px 16px;
-    transition: border-color 0.2s;
-  }
-  .search-bar:focus-within {
-    border-color: var(--accent);
-  }
-  .search-input {
-    flex: 1;
-    border: none;
-    background: transparent;
-    padding: 10px 0;
-    font-size: 15px;
-    color: var(--text);
-    outline: none;
-  }
-  .search-input::placeholder {
-    color: var(--text-muted);
-  }
-  .search-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 40px;
-    height: 40px;
-    border: none;
-    border-radius: 8px;
-    background: var(--accent);
-    color: var(--bg);
-    cursor: pointer;
-    transition: opacity 0.2s;
-    flex-shrink: 0;
-  }
-  .search-btn:hover {
-    opacity: 0.9;
-  }
-
-  .hero-ctas {
-    display: flex;
-    justify-content: center;
-    gap: 12px;
-    margin-top: 28px;
-  }
-  :global(.cta-primary) {
-    display: inline-flex;
-    align-items: center;
-    padding: 12px 28px;
-    background: var(--accent);
-    color: var(--bg);
-    border: none;
-    border-radius: 8px;
-    font-size: 15px;
-    font-weight: 600;
-    text-decoration: none;
-    cursor: pointer;
-    transition: opacity 0.2s;
-  }
-  :global(.cta-primary:hover) {
-    opacity: 0.9;
-  }
-  .cta-secondary {
-    display: inline-flex;
-    align-items: center;
-    padding: 12px 28px;
-    background: transparent;
-    color: var(--text);
-    border: 1.5px solid var(--border);
-    border-radius: 8px;
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: border-color 0.2s, color 0.2s;
-  }
-  .cta-secondary:hover {
-    border-color: var(--accent);
-    color: var(--accent);
   }
 
   .how-section {
@@ -490,9 +404,58 @@
     transform: translateX(-50%);
     z-index: 50;
     width: 100%;
-    max-width: 420px;
+    max-width: 440px;
     padding: 0 16px;
     box-sizing: border-box;
   }
-
+  .search-bar {
+    display: flex;
+    align-items: center;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 4px 4px 4px 14px;
+    box-shadow: var(--shadow-lg);
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .search-bar:focus-within {
+    border-color: var(--accent);
+    box-shadow: var(--shadow-lg), 0 0 0 3px rgba(124, 58, 237, 0.1);
+  }
+  .search-icon {
+    font-size: 20px;
+    color: var(--text-muted);
+  }
+  .search-input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    padding: 10px 8px;
+    font-size: 15px;
+    color: var(--text);
+    outline: none;
+  }
+  .search-input::placeholder {
+    color: var(--text-muted);
+  }
+  .search-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: var(--radius-md);
+    background: var(--accent);
+    color: #fff;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    flex-shrink: 0;
+  }
+  .search-btn:hover {
+    opacity: 0.9;
+  }
+  .search-btn .material-symbols-outlined {
+    font-size: 18px;
+  }
 </style>

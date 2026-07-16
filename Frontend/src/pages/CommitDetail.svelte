@@ -16,6 +16,12 @@
     return "var(--amber)";
   }
 
+  function statusBg(status) {
+    if (status === "verified") return "var(--blue-bg)";
+    if (status === "slashed") return "var(--rose-bg)";
+    return "var(--amber-bg)";
+  }
+
   function formatTimestamp(ts) {
     return new Date(ts).toLocaleString("en-US", {
       month: "short",
@@ -47,40 +53,66 @@
 
 {#if commitment && protocol}
   <div class="commit-detail">
-    <Link to="/dashboard" class="back-link">← Dashboard</Link>
+    <Link to="/dashboard" class="back-link">
+      <span class="material-symbols-outlined">arrow_back</span>
+      Dashboard
+    </Link>
 
     <div class="detail-header">
-      {#if protocol.image}
-        <img src={protocol.image} alt={protocol.name} class="detail-logo" />
-      {/if}
-      <h1 class="detail-title">{protocol.name}</h1>
-      <span class="detail-status" style="color: {statusColor(commitment.status)}">
+      <div class="detail-header-left">
+        {#if protocol.image}
+          <img src={protocol.image} alt={protocol.name} class="detail-logo" />
+        {/if}
+        <div class="detail-title-group">
+          <h1 class="detail-title">{protocol.name}</h1>
+          <span class="commit-id">#{commitment.id}</span>
+        </div>
+      </div>
+      <span class="status-badge" style="background: {statusBg(commitment.status)}; color: {statusColor(commitment.status)};">
         {commitment.status}
       </span>
     </div>
 
     <div class="detail-meta">
       <div class="meta-item">
-        <span class="meta-label">Staked</span>
-        <span class="meta-value">{formatWei(commitment.staked_amount)}</span>
+        <div class="meta-icon" style="background: var(--green-bg); color: var(--green);">
+          <span class="material-symbols-outlined">stacks</span>
+        </div>
+        <div class="meta-content">
+          <span class="meta-label">Staked</span>
+          <span class="meta-value">{formatWei(commitment.staked_amount)}</span>
+        </div>
       </div>
       <div class="meta-item">
-        <span class="meta-label">Committed</span>
-        <span class="meta-value">{formatTimestamp(commitment.commit_timestamp)}</span>
+        <div class="meta-icon" style="background: var(--accent-bg); color: var(--accent);">
+          <span class="material-symbols-outlined">schedule</span>
+        </div>
+        <div class="meta-content">
+          <span class="meta-label">Committed</span>
+          <span class="meta-value">{formatTimestamp(commitment.commit_timestamp)}</span>
+        </div>
       </div>
       <div class="meta-item">
-        <span class="meta-label">Deadline</span>
-        <span class="meta-value" style="color: {commitment.status === 'active' ? 'var(--amber)' : 'var(--text-muted)'}">
-          {formatTimestamp(commitment.verify_deadline)}
-          {#if commitment.status === 'active'}
-            <span class="deadline-countdown">({deadlineStatus(commitment.verify_deadline)})</span>
-          {/if}
-        </span>
+        <div class="meta-icon" style="background: {commitment.status === 'active' ? 'var(--amber-bg)' : 'var(--surface-hover)'}; color: {commitment.status === 'active' ? 'var(--amber)' : 'var(--text-muted)'};">
+          <span class="material-symbols-outlined">timer</span>
+        </div>
+        <div class="meta-content">
+          <span class="meta-label">Deadline</span>
+          <span class="meta-value">
+            {formatTimestamp(commitment.verify_deadline)}
+            {#if commitment.status === 'active'}
+              <span class="deadline-countdown">({deadlineStatus(commitment.verify_deadline)})</span>
+            {/if}
+          </span>
+        </div>
       </div>
     </div>
 
     <div class="graph-section">
-      <h3 class="section-label">Activity Timeline</h3>
+      <h3 class="section-label">
+        <span class="material-symbols-outlined">timeline</span>
+        Activity Timeline
+      </h3>
       <div class="graph-strip">
         <CommitGraph
           {events}
@@ -111,11 +143,15 @@
     </div>
 
     <div class="actions-section">
-      <Link to={`/protocol/${protocol.id}`} class="action-btn secondary">View Protocol Profile</Link>
+      <Link to={`/protocol/${protocol.id}`} class="action-btn">
+        <span class="material-symbols-outlined">visibility</span>
+        View Protocol Profile
+      </Link>
     </div>
   </div>
 {:else}
   <div class="not-found">
+    <span class="material-symbols-outlined not-found-icon">search_off</span>
     <h2>Commitment not found</h2>
     <Link to="/dashboard" class="back-link">← Dashboard</Link>
   </div>
@@ -128,79 +164,129 @@
     padding: 32px 24px 64px;
   }
   :global(.back-link) {
-    color: var(--accent);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--text-muted);
     text-decoration: none;
     font-size: 14px;
-    display: inline-block;
-    margin-bottom: 24px;
+    font-weight: 500;
+    margin-bottom: 28px;
+    transition: color 0.2s;
   }
   :global(.back-link:hover) {
-    opacity: 0.8;
+    color: var(--text);
+  }
+  :global(.back-link .material-symbols-outlined) {
+    font-size: 18px;
   }
 
   .detail-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 24px;
+    margin-bottom: 28px;
     gap: 12px;
   }
+  .detail-header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+  }
   .detail-logo {
-    width: 32px;
-    height: 32px;
-    border-radius: 6px;
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-sm);
     object-fit: cover;
     flex-shrink: 0;
   }
+  .detail-title-group {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
   .detail-title {
     font-size: 28px;
-    font-weight: 700;
+    font-weight: 800;
     margin: 0;
     color: var(--text);
+    letter-spacing: -0.5px;
   }
-  .detail-status {
+  .commit-id {
     font-family: var(--mono);
-    font-size: 14px;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .status-badge {
+    font-family: var(--mono);
+    font-size: 12px;
     font-weight: 700;
     text-transform: uppercase;
     padding: 4px 12px;
-    border-radius: 6px;
-    background: var(--surface);
-    border: 1px solid currentColor;
+    border-radius: var(--radius-full);
+    letter-spacing: 0.3px;
+    flex-shrink: 0;
   }
 
   .detail-meta {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 2px;
     background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 20px;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    padding: 4px;
     margin-bottom: 32px;
+    overflow: hidden;
   }
   .meta-item {
     display: flex;
-    justify-content: space-between;
     align-items: center;
     gap: 12px;
+    padding: 14px 16px;
+    border-radius: var(--radius-md);
+    transition: background 0.15s;
+  }
+  .meta-item:hover {
+    background: var(--surface-hover);
+  }
+  .meta-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .meta-icon .material-symbols-outlined {
+    font-size: 18px;
+  }
+  .meta-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
   }
   .meta-label {
-    font-size: 14px;
+    font-size: 12px;
     color: var(--text-muted);
+    font-weight: 500;
   }
   .meta-value {
     font-family: var(--mono);
     font-size: 14px;
     color: var(--text);
-    text-align: right;
+    font-weight: 500;
   }
   .deadline-countdown {
     font-family: var(--sans);
-    font-size: 13px;
+    font-size: 12px;
     color: var(--amber);
     display: block;
-    margin-top: 2px;
+    margin-top: 1px;
+    font-weight: 500;
   }
 
   .graph-section {
@@ -208,18 +294,24 @@
   }
   .graph-strip {
     margin-bottom: 24px;
-    padding: 12px 16px;
+    padding: 16px;
     background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
   }
   .section-label {
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.8px;
+    letter-spacing: 0.6px;
     color: var(--text-muted);
-    margin: 0 0 16px;
+    margin: 0 0 14px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .section-label .material-symbols-outlined {
+    font-size: 16px;
   }
   .event-flow {
     display: flex;
@@ -281,26 +373,38 @@
   }
   :global(.action-btn) {
     flex: 1;
-    padding: 12px;
-    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 14px;
+    border-radius: var(--radius-md);
     font-size: 14px;
     font-weight: 600;
     text-align: center;
     text-decoration: none;
-    transition: opacity 0.2s;
-  }
-  :global(.action-btn:hover) {
-    opacity: 0.9;
-  }
-  :global(.action-btn.secondary) {
     background: var(--surface);
     border: 1px solid var(--border);
     color: var(--text);
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  :global(.action-btn:hover) {
+    border-color: var(--accent-border);
+    box-shadow: var(--shadow-sm);
+  }
+  :global(.action-btn .material-symbols-outlined) {
+    font-size: 18px;
   }
 
   .not-found {
-    padding: 64px 24px;
+    padding: 80px 24px;
     text-align: center;
+  }
+  .not-found-icon {
+    font-size: 56px;
+    color: var(--border);
+    display: block;
+    margin-bottom: 16px;
   }
   .not-found h2 {
     color: var(--text-muted);
