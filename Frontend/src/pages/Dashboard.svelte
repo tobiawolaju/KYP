@@ -169,6 +169,12 @@
     return "var(--amber)";
   }
 
+  function statusBg(status) {
+    if (status === "verified") return "var(--blue-bg)";
+    if (status === "slashed") return "var(--rose-bg)";
+    return "var(--amber-bg)";
+  }
+
   function formatTimestamp(ts) {
     return new Date(ts).toLocaleDateString("en-US", { month: "short", day: "numeric" });
   }
@@ -178,158 +184,186 @@
   }
 </script>
 
-{#if wallet.authenticated}
-  <div class="dashboard">
-    <div class="dash-header">
+<div class="dashboard">
+  <div class="dash-header">
+    <div class="dash-title-group">
       <h1 class="dash-title">Dashboard</h1>
+      <p class="dash-subtitle">{wallet.authenticated ? "Your onchain activity overview" : "Connect your wallet to get started"}</p>
+    </div>
+    {#if wallet.authenticated}
       <button class="disconnect-btn" onclick={handleDisconnect} aria-label="Disconnect Wallet">
         <span class="material-symbols-outlined">logout</span>
       </button>
-    </div>
+    {:else}
+      <button class="login-btn" onclick={() => wallet.login?.()} aria-label="Login">
+        <span class="material-symbols-outlined">account_balance_wallet</span>
+        Connect Wallet
+      </button>
+    {/if}
+  </div>
 
-    <div class="summary-section">
-      <div class="summary-cards">
-        <div class="summary-card">
-          <span class="summary-label">Wallet</span>
-          <span class="summary-value mono">{truncate(wallet.address)}</span>
+  <div class="summary-section">
+    <div class="summary-cards">
+      <div class="summary-card">
+        <div class="summary-icon" style="background: var(--accent-bg); color: var(--accent);">
+          <span class="material-symbols-outlined">account_balance_wallet</span>
         </div>
-        <div class="summary-card">
-          <span class="summary-label">Total Staked</span>
-          <span class="summary-value mono">{totalStaked.toFixed(3)} MON</span>
+        <span class="summary-label">Wallet</span>
+        <span class="summary-value mono">{wallet.authenticated ? truncate(wallet.address) : "0x0000...0000"}</span>
+      </div>
+      <div class="summary-card">
+        <div class="summary-icon" style="background: var(--green-bg); color: var(--green);">
+          <span class="material-symbols-outlined">stacks</span>
         </div>
-        <div class="summary-card">
-          <span class="summary-label">Current Streak</span>
-          <span class="summary-value">{currentStreak} day{currentStreak !== 1 ? "s" : ""}</span>
+        <span class="summary-label">Total Staked</span>
+        <span class="summary-value mono">{wallet.authenticated ? totalStaked.toFixed(3) : "0.000"} MON</span>
+      </div>
+      <div class="summary-card">
+        <div class="summary-icon" style="background: var(--amber-bg); color: var(--amber);">
+          <span class="material-symbols-outlined">local_fire_department</span>
         </div>
-        <div class="summary-card">
-          <span class="summary-label">Longest Streak</span>
-          <span class="summary-value">{longestStreak} day{longestStreak !== 1 ? "s" : ""}</span>
+        <span class="summary-label">Current Streak</span>
+        <span class="summary-value">{wallet.authenticated ? currentStreak : 0} day{(!wallet.authenticated || currentStreak !== 1) ? "s" : ""}</span>
+      </div>
+      <div class="summary-card">
+        <div class="summary-icon" style="background: var(--rose-bg); color: var(--rose);">
+          <span class="material-symbols-outlined">emoji_events</span>
         </div>
+        <span class="summary-label">Longest Streak</span>
+        <span class="summary-value">{wallet.authenticated ? longestStreak : 0} day{(!wallet.authenticated || longestStreak !== 1) ? "s" : ""}</span>
       </div>
     </div>
+  </div>
 
-    <div class="activity-section">
-      <h2 class="section-title">Activity (Last 30 Days)</h2>
-      <div class="activity-grid-wrapper">
-        <div class="activity-grid">
-          {#each gridWeeks as week}
-            <div class="grid-week">
-              {#each week as day}
-                <span class="grid-square {gridColor(day)}" title={gridTitle(day)}></span>
-              {/each}
-            </div>
-          {/each}
-        </div>
-        <div class="grid-legend">
-          <div class="legend-item">
-            <span class="grid-square empty"></span>
-            <span class="legend-label">No activity</span>
-          </div>
-          <div class="legend-item">
-            <span class="grid-square event"></span>
-            <span class="legend-label">Activity</span>
-          </div>
-          <div class="legend-item">
-            <span class="grid-square slash"></span>
-            <span class="legend-label">Slash</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="favorites-section">
-      <h2 class="section-title">Your Protocols</h2>
-      <div class="favorites-list">
-        {#each favoriteProtocols as entry}
-          <div class="fav-card">
-            <div class="fav-card-top">
-              <div class="fav-info">
-                {#if entry.protocol?.image}
-                  <img src={entry.protocol.image} alt={entry.protocol.name} class="fav-logo" />
-                {/if}
-                <div class="fav-text">
-                  <Link to={`/protocol/${entry.protocol_id}`} class="fav-name">
-                    {entry.protocol?.name ?? "Unknown Protocol"}
-                  </Link>
-                  <span class="fav-date">Favorited {formatTimestamp(entry.favorited_at)}</span>
-                </div>
-              </div>
-              {#if entry.auto_favorited}
-                <span class="auto-badge">auto</span>
-              {/if}
-            </div>
-
-            {#if entry.commitment}
-              <div class="commit-section">
-                <div class="commit-meta">
-                  <span class="commit-status" style="color: {statusColor(entry.commitment.status)}">
-                    {entry.commitment.status}
-                  </span>
-                  <span class="commit-amount">{formatWei(entry.commitment.staked_amount)}</span>
-                  <span class="commit-deadline">due {formatTimestamp(entry.commitment.verify_deadline)}</span>
-                </div>
-
-                <Link to={`/dashboard/commit/${entry.commitment.id}`} class="commit-graph-link">
-                  <CommitGraph
-                    events={entry.events}
-                    size="mini"
-                    startDate={entry.commitment.commit_timestamp}
-                    endDate={entry.commitment.verify_deadline}
-                    status={entry.commitment.status}
-                  />
-                </Link>
-              </div>
-            {:else}
-              <div class="no-commit">
-                <span class="no-commit-text">Not yet committed</span>
-                <Link to={`/protocol/${entry.protocol_id}`} class="commit-link">Commit →</Link>
-              </div>
-            {/if}
+  <div class="activity-section">
+    <h2 class="section-title">Activity (Last 30 Days)</h2>
+    <div class="activity-grid-wrapper">
+      <div class="activity-grid">
+        {#each gridWeeks as week}
+          <div class="grid-week">
+            {#each week as day}
+              <span class="grid-square {gridColor(day)}" title={gridTitle(day)}></span>
+            {/each}
           </div>
         {/each}
       </div>
+      <div class="grid-legend">
+        <div class="legend-item">
+          <span class="grid-square empty"></span>
+          <span class="legend-label">No activity</span>
+        </div>
+        <div class="legend-item">
+          <span class="grid-square event"></span>
+          <span class="legend-label">Activity</span>
+        </div>
+        <div class="legend-item">
+          <span class="grid-square slash"></span>
+          <span class="legend-label">Slash</span>
+        </div>
+      </div>
     </div>
+  </div>
 
-    <Link to="/" class="research-fab">+ Research New Protocol</Link>
+  <div class="favorites-section">
+    <h2 class="section-title">Your Protocols</h2>
+    <div class="favorites-list">
+      {#each favoriteProtocols as entry}
+        <div class="fav-card">
+          <div class="fav-card-top">
+            <div class="fav-info">
+              {#if entry.protocol?.image}
+                <img src={entry.protocol.image} alt={entry.protocol.name} class="fav-logo" />
+              {/if}
+              <div class="fav-text">
+                <Link to={`/protocol/${entry.protocol_id}`} class="fav-name">
+                  {entry.protocol?.name ?? "Unknown Protocol"}
+                </Link>
+                <span class="fav-date">Favorited {formatTimestamp(entry.favorited_at)}</span>
+              </div>
+            </div>
+            {#if entry.auto_favorited}
+              <span class="auto-badge">auto</span>
+            {/if}
+          </div>
+
+          {#if entry.commitment}
+            <div class="commit-section">
+              <div class="commit-meta">
+                <span class="commit-status-badge" style="background: {statusBg(entry.commitment.status)}; color: {statusColor(entry.commitment.status)};">
+                  {entry.commitment.status}
+                </span>
+                <span class="commit-amount">{formatWei(entry.commitment.staked_amount)}</span>
+                <span class="commit-deadline">due {formatTimestamp(entry.commitment.verify_deadline)}</span>
+              </div>
+
+              <Link to={`/dashboard/commit/${entry.commitment.id}`} class="commit-graph-link">
+                <CommitGraph
+                  events={entry.events}
+                  size="mini"
+                  startDate={entry.commitment.commit_timestamp}
+                  endDate={entry.commitment.verify_deadline}
+                  status={entry.commitment.status}
+                />
+              </Link>
+            </div>
+          {:else}
+            <div class="no-commit">
+              <span class="no-commit-text">Not yet committed</span>
+              <Link to={`/protocol/${entry.protocol_id}`} class="commit-link">Commit →</Link>
+            </div>
+          {/if}
+        </div>
+      {/each}
+    </div>
   </div>
-{:else}
-  <div class="connect-prompt">
-    <h2>Wallet Required</h2>
-    <p>Connect your wallet to view your Dashboard.</p>
-    <button class="connect-btn" onclick={() => wallet.login?.()}>Connect Wallet</button>
-  </div>
-{/if}
+
+  <Link to="/" class="research-fab">
+    <span class="material-symbols-outlined">add</span>
+    Research New Protocol
+  </Link>
+</div>
 
 <style>
   .dashboard {
     max-width: 720px;
     margin: 0 auto;
-    padding: 32px 24px 64px;
+    padding: 40px 24px 100px;
   }
   .dash-header {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    margin-bottom: 28px;
+    align-items: flex-start;
+    margin-bottom: 32px;
     gap: 16px;
     flex-wrap: wrap;
   }
+  .dash-title-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
   .dash-title {
-    font-size: 28px;
-    font-weight: 700;
+    font-size: 32px;
+    font-weight: 800;
     margin: 0;
     color: var(--text);
+    letter-spacing: -0.5px;
+  }
+  .dash-subtitle {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin: 0;
   }
   .disconnect-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background: #fde8e8;
+    background: var(--rose-bg);
     color: var(--rose);
-    border: 1px solid var(--rose);
-    border-radius: 8px;
-    width: 36px;
-    height: 36px;
+    border: none;
+    border-radius: var(--radius-md);
+    width: 40px;
+    height: 40px;
     cursor: pointer;
     transition: opacity 0.2s;
   }
@@ -339,28 +373,59 @@
   .disconnect-btn .material-symbols-outlined {
     font-size: 20px;
   }
+  .login-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-md);
+    padding: 10px 18px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: var(--sans);
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.15s;
+    box-shadow: var(--shadow-accent);
+  }
+  .login-btn:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+  }
+  .login-btn .material-symbols-outlined {
+    font-size: 18px;
+  }
 
   :global(.research-fab) {
     position: fixed;
     bottom: 24px;
     right: 24px;
-    padding: 10px 20px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 12px 20px;
     background: var(--accent);
-    color: var(--bg);
-    border-radius: 8px;
+    color: #fff;
+    border-radius: var(--radius-md);
     font-size: 14px;
     font-weight: 600;
     text-decoration: none;
     white-space: nowrap;
-    transition: opacity 0.2s;
+    transition: opacity 0.2s, transform 0.15s;
     z-index: 50;
+    box-shadow: var(--shadow-accent);
   }
   :global(.research-fab:hover) {
     opacity: 0.9;
+    transform: translateY(-1px);
+  }
+  :global(.research-fab .material-symbols-outlined) {
+    font-size: 18px;
   }
 
   .summary-section {
-    margin-bottom: 28px;
+    margin-bottom: 32px;
   }
   .summary-cards {
     display: grid;
@@ -369,15 +434,31 @@
   }
   .summary-card {
     background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 16px;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    padding: 18px;
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 8px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .summary-card:hover {
+    border-color: var(--border);
+    box-shadow: var(--shadow-sm);
+  }
+  .summary-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .summary-icon .material-symbols-outlined {
+    font-size: 20px;
   }
   .summary-label {
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.6px;
@@ -387,10 +468,12 @@
     font-size: 18px;
     font-weight: 700;
     color: var(--text);
+    line-height: 1.2;
   }
   .summary-value.mono {
     font-family: var(--mono);
-    font-size: 15px;
+    font-size: 14px;
+    letter-spacing: -0.3px;
   }
 
   .activity-section {
@@ -398,30 +481,34 @@
   }
   .section-title {
     font-size: 18px;
-    font-weight: 600;
+    font-weight: 700;
     margin: 0 0 14px;
     color: var(--text);
   }
   .activity-grid-wrapper {
     background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 16px;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    padding: 20px;
   }
   .activity-grid {
     display: flex;
-    gap: 3px;
+    gap: 4px;
     flex-wrap: wrap;
   }
   .grid-week {
     display: flex;
-    gap: 3px;
+    gap: 4px;
   }
   .grid-square {
-    width: 12px;
-    height: 12px;
-    border-radius: 2px;
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
     flex-shrink: 0;
+    transition: transform 0.15s;
+  }
+  .grid-square:hover {
+    transform: scale(1.3);
   }
   .grid-square.event {
     background: var(--accent);
@@ -430,28 +517,29 @@
     background: var(--rose);
   }
   .grid-square.empty {
-    background: var(--border);
+    background: var(--border-light);
   }
   .grid-legend {
     display: flex;
     align-items: center;
-    gap: 12px;
-    margin-top: 10px;
+    gap: 14px;
+    margin-top: 12px;
     justify-content: flex-end;
   }
   .legend-item {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 5px;
   }
   .legend-label {
     font-size: 11px;
     color: var(--text-muted);
+    font-weight: 500;
   }
 
   .favorites-section {
-    border-top: 1px solid var(--border);
-    padding-top: 28px;
+    border-top: 1px solid var(--border-light);
+    padding-top: 32px;
   }
 
   .favorites-list {
@@ -461,12 +549,17 @@
   }
   .fav-card {
     background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 20px;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    padding: 22px;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 14px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .fav-card:hover {
+    border-color: var(--border);
+    box-shadow: var(--shadow-sm);
   }
   .fav-card-top {
     display: flex;
@@ -480,9 +573,9 @@
     gap: 10px;
   }
   .fav-logo {
-    width: 28px;
-    height: 28px;
-    border-radius: 6px;
+    width: 30px;
+    height: 30px;
+    border-radius: var(--radius-sm);
     object-fit: cover;
     flex-shrink: 0;
   }
@@ -493,7 +586,7 @@
     min-width: 0;
   }
   :global(.fav-name) {
-    font-size: 17px;
+    font-size: 16px;
     font-weight: 600;
     color: var(--text);
     text-decoration: none;
@@ -502,17 +595,18 @@
     color: var(--accent);
   }
   .fav-date {
-    font-size: 13px;
+    font-size: 12px;
     color: var(--text-muted);
   }
   .auto-badge {
     font-size: 11px;
-    padding: 2px 6px;
-    border-radius: 3px;
+    padding: 3px 8px;
+    border-radius: var(--radius-full);
     background: var(--accent-bg);
     color: var(--accent);
     font-family: var(--mono);
     text-transform: uppercase;
+    font-weight: 600;
   }
 
   .commit-section {
@@ -522,20 +616,24 @@
   }
   .commit-meta {
     display: flex;
-    gap: 16px;
+    gap: 12px;
     align-items: center;
     flex-wrap: wrap;
   }
-  .commit-status {
+  .commit-status-badge {
     font-family: var(--mono);
-    font-size: 13px;
+    font-size: 11px;
     font-weight: 700;
     text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: var(--radius-sm);
+    letter-spacing: 0.3px;
   }
   .commit-amount {
     font-family: var(--mono);
     font-size: 13px;
     color: var(--text);
+    font-weight: 500;
   }
   .commit-deadline {
     font-size: 13px;
@@ -575,40 +673,13 @@
     opacity: 0.8;
   }
 
-  .connect-prompt {
-    max-width: 480px;
-    margin: 80px auto;
-    text-align: center;
-    padding: 48px 24px;
-  }
-  .connect-prompt h2 {
-    font-size: 24px;
-    margin: 0 0 8px;
-    color: var(--text);
-  }
-  .connect-prompt p {
-    font-size: 15px;
-    color: var(--text-muted);
-    margin: 0 0 24px;
-  }
-  :global(.connect-btn) {
-    padding: 12px 28px;
-    background: var(--accent);
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: opacity 0.2s;
-  }
-  :global(.connect-btn:hover) {
-    opacity: 0.9;
-  }
 
   @media (max-width: 600px) {
     .summary-cards {
       grid-template-columns: repeat(2, 1fr);
+    }
+    .dashboard {
+      padding: 24px 16px 100px;
     }
   }
 </style>

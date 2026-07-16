@@ -31,7 +31,7 @@
   {/if}
   <div class="desktop-links">
     <Link to="/research" class="nav-link">Research</Link>
-    <Link to="/protocols" class="nav-link">Explore</Link>
+    <Link to="/protocols" class="nav-link">Explore Protocols</Link>
     <Link to="/dashboard" class="nav-link">Dashboard</Link>
   </div>
   <button class="hamburger" onclick={toggleDrawer} aria-label="Menu">
@@ -50,7 +50,7 @@
       </div>
       <div class="drawer-links">
         <Link to="/research" class="drawer-link" onclick={closeDrawer}>Research</Link>
-        <Link to="/protocols" class="drawer-link" onclick={closeDrawer}>Explore</Link>
+        <Link to="/protocols" class="drawer-link" onclick={closeDrawer}>Explore Protocols</Link>
         <Link to="/dashboard" class="drawer-link" onclick={closeDrawer}>Dashboard</Link>
       </div>
     </div>
@@ -65,20 +65,23 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 12px 32px;
-    border-bottom: 1px solid var(--border);
-    background: var(--surface);
+    padding: 14px 32px;
+    border-bottom: 1px solid var(--border-light);
+    background: rgba(250, 250, 249, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
   }
   :global(.logo) {
-    font-family: var(--mono);
+    font-family: var(--display);
     font-size: 22px;
     font-weight: 700;
     color: var(--accent);
     text-decoration: none;
     letter-spacing: -0.5px;
+    transition: opacity 0.2s;
   }
   :global(.logo:hover) {
-    opacity: 0.85;
+    opacity: 0.8;
   }
   .back-logo {
     display: inline-flex;
@@ -91,48 +94,58 @@
     color: var(--text);
     width: 36px;
     height: 36px;
-    border-radius: 8px;
+    border-radius: var(--radius-sm);
     transition: background 0.2s;
   }
   .back-logo:hover {
-    background: var(--surface);
+    background: var(--surface-hover);
   }
   .back-logo .material-symbols-outlined {
-    font-size: 24px;
+    font-size: 22px;
   }
   .desktop-links {
     display: flex;
-    gap: 24px;
+    gap: 6px;
   }
   :global(.nav-link) {
-    color: var(--text);
+    color: var(--text-secondary);
     text-decoration: none;
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 500;
-    transition: color 0.2s;
+    padding: 6px 14px;
+    border-radius: var(--radius-sm);
+    transition: color 0.2s, background 0.2s;
   }
   :global(.nav-link:hover) {
-    opacity: 0.7;
+    color: var(--text);
+    background: var(--surface-hover);
   }
   :global(.nav-link.active) {
     color: var(--accent);
+    background: var(--accent-bg);
   }
   .hamburger {
     display: none;
     background: none;
-    border: none;
+    border: 1px solid var(--border);
     color: var(--text);
     cursor: pointer;
-    padding: 4px;
+    padding: 6px;
+    border-radius: var(--radius-sm);
+    transition: background 0.2s;
+  }
+  .hamburger:hover {
+    background: var(--surface-hover);
   }
   .hamburger .material-symbols-outlined {
-    font-size: 28px;
+    font-size: 22px;
   }
 
   .drawer-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.4);
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(4px);
     z-index: 200;
   }
   .drawer {
@@ -141,7 +154,7 @@
     background: var(--bg);
     display: flex;
     flex-direction: column;
-    padding: 20px 32px;
+    padding: 24px 32px;
     z-index: 201;
   }
   .drawer-header {
@@ -151,7 +164,7 @@
     margin-bottom: 48px;
   }
   .drawer-logo {
-    font-family: var(--mono);
+    font-family: var(--display);
     font-size: 22px;
     font-weight: 700;
     color: var(--accent);
@@ -159,34 +172,43 @@
   }
   .close-btn {
     background: none;
-    border: none;
+    border: 1px solid var(--border);
     color: var(--text);
     cursor: pointer;
-    padding: 4px;
+    padding: 6px;
+    border-radius: var(--radius-sm);
+    transition: background 0.2s;
+  }
+  .close-btn:hover {
+    background: var(--surface-hover);
   }
   .close-btn .material-symbols-outlined {
-    font-size: 28px;
+    font-size: 22px;
   }
   .drawer-links {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 4px;
   }
   :global(.drawer-link) {
     display: block;
-    padding: 16px 0;
-    font-size: 20px;
+    padding: 16px 12px;
+    font-size: 18px;
     font-weight: 500;
     color: var(--text);
     text-decoration: none;
-    border-bottom: 1px solid var(--border);
-    transition: color 0.2s;
+    border-radius: var(--radius-md);
+    transition: background 0.2s, color 0.2s;
   }
   :global(.drawer-link:hover) {
+    background: var(--surface-hover);
     color: var(--accent);
   }
 
   @media (max-width: 768px) {
+    .navbar {
+      padding: 12px 20px;
+    }
     .desktop-links {
       display: none;
     }
