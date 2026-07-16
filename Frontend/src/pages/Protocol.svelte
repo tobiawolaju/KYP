@@ -5,6 +5,7 @@
   import { protocols } from "../data/dummyData.js";
   import { favorites } from "../data/dummyData.js";
   import { VERIFY_WINDOW_HOURS } from "../lib/constants.js";
+  import ScoreBadge from "../lib/ScoreBadge.svelte";
 
   let location = useLocation();
   let id = $derived(location.pathname.split("/").pop());
@@ -28,8 +29,6 @@
     if (score >= 11) return { label: "High risk", color: "color-mix(in srgb, var(--rose), var(--amber) 50%)" };
     return { label: "Rug potential", color: "var(--rose)" };
   }
-
-  let tier = $derived(tierFromScore(protocol?.score ?? 0));
 
   function handleCommit() {
     if (!wallet.authenticated) {
@@ -68,18 +67,7 @@
           {/if}
           <h1 class="protocol-name">{protocol.name}</h1>
         </div>
-        <div class="shield" style="--shield-color: {tier.color};">
-          <svg viewBox="0 0 120 140" class="shield-svg">
-            <path d="M60 2 L116 34 L116 78 C116 108 90 128 60 138 C30 128 4 108 4 78 L4 34 Z" class="shield-border-outer" />
-            <path d="M60 8 L112 38 L112 78 C112 106 88 126 60 136 C32 126 8 106 8 78 L8 38 Z" class="shield-bg" />
-            <path d="M60 8 L112 38 L112 78 C112 106 88 126 60 136 C32 126 8 106 8 78 L8 38 Z" class="shield-border" />
-          </svg>
-          <div class="shield-content">
-            <span class="shield-score">{protocol.score}</span>
-            <span class="shield-max">/50</span>
-            <span class="shield-label">{tier.label}</span>
-          </div>
-        </div>
+        <ScoreBadge score={protocol.score} />
       </div>
       <div class="header-meta">
         <span class="network-badge">{protocol.network}</span>
@@ -281,69 +269,6 @@
     color: var(--text);
     line-height: 1.1;
   }
-  .shield {
-    position: relative;
-    width: 104px;
-    height: 124px;
-    flex-shrink: 0;
-    transform: rotate(-6deg);
-    margin-top: 4px;
-  }
-  .shield-svg {
-    width: 100%;
-    height: 100%;
-    display: block;
-  }
-  .shield-bg {
-    fill: color-mix(in srgb, var(--shield-color) 14%, transparent);
-  }
-  .shield-border {
-    fill: none;
-    stroke: var(--shield-color);
-    stroke-width: 3;
-  }
-  .shield-border-outer {
-    fill: none;
-    stroke: var(--shield-color);
-    stroke-width: 2;
-    opacity: 0.4;
-  }
-  .shield-content {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 2px;
-    padding-top: 4px;
-  }
-  .shield-score {
-    font-size: 32px;
-    font-weight: 700;
-    font-family: var(--mono);
-    color: var(--shield-color);
-    line-height: 1;
-  }
-  .shield-max {
-    font-size: 14px;
-    color: var(--text-muted);
-    font-family: var(--mono);
-    line-height: 1;
-  }
-  .shield-label {
-    font-size: 10px;
-    font-weight: 700;
-    color: #fff;
-    background: var(--shield-color);
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    line-height: 1;
-    padding: 2px 6px;
-    border-radius: 3px;
-    margin-top: 4px;
-  }
-
   .header-meta {
     display: flex;
     gap: 8px;

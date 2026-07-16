@@ -2,19 +2,10 @@
   import { navigate } from "../lib/router.svelte.js";
   import Link from "../lib/Link.svelte";
   import { protocols } from "../data/dummyData.js";
+  import ScoreBadge from "../lib/ScoreBadge.svelte";
   let searchQuery = $state("");
 
   const potd = protocols.find((p) => p.id === "p3");
-
-  let potdTier = $derived(tierFromScore(potd?.score ?? 0));
-
-  function tierFromScore(score) {
-    if (score >= 41) return { label: "Secured", color: "var(--accent)" };
-    if (score >= 31) return { label: "Solid", color: "var(--accent)" };
-    if (score >= 21) return { label: "Caution", color: "var(--amber)" };
-    if (score >= 11) return { label: "High risk", color: "color-mix(in srgb, var(--rose), var(--amber) 50%)" };
-    return { label: "Rug potential", color: "var(--rose)" };
-  }
 
   function handleSearch(query) {
     const q = query.trim().toLowerCase();
@@ -35,15 +26,7 @@
     if (e.key === "Enter") handleTopSearch();
   }
 
-  function scoreColor(score) {
-    if (score >= 40) return "var(--accent)";
-    if (score >= 30) return "var(--amber)";
-    return "var(--rose)";
-  }
 
-  function formatScore(score) {
-    return score + "/50";
-  }
 
   let howGrid = $state(null);
   let currentStep = $state(1);
@@ -120,18 +103,7 @@
           <img src={potd.image} alt={potd.name} class="potd-logo" />
         {/if}
         <h3 class="protocol-name">{potd.name}</h3>
-        <div class="shield" style="--shield-color: {potdTier.color};">
-          <svg viewBox="0 0 120 140" class="shield-svg">
-            <path d="M60 2 L116 34 L116 78 C116 108 90 128 60 138 C30 128 4 108 4 78 L4 34 Z" class="shield-border-outer" />
-            <path d="M60 8 L112 38 L112 78 C112 106 88 126 60 136 C32 126 8 106 8 78 L8 38 Z" class="shield-bg" />
-            <path d="M60 8 L112 38 L112 78 C112 106 88 126 60 136 C32 126 8 106 8 78 L8 38 Z" class="shield-border" />
-          </svg>
-          <div class="shield-content">
-            <span class="shield-score">{potd.score}</span>
-            <span class="shield-max">/50</span>
-            <span class="shield-label">{potdTier.label}</span>
-          </div>
-        </div>
+        <ScoreBadge score={potd.score} size="md" />
       </div>
 
       <div class="potd-body">
@@ -445,68 +417,6 @@
     margin: 0;
     color: var(--text);
     line-height: 1.2;
-  }
-  .shield {
-    position: relative;
-    width: 78px;
-    height: 93px;
-    flex-shrink: 0;
-    transform: rotate(-6deg);
-    margin-top: 2px;
-  }
-  .shield-svg {
-    width: 100%;
-    height: 100%;
-    display: block;
-  }
-  .shield-bg {
-    fill: color-mix(in srgb, var(--shield-color) 14%, transparent);
-  }
-  .shield-border {
-    fill: none;
-    stroke: var(--shield-color);
-    stroke-width: 3;
-  }
-  .shield-border-outer {
-    fill: none;
-    stroke: var(--shield-color);
-    stroke-width: 2;
-    opacity: 0.4;
-  }
-  .shield-content {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 1px;
-    padding-top: 2px;
-  }
-  .shield-score {
-    font-size: 24px;
-    font-weight: 700;
-    font-family: var(--mono);
-    color: var(--shield-color);
-    line-height: 1;
-  }
-  .shield-max {
-    font-size: 11px;
-    color: var(--text-muted);
-    font-family: var(--mono);
-    line-height: 1;
-  }
-  .shield-label {
-    font-size: 8px;
-    font-weight: 700;
-    color: #fff;
-    background: var(--shield-color);
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    line-height: 1;
-    padding: 2px 5px;
-    border-radius: 3px;
-    margin-top: 2px;
   }
   .potd-body {
     display: flex;

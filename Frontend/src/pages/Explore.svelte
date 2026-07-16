@@ -1,6 +1,7 @@
 <script>
   import Link from "../lib/Link.svelte";
   import { protocols } from "../data/dummyData.js";
+  import ScoreBadge from "../lib/ScoreBadge.svelte";
 
   let categories = $derived([...new Set(protocols.map((p) => p.category))]);
   let networks = $derived([...new Set(protocols.map((p) => p.network))]);
@@ -18,15 +19,7 @@
     })
   );
 
-  function scoreColor(score) {
-    if (score >= 40) return "var(--accent)";
-    if (score >= 30) return "var(--amber)";
-    return "var(--rose)";
-  }
 
-  function formatScore(score) {
-    return score + "/50";
-  }
 </script>
 
 <div class="explore-page">
@@ -76,9 +69,7 @@
             <h3 class="card-name">{protocol.name}</h3>
             <span class="card-category">{protocol.category}</span>
           </div>
-          <span class="card-score" style="color: {scoreColor(protocol.score)}">
-            {formatScore(protocol.score)}
-          </span>
+          <ScoreBadge score={protocol.score} size="sm" />
         </div>
         <p class="card-summary">{protocol.summary}</p>
         <div class="card-footer">
