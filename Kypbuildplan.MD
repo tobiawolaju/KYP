@@ -41,29 +41,35 @@ Contract drafted: [`KYPCommitment.sol`](./KYPCommitment.sol). Test suite drafted
 
 All contract work done: written, tested (20/20 including demo twin), deployed, verified on explorer, exercised live on testnet (stake, verify, and slash all confirmed with real tx hashes), and pushed to a public GitHub repo with clean commit history.
 
-## Phase 2 — Backend (tonight/tomorrow AM)
+## Phase 2 — Backend (in progress)
 
 - [ ] Set up Node.js server skeleton on Render
 - [ ] Build `/research` endpoint: takes a link/handle, returns structured profile (name, description, score, use cases, risks) — start with a single well-crafted prompt to an LLM with web access rather than multiple chained agents
 - [ ] Build `/commit` endpoint: writes commitment record, triggers/records the onchain stake tx
 - [ ] Build `/verify` endpoint: reads onchain activity for a wallet + protocol pair, updates commitment status
+- [ ] **Build scheduled auto-resolution script**: periodic job (Render Cron Job, or an external scheduler hitting a `/resolve-due-commitments` endpoint) that scans all `active` commitments, checks each via RPC, and calls `verify()` or `slash()` on the ones that are due — no manual button click required, resolves automatically the moment a deadline passes or engagement is detected. Confirm Render plan supports Cron Jobs before committing to that path; fall back to an external trigger (cron-job.org / GitHub Actions scheduled workflow) if not.
 - [ ] Add basic error handling (bad link, LLM failure, RPC failure) — no unhandled crashes during a live demo
 
-## Phase 3 — Frontend UI Design (tomorrow)
+## Phase 3 & 4 — Frontend (well ahead of plan, built on dummy data)
 
-- [ ] Pick a visual identity — NOT default Tailwind/shadcn look (judging agent flags generic AI-slop UI). Pick one distinct color/type choice and commit to it everywhere.
-- [ ] Design Screen 1: research input (paste box) → profile card output (score, use cases, risks, "who this is for")
-- [ ] Design Screen 2: action steps + commit button + stake amount input
-- [ ] Design Screen 3: dashboard — list of commitments with live status (active / verified / slashed)
-- [ ] Make sure everything fits in viewport, no dead space, no obvious template scaffolding left in
+Stack note: frontend is Svelte + Vite (not React as originally assumed) — routing, structure, and all prompts adjusted accordingly.
 
-## Phase 4 — Frontend Build
+Visual identity locked: Monad-brand-inspired white theme (`#6E54FF` primary purple, `#DDD7FE` light fill, `#85E6FF`/`#B9E3F9`/`#FF8EE4`/`#FFAE45` secondary accents, red/rose for slashed state), Britti Sans/Inter/Roboto Mono typography, Privy for wallet auth (wallet-only, embedded wallets disabled).
 
-- [ ] Scaffold React app, deploy skeleton to Vercel early (get the empty shell live first — avoids last-minute deploy surprises)
-- [ ] Build research input + profile view, wire to `/research`
-- [ ] Build commit flow, wire to `/commit` + wallet connect (wagmi/viem or similar) + contract stake call
-- [ ] Build dashboard, wire to `/verify` + commitment list endpoint
-- [ ] Wallet connect flow (Monad Testnet, testnet MON from faucet for demo wallet)
+- [x] Visual identity picked and applied consistently (not default Tailwind/shadcn look)
+- [x] Routing set up: `/`, `/protocol/:id`, `/protocols` (explore), `/dashboard`, `/dashboard/commit/:id`
+- [x] Dummy data file with 8 protocols, commitments, favorites, activity events
+- [x] Home — hero + featured protocols grid
+- [x] Protocol page — score shield (5-tier: Rug potential/High risk/Caution/Solid/Secured), who it's for / who it's NOT for, risks, verification badge, age fact, team section, use cases, links, favorite toggle, similar protocols with tier tags, commit modal
+- [x] Explore (`/protocols`) — filter by network, category, score range (TVL filter deliberately excluded — no real data source yet)
+- [x] Dashboard — wallet address, total staked, streak calculation, aggregate GitHub-style activity grid (merged across protocols), per-protocol commit graphs (real timeline with empty-day cells, not floating dots), FAB for "+ Research new protocol", wallet disconnect
+- [x] Commit Detail page — expanded commit graph + activity list + stake balance
+- [x] CommitGraph component — reusable, mini/expanded sizes, cyan/red/muted day-cell timeline logic
+- [x] Static "Testnet" network badge (no live mainnet toggle — correctly scoped, `network` field ready for future use)
+- [x] Commit/stake modal copy updated: fixed 72h period stated explicitly, auto-resolution explained (no manual verify button implied)
+- [ ] Wire real wallet connect via Privy end-to-end (currently scaffolded — confirm live connect/disconnect works, not just UI states)
+- [ ] Replace dummy data reads with real backend calls once Phase 2 endpoints are live (`/research`, `/commit`, `/verify`)
+- [ ] Wire real contract calls for `stake()` from the commit modal (currently navigates to dashboard without a real tx)
 
 ## Phase 5 — Integration + End-to-End Test
 
