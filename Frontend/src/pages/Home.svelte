@@ -56,6 +56,7 @@
   }
 </script>
 
+<div class="home-page">
 <section class="hero-section">
   <h1 class="hero-title">
     Know Your<br /><span class="accent-text">Protocol</span>
@@ -115,6 +116,9 @@
   {#if potd}
     <div class="potd-card">
       <div class="potd-header">
+        {#if potd.image}
+          <img src={potd.image} alt={potd.name} class="potd-logo" />
+        {/if}
         <h3 class="protocol-name">{potd.name}</h3>
         <div class="shield" style="--shield-color: {potdTier.color};">
           <svg viewBox="0 0 120 140" class="shield-svg">
@@ -154,6 +158,8 @@
   {/if}
 </section>
 
+</div>
+
 <div class="floating-search">
   <div class="search-bar">
     <input
@@ -173,6 +179,12 @@
 </div>
 
 <style>
+  .home-page {
+    min-height: calc(100vh - 53px);
+    background: linear-gradient(to bottom, var(--bg) 0%, var(--bg) 75%, var(--accent) 75%, var(--accent) 100%);
+    padding-bottom: 100px;
+    margin-bottom: -100px;
+  }
   .hero-section {
     position: relative;
     padding: 64px 32px 48px;
@@ -416,9 +428,16 @@
   .potd-header {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
+    align-items: center;
     gap: 16px;
     margin-bottom: 20px;
+  }
+  .potd-logo {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    object-fit: cover;
+    flex-shrink: 0;
   }
   .protocol-name {
     font-size: 28px;

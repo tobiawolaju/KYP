@@ -1,6 +1,7 @@
 export const protocols = [
   {
     id: "p1",
+    image: "/img.png",
     name: "AetherSwap",
     chain: "monad",
     network: "testnet",
@@ -26,6 +27,7 @@ export const protocols = [
   },
   {
     id: "p2",
+    image: "/img.png",
     name: "MonadLend",
     chain: "monad",
     network: "testnet",
@@ -51,6 +53,7 @@ export const protocols = [
   },
   {
     id: "p3",
+    image: "/img.png",
     name: "Nexus Perps",
     chain: "monad",
     network: "testnet",
@@ -76,6 +79,7 @@ export const protocols = [
   },
   {
     id: "p4",
+    image: "/img.png",
     name: "Leaf Gardens",
     chain: "monad",
     network: "testnet",
@@ -101,6 +105,7 @@ export const protocols = [
   },
   {
     id: "p5",
+    image: "/img.png",
     name: "BaseBridge",
     chain: "monad",
     network: "testnet",
@@ -126,6 +131,7 @@ export const protocols = [
   },
   {
     id: "p6",
+    image: "/img.png",
     name: "Hive DAO",
     chain: "monad",
     network: "testnet",
@@ -151,6 +157,7 @@ export const protocols = [
   },
   {
     id: "p7",
+    image: "/img.png",
     name: "Prism Money",
     chain: "monad",
     network: "testnet",
@@ -176,6 +183,7 @@ export const protocols = [
   },
   {
     id: "p8",
+    image: "/img.png",
     name: "Orbit Zero",
     chain: "monad",
     network: "testnet",

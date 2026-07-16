@@ -50,6 +50,9 @@
     <Link to="/dashboard" class="back-link">← Dashboard</Link>
 
     <div class="detail-header">
+      {#if protocol.image}
+        <img src={protocol.image} alt={protocol.name} class="detail-logo" />
+      {/if}
       <h1 class="detail-title">{protocol.name}</h1>
       <span class="detail-status" style="color: {statusColor(commitment.status)}">
         {commitment.status}
@@ -141,6 +144,13 @@
     align-items: center;
     margin-bottom: 24px;
     gap: 12px;
+  }
+  .detail-logo {
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    object-fit: cover;
+    flex-shrink: 0;
   }
   .detail-title {
     font-size: 28px;

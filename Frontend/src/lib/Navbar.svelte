@@ -30,7 +30,7 @@
     <Link to="/" class="logo">KYP</Link>
   {/if}
   <div class="desktop-links">
-    <Link to="/" class="nav-link">Research</Link>
+    <Link to="/research" class="nav-link">Research</Link>
     <Link to="/protocols" class="nav-link">Explore</Link>
     <Link to="/dashboard" class="nav-link">Dashboard</Link>
   </div>
@@ -49,7 +49,7 @@
         </button>
       </div>
       <div class="drawer-links">
-        <Link to="/" class="drawer-link" onclick={closeDrawer}>Research</Link>
+        <Link to="/research" class="drawer-link" onclick={closeDrawer}>Research</Link>
         <Link to="/protocols" class="drawer-link" onclick={closeDrawer}>Explore</Link>
         <Link to="/dashboard" class="drawer-link" onclick={closeDrawer}>Dashboard</Link>
       </div>

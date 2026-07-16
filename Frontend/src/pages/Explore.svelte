@@ -70,6 +70,9 @@
       <Link to={`/protocol/${protocol.id}`} class="protocol-card">
         <div class="card-top">
           <div class="card-titles">
+            {#if protocol.image}
+              <img src={protocol.image} alt={protocol.name} class="card-logo" />
+            {/if}
             <h3 class="card-name">{protocol.name}</h3>
             <span class="card-category">{protocol.category}</span>
           </div>
@@ -193,8 +196,16 @@
   }
   .card-titles {
     display: flex;
-    flex-direction: column;
-    gap: 2px;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+  .card-logo {
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    object-fit: cover;
+    flex-shrink: 0;
   }
   .card-name {
     font-size: 17px;

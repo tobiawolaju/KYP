@@ -25,7 +25,7 @@
 <main class="main-content">
   {#if path === "/"}
     <Home />
-  {:else if path === "/Research"}
+  {:else if path === "/research"}
     <Research />
   {:else if path === "/protocols"}
     <Explore />
@@ -46,6 +46,6 @@
   }
   .app-footer {
     height: 100px;
-    background: var(--bg);
+    background: transparent;
   }
 </style>

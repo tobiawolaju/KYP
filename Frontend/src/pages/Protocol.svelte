@@ -63,6 +63,9 @@
     <div class="profile-header">
       <div class="header-top">
         <div class="name-shield-row">
+          {#if protocol.image}
+            <img src={protocol.image} alt={protocol.name} class="protocol-logo" />
+          {/if}
           <h1 class="protocol-name">{protocol.name}</h1>
         </div>
         <div class="shield" style="--shield-color: {tier.color};">
@@ -260,6 +263,16 @@
   .name-shield-row {
     flex: 1;
     min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .protocol-logo {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    object-fit: cover;
+    flex-shrink: 0;
   }
   .protocol-name {
     font-size: 42px;

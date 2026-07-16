@@ -244,10 +244,15 @@
           <div class="fav-card">
             <div class="fav-card-top">
               <div class="fav-info">
-                <Link to={`/protocol/${entry.protocol_id}`} class="fav-name">
-                  {entry.protocol?.name ?? "Unknown Protocol"}
-                </Link>
-                <span class="fav-date">Favorited {formatTimestamp(entry.favorited_at)}</span>
+                {#if entry.protocol?.image}
+                  <img src={entry.protocol.image} alt={entry.protocol.name} class="fav-logo" />
+                {/if}
+                <div class="fav-text">
+                  <Link to={`/protocol/${entry.protocol_id}`} class="fav-name">
+                    {entry.protocol?.name ?? "Unknown Protocol"}
+                  </Link>
+                  <span class="fav-date">Favorited {formatTimestamp(entry.favorited_at)}</span>
+                </div>
               </div>
               {#if entry.auto_favorited}
                 <span class="auto-badge">auto</span>
@@ -471,8 +476,21 @@
   }
   .fav-info {
     display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .fav-logo {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+  .fav-text {
+    display: flex;
     flex-direction: column;
     gap: 2px;
+    min-width: 0;
   }
   :global(.fav-name) {
     font-size: 17px;
