@@ -52,13 +52,6 @@
 
 {#if protocol}
   <div class="protocol-page">
-    <div class="sticky-bar">
-      <button class="fav-btn" onclick={toggleFavorite} title={isFavorited ? "Remove from Favourites" : "Add to Favourite"}>
-        <span class="fav-star">{isFavorited ? "★" : "☆"}</span>
-        <span class="fav-text">{isFavorited ? "Favourite" : "Add to Favourite"}</span>
-      </button>
-    </div>
-
     <div class="profile-header">
       <div class="header-top">
         <div class="name-shield-row">
@@ -180,11 +173,6 @@
           {/if}
         </div>
       </div>
-
-      <button class="commit-btn" onclick={handleCommit}>
-        <span class="material-symbols-outlined">lock</span>
-        Commit & Stake
-      </button>
     </div>
 
     <section class="similar-section">
@@ -201,6 +189,15 @@
         {/each}
       </div>
     </section>
+  </div>
+
+  <div class="floating-bar">
+    <button class="fav-btn" onclick={toggleFavorite}>
+      {isFavorited ? "★ Favourite" : "☆ Add to Favourite"}
+    </button>
+    <button class="commit-btn" onclick={handleCommit}>
+      Commit
+    </button>
   </div>
 
   {#if showStakeModal}
@@ -246,44 +243,46 @@
   .protocol-page {
     max-width: 720px;
     margin: 0 auto;
-    padding: 32px 24px 64px;
+    padding: 32px 24px 120px;
   }
-  .sticky-bar {
+  .floating-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100vw;
+    display: flex;
+    z-index: 50;
+  }
+  .floating-bar .fav-btn {
+    flex: 1;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 16px 0;
-    margin-bottom: 20px;
-    background: var(--bg);
-    border-bottom: 1px solid var(--border-light);
-  }
-  .fav-btn {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    background: none;
+    padding: 0;
+    height: 20vw;
+    background: var(--surface);
     border: none;
-    padding: 8px 20px;
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--text-secondary);
+    border-right: 1px solid var(--border);
+    font-size: 16px;
+    font-weight: 600;
+    color: #000;
     cursor: pointer;
-    font-family: inherit;
-    border-radius: var(--radius-md);
-    transition: background 0.2s, color 0.2s;
+    font-family: var(--sans);
   }
-  .fav-btn:hover {
-    background: var(--surface-hover);
-    color: var(--text);
-  }
-  .fav-text {
-    line-height: 22px;
-  }
-  .fav-star {
-    font-size: 55px;
-    color: var(--amber);
-    line-height: 1;
+  .floating-bar .commit-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    height: 20vw;
+    background: var(--accent);
+    border: none;
+    font-size: 16px;
+    font-weight: 600;
+    color: #fff;
+    cursor: pointer;
+    font-family: var(--sans);
   }
 
   .profile-header {
@@ -478,30 +477,6 @@
   }
   .link-item .material-symbols-outlined {
     font-size: 16px;
-  }
-  .commit-btn {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 14px;
-    background: var(--accent);
-    color: #fff;
-    border: none;
-    border-radius: var(--radius-full);
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: opacity 0.2s, transform 0.15s;
-    margin-top: 8px;
-  }
-  .commit-btn:hover {
-    opacity: 0.9;
-    transform: translateY(-1px);
-  }
-  .commit-btn .material-symbols-outlined {
-    font-size: 20px;
   }
 
   .similar-section {
@@ -706,5 +681,11 @@
   }
   :global(.back-link:hover) {
     opacity: 0.8;
+  }
+  @media (min-width: 641px) {
+    .floating-bar .fav-btn,
+    .floating-bar .commit-btn {
+      height: 5vw;
+    }
   }
 </style>

@@ -11,16 +11,9 @@
 
   let location = useLocation();
   let path = $derived(location.pathname);
-  let needsWallet = $derived(
-    path.startsWith("/protocol/") ||
-    path === "/myprotocols" ||
-    path.startsWith("/myprotocols/commit/")
-  );
 </script>
 
-{#if needsWallet}
-  <PrivyHost />
-{/if}
+<PrivyHost />
 <Navbar />
 <main class="main-content">
   {#if path === "/"}

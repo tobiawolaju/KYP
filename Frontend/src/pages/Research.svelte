@@ -51,10 +51,9 @@
     align-items: center;
     justify-content: center;
     min-height: calc(100vh - 200px);
-    padding: 32px;
+    padding: 0;
   }
   .research-inner {
-    max-width: 480px;
     width: 100%;
     text-align: center;
   }
@@ -91,11 +90,11 @@
     border: none;
     border-radius: 0;
     padding: 0 0 0 14px;
-    box-shadow: var(--shadow-lg);
+    box-shadow: none;
     transition: border-color 0.2s, box-shadow 0.2s;
   }
   .search-bar:focus-within {
-    box-shadow: var(--shadow-lg);
+    box-shadow: none;
   }
   .search-icon {
     font-size: 20px;
