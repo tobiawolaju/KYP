@@ -88,15 +88,14 @@
     display: flex;
     align-items: center;
     background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 4px 4px 4px 14px;
-    box-shadow: var(--shadow-sm);
+    border: none;
+    border-radius: 0;
+    padding: 0 0 0 14px;
+    box-shadow: var(--shadow-lg);
     transition: border-color 0.2s, box-shadow 0.2s;
   }
   .search-bar:focus-within {
-    border-color: var(--accent);
-    box-shadow: var(--shadow-md), 0 0 0 3px rgba(124, 58, 237, 0.1);
+    box-shadow: var(--shadow-lg);
   }
   .search-icon {
     font-size: 20px;
@@ -106,10 +105,12 @@
     flex: 1;
     border: none;
     background: transparent;
-    padding: 12px 8px;
-    font-size: 16px;
+    padding: 0 8px;
+    font-size: 15px;
     color: var(--text);
     outline: none;
+    height: 100%;
+    box-sizing: border-box;
   }
   .search-input::placeholder {
     color: var(--text-muted);
@@ -118,10 +119,10 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 44px;
-    height: 44px;
+    width: 20vw;
+    height: 20vw;
     border: none;
-    border-radius: var(--radius-full);
+    border-radius: 0;
     background: var(--accent);
     color: #fff;
     cursor: pointer;
@@ -133,5 +134,14 @@
   }
   .search-btn .material-symbols-outlined {
     font-size: 18px;
+  }
+  @media (min-width: 641px) {
+    .search-btn {
+      width: 5vw;
+      height: 5vw;
+    }
+    .search-bar {
+      height: 5vw;
+    }
   }
 </style>
