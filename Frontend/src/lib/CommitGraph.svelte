@@ -40,6 +40,7 @@
     });
     if (dayEvts.length === 0) return "empty";
     if (dayEvts.some((e) => e.event_type === "slash")) return "slash";
+    if (dayEvts.some((e) => e.event_type === "check_missed")) return "missed";
     return "event";
   }
 
@@ -57,6 +58,7 @@
       if (e.event_type === "stake") return "Stake";
       if (e.event_type === "verify") return "Verify";
       if (e.event_type === "slash") return "Slash";
+      if (e.event_type === "check_missed") return "Missed Check";
       return e.event_type;
     });
     return ds + " — " + [...new Set(labels)].join(", ");
@@ -115,6 +117,9 @@
   }
   .square.slash {
     background: var(--rose);
+  }
+  .square.missed {
+    background: var(--amber);
   }
   .square.empty {
     background: var(--border);

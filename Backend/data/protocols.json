@@ -1,0 +1,450 @@
+[
+  {
+    "id": "p1",
+    "name": "AetherSwap",
+    "image": "/img.png",
+    "chain": "monad",
+    "network": "testnet",
+    "category": "DeFi",
+    "links": {
+      "project": "https://aetherswap.xyz",
+      "twitter": "https://x.com/aetherswap",
+      "discord": "https://discord.gg/aetherswap",
+      "github": "https://github.com/aetherswap/core"
+    },
+    "contract_address": "0x7a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d",
+    "contract_verified": true,
+    "score": 42,
+    "score_max": 50,
+    "who_its_for": "DeFi traders looking for low-slippage swaps on Monad testnet.",
+    "who_its_not_for": "Users who need multi-chain support or fiat on-ramps.",
+    "use_cases": ["Token swapping", "Liquidity provision", "Yield farming"],
+    "risks": {
+      "contract": "Not audited by a top-tier firm — bug bounty only.",
+      "community": "Small but active Discord, ~800 members.",
+      "structural": "Novel AMM design untested at scale."
+    },
+    "forensics": {
+      "has_admin_functions": true,
+      "admin_function_notes": "Two minor admin calls post-deployment to adjust fee tier. No upgrade proxy.",
+      "deployer_wallet_age": "14 days",
+      "deployer_prior_deploys": 0,
+      "top_10_holder_concentration_pct": null
+    },
+    "funding": {
+      "has_funding_info": false,
+      "investors": [],
+      "source_note": "Self-funded. Team holds ~1.2M MON in a multisig treasury."
+    },
+    "founder_history": {
+      "prior_projects_found": true,
+      "details": "Lead dev previously built a Uniswap V3 fork on Arbitrum (TVL peaked ~$4M). Left after audit findings were disputed.",
+      "confidence_note": "Public GitHub profile with 200+ contributions"
+    },
+    "restricted_jurisdictions": ["US", "KP"],
+    "team": [
+      { "name": "0xA1b2...3c4d", "role": "Lead Developer" },
+      { "name": "anon", "role": "Smart Contract Engineer" },
+      { "name": "anon", "role": "Frontend Engineer" },
+      { "name": "anon", "role": "Community Manager" }
+    ],
+    "team_as_of": "2026-07-10",
+    "deployed_date": "2026-05-20",
+    "age_summary": "Deployed ~58 days ago",
+    "summary": "AetherSwap is a concentrated-liquidity AMM on Monad testnet, designed for capital-efficient swaps with minimal slippage.",
+    "created_at": null,
+    "created_by_wallet": null
+  },
+  {
+    "id": "p2",
+    "name": "MonadLend",
+    "image": "/img.png",
+    "chain": "monad",
+    "network": "testnet",
+    "category": "DeFi",
+    "links": {
+      "project": "https://monadlend.io",
+      "twitter": "https://x.com/monadlend",
+      "discord": null,
+      "github": "https://github.com/monadlend/protocol"
+    },
+    "contract_address": "0x8b9c0d1e2f3a4b5c6d7e8f901a2b3c4d5e6f7089",
+    "contract_verified": true,
+    "score": 38,
+    "score_max": 50,
+    "who_its_for": "Users seeking overcollateralized lending on Monad.",
+    "who_its_not_for": "Traders wanting leveraged or undercollateralized credit.",
+    "use_cases": ["Lending", "Borrowing", "Liquid staking"],
+    "risks": {
+      "contract": "Audited by SigmaPrime — medium-severity findings addressed.",
+      "community": "Growing steadily, ~3k followers on X.",
+      "structural": "Depends heavily on MON price stability for liquidation safety."
+    },
+    "forensics": {
+      "has_admin_functions": true,
+      "admin_function_notes": "All admin functions behind a 48h timelock. No suspicious transfers.",
+      "deployer_wallet_age": "2 days",
+      "deployer_prior_deploys": 1,
+      "top_10_holder_concentration_pct": 34.2
+    },
+    "funding": {
+      "has_funding_info": true,
+      "investors": ["Monad Foundation"],
+      "source_note": "Received 500k MON grant from Monad Foundation testnet incentive program."
+    },
+    "founder_history": {
+      "prior_projects_found": true,
+      "details": "Core team came from a failed lending protocol on Solana. Pivoted to Monad for lower gas.",
+      "confidence_note": "Public LinkedIn profiles available for 2 of 3 founders"
+    },
+    "restricted_jurisdictions": ["US"],
+    "team": [
+      { "name": "Jane.eth", "role": "Co-founder / Protocol Lead" },
+      { "name": "Mark.eth", "role": "Co-founder / Engineering" },
+      { "name": "anon", "role": "Smart Contract Engineer" },
+      { "name": "anon", "role": "Frontend Engineer" },
+      { "name": "anon", "role": "Risk Analyst" },
+      { "name": "anon", "role": "Community Manager" }
+    ],
+    "team_as_of": "2026-07-05",
+    "deployed_date": "2026-04-10",
+    "age_summary": "Deployed ~98 days ago",
+    "summary": "MonadLend is a lending marketplace where users can supply assets to earn yield or borrow against collateral, inspired by Aave but optimized for Monad.",
+    "created_at": null,
+    "created_by_wallet": null
+  },
+  {
+    "id": "p3",
+    "name": "Nexus Perps",
+    "image": "/img.png",
+    "chain": "monad",
+    "network": "testnet",
+    "category": "DeFi",
+    "links": {
+      "project": "https://nexusperps.xyz",
+      "twitter": "https://x.com/nexusperps",
+      "discord": "https://discord.gg/nexusperps",
+      "github": null
+    },
+    "contract_address": "0x9c0d1e2f3a4b5c6d7e8f901a2b3c4d5e6f7a8b9c0",
+    "contract_verified": true,
+    "score": 45,
+    "score_max": 50,
+    "who_its_for": "Traders who want perpetual futures on Monad.",
+    "who_its_not_for": "Casual users or those unfamiliar with leverage trading risks.",
+    "use_cases": ["Perpetual trading", "Leverage up to 20x", "Hedging"],
+    "risks": {
+      "contract": "Audited by Ackee Blockchain — critical issues found and patched.",
+      "community": "Strong community with active governance debates.",
+      "structural": "Oracle-dependent; relies on Pyth for price feeds."
+    },
+    "forensics": {
+      "has_admin_functions": false,
+      "admin_function_notes": "No upgrade proxy — immutable after final patch. Deployed via deterministic factory.",
+      "deployer_wallet_age": "1 day",
+      "deployer_prior_deploys": 3,
+      "top_10_holder_concentration_pct": 42.5
+    },
+    "funding": {
+      "has_funding_info": true,
+      "investors": ["Paradigm", "Angel investors (unnamed)"],
+      "source_note": "Raised $2.1M seed from Paradigm testnet cohort and angel investors. Treasury holds ~800k MON."
+    },
+    "founder_history": {
+      "prior_projects_found": true,
+      "details": "Founders are ex-Jump Trading quant engineers. Previously built a CEX order-book matching engine. Publicly known.",
+      "confidence_note": "Verified via public LinkedIn and conference talks"
+    },
+    "restricted_jurisdictions": ["US", "GB", "JP", "CN"],
+    "team": [
+      { "name": "Alex Park", "role": "Co-founder / CEO" },
+      { "name": "Sarah Kim", "role": "Co-founder / CTO" },
+      { "name": "anon", "role": "Smart Contract Engineer" },
+      { "name": "anon", "role": "Backend Engineer" },
+      { "name": "anon", "role": "Quant Researcher" },
+      { "name": "anon", "role": "Frontend Engineer" },
+      { "name": "anon", "role": "DevRel" },
+      { "name": "anon", "role": "Community Manager" }
+    ],
+    "team_as_of": "2026-07-14",
+    "deployed_date": "2026-03-01",
+    "age_summary": "Deployed ~138 days ago",
+    "summary": "Nexus Perps brings perpetual futures to Monad with up to 20x leverage, a fully onchain order book, and Pyth-powered oracles.",
+    "created_at": null,
+    "created_by_wallet": null
+  },
+  {
+    "id": "p4",
+    "name": "Leaf Gardens",
+    "image": "/img.png",
+    "chain": "monad",
+    "network": "testnet",
+    "category": "Gaming",
+    "links": {
+      "project": "https://leafgardens.xyz",
+      "twitter": "https://x.com/leafgardens_nft",
+      "discord": "https://discord.gg/leafgardens",
+      "github": "https://github.com/leafgardens/contracts"
+    },
+    "contract_address": "0x0d1e2f3a4b5c6d7e8f901a2b3c4d5e6f7a8b9c0d1",
+    "contract_verified": false,
+    "score": 29,
+    "score_max": 50,
+    "who_its_for": "NFT collectors and gamers building on Monad.",
+    "who_its_not_for": "Users looking for audited DeFi or stable yield.",
+    "use_cases": ["NFT minting", "Gaming", "Staking NFTs for yield"],
+    "risks": {
+      "contract": "No public audit available.",
+      "community": "Hype-driven community, ~12k X followers.",
+      "structural": "Gaming mechanics still in development — roadmap risk."
+    },
+    "forensics": {
+      "has_admin_functions": null,
+      "admin_function_notes": null,
+      "deployer_wallet_age": null,
+      "deployer_prior_deploys": null,
+      "top_10_holder_concentration_pct": null
+    },
+    "funding": {
+      "has_funding_info": false,
+      "investors": [],
+      "source_note": "No known funding. Revenue comes from 5% mint fee (~300 MON collected so far)."
+    },
+    "founder_history": {
+      "prior_projects_found": true,
+      "details": "Solo anon developer. Only prior activity is a small NFT collection on Base with ~200 minted.",
+      "confidence_note": "No doxxed identity. Handle matches across Discord and X."
+    },
+    "restricted_jurisdictions": [],
+    "team": [],
+    "team_as_of": "2026-06-20",
+    "deployed_date": "2026-06-01",
+    "age_summary": "Deployed ~46 days ago",
+    "summary": "Leaf Gardens is a gamified NFT ecosystem on Monad where players mint, stake, and battle digital flora to earn yield.",
+    "created_at": null,
+    "created_by_wallet": null
+  },
+  {
+    "id": "p5",
+    "name": "BaseBridge",
+    "image": "/img.png",
+    "chain": "monad",
+    "network": "testnet",
+    "category": "Infra",
+    "links": {
+      "project": "https://basebridge.xyz",
+      "twitter": "https://x.com/basebridge",
+      "discord": null,
+      "github": "https://github.com/basebridge/relayers"
+    },
+    "contract_address": "0x1e2f3a4b5c6d7e8f901a2b3c4d5e6f7a8b9c0d1e2f",
+    "contract_verified": true,
+    "score": 34,
+    "score_max": 50,
+    "who_its_for": "Users bridging assets between Monad testnet and other testnets.",
+    "who_its_not_for": "Users who need mainnet bridges or production-grade reliability.",
+    "use_cases": ["Cross-chain bridging", "Asset transfer", "Liquidity migration"],
+    "risks": {
+      "contract": "Audited by Code4rena — 2 high findings resolved.",
+      "community": "Moderate community, ~1.5k Discord members.",
+      "structural": "Relies on a committee of 3 validators — trust-minimized but not trustless."
+    },
+    "forensics": {
+      "has_admin_functions": true,
+      "admin_function_notes": "Emergency pause function present. Triggered once on day 3, resolved within 2h.",
+      "deployer_wallet_age": "30 days",
+      "deployer_prior_deploys": 1,
+      "top_10_holder_concentration_pct": 65.0
+    },
+    "funding": {
+      "has_funding_info": true,
+      "investors": ["Monad Foundation"],
+      "source_note": "Grant from Monad ecosystem fund (~100k MON). No VC backing."
+    },
+    "founder_history": {
+      "prior_projects_found": true,
+      "details": "Two founders previously worked at LayerZero as relayer engineers.",
+      "confidence_note": "One has a public GitHub with 4k+ contributions"
+    },
+    "restricted_jurisdictions": ["US"],
+    "team": [
+      { "name": "anon", "role": "Co-founder / Protocol Lead" },
+      { "name": "anon", "role": "Co-founder / Infrastructure" },
+      { "name": "anon", "role": "Relayer Engineer" }
+    ],
+    "team_as_of": "2026-07-12",
+    "deployed_date": "2026-05-01",
+    "age_summary": "Deployed ~77 days ago",
+    "summary": "BaseBridge is a lightweight cross-chain bridge connecting Monad testnet to Ethereum Sepolia and Arbitrum Goerli.",
+    "created_at": null,
+    "created_by_wallet": null
+  },
+  {
+    "id": "p6",
+    "name": "Hive DAO",
+    "image": "/img.png",
+    "chain": "monad",
+    "network": "testnet",
+    "category": "Infra",
+    "links": {
+      "project": "https://hivedao.xyz",
+      "twitter": "https://x.com/hivedao",
+      "discord": "https://discord.gg/hivedao",
+      "github": "https://github.com/hivedao/framework"
+    },
+    "contract_address": "0x2f3a4b5c6d7e8f901a2b3c4d5e6f7a8b9c0d1e2f3a",
+    "contract_verified": true,
+    "score": 40,
+    "score_max": 50,
+    "who_its_for": "DAO operators launching and managing communities on Monad.",
+    "who_its_not_for": "Users wanting simple token voting without governance overhead.",
+    "use_cases": ["DAO creation", "Proposal voting", "Treasury management"],
+    "risks": {
+      "contract": "Audited by Spearbit — all findings closed.",
+      "community": "Well-organized contributor base.",
+      "structural": "Novel quadratic voting mechanism may have low participation."
+    },
+    "forensics": {
+      "has_admin_functions": false,
+      "admin_function_notes": "All governance contracts are non-upgradeable. Timelock set to 72h. No admin keys found post-deployment.",
+      "deployer_wallet_age": "60 days",
+      "deployer_prior_deploys": 2,
+      "top_10_holder_concentration_pct": 31.2
+    },
+    "funding": {
+      "has_funding_info": true,
+      "investors": ["Variant Fund", "Angels (unnamed)"],
+      "source_note": "Raised $1.5M from Variant Fund and angels. Treasury holds ~600k MON + 50k USDC."
+    },
+    "founder_history": {
+      "prior_projects_found": true,
+      "details": "Founders are ex-Compound governance contributors. One previously led MakerDAO's on-chain voting migration.",
+      "confidence_note": "Verified via Compound governance forum history and public talks"
+    },
+    "restricted_jurisdictions": [],
+    "team": [
+      { "name": "Chris.eth", "role": "Co-founder / Governance Lead" },
+      { "name": "Lin.eth", "role": "Co-founder / Smart Contracts" },
+      { "name": "anon", "role": "Frontend Engineer" },
+      { "name": "anon", "role": "Governance Researcher" },
+      { "name": "anon", "role": "DevRel" },
+      { "name": "anon", "role": "Community Manager" },
+      { "name": "anon", "role": "Technical Writer" }
+    ],
+    "team_as_of": "2026-07-15",
+    "deployed_date": "2026-02-10",
+    "age_summary": "Deployed ~158 days ago",
+    "summary": "Hive DAO is a DAO-launch toolkit on Monad with built-in quadratic voting, streaming treasuries, and onchain payroll.",
+    "created_at": null,
+    "created_by_wallet": null
+  },
+  {
+    "id": "p7",
+    "name": "Prism Money",
+    "image": "/img.png",
+    "chain": "monad",
+    "network": "testnet",
+    "category": "DeFi",
+    "links": {
+      "project": "https://prismmoney.xyz",
+      "twitter": "https://x.com/prismmoney",
+      "discord": "https://discord.gg/prismmoney",
+      "github": null
+    },
+    "contract_address": "0x3a4b5c6d7e8f901a2b3c4d5e6f7a8b9c0d1e2f3a4b",
+    "contract_verified": false,
+    "score": 31,
+    "score_max": 50,
+    "who_its_for": "Yield optimizers looking for auto-compounding strategies on Monad.",
+    "who_its_not_for": "Users who prefer manual position management or low-risk savings.",
+    "use_cases": ["Auto-compounding", "Yield aggregation", "Strategy vaults"],
+    "risks": {
+      "contract": "Unaudited — team plans audit after mainnet launch.",
+      "community": "Early stage, ~500 X followers.",
+      "structural": "Strategy vaults hold concentrated positions — high impermanent loss risk."
+    },
+    "forensics": {
+      "has_admin_functions": true,
+      "admin_function_notes": "Vault contracts use a strategy pattern with owner-callable functions. No timelock.",
+      "deployer_wallet_age": null,
+      "deployer_prior_deploys": null,
+      "top_10_holder_concentration_pct": 78.3
+    },
+    "funding": {
+      "has_funding_info": false,
+      "investors": [],
+      "source_note": "No public funding. ~50k MON deposited by early testers."
+    },
+    "founder_history": {
+      "prior_projects_found": false,
+      "details": "Solo developer. Previously built yield tools on EVM (unverified claims).",
+      "confidence_note": "No public code history prior to this project"
+    },
+    "restricted_jurisdictions": ["US", "CN"],
+    "team": [
+      { "name": "anon", "role": "Solo Developer" }
+    ],
+    "team_as_of": "2026-07-01",
+    "deployed_date": "2026-06-25",
+    "age_summary": "Deployed ~22 days ago",
+    "summary": "Prism Money is a yield aggregator that auto-compounds user deposits across Monad DeFi protocols to maximize returns.",
+    "created_at": null,
+    "created_by_wallet": null
+  },
+  {
+    "id": "p8",
+    "name": "Orbit Zero",
+    "image": "/img.png",
+    "chain": "monad",
+    "network": "testnet",
+    "category": "Infra",
+    "links": {
+      "project": "https://orbitzero.xyz",
+      "twitter": "https://x.com/orbitzero",
+      "discord": null,
+      "github": "https://github.com/orbitzero/app"
+    },
+    "contract_address": "0x4b5c6d7e8f901a2b3c4d5e6f7a8b9c0d1e2f3a4b5c",
+    "contract_verified": true,
+    "score": 27,
+    "score_max": 50,
+    "who_its_for": "Developers building zero-knowledge apps on Monad.",
+    "who_its_not_for": "End users who don't need privacy features or ZK verification.",
+    "use_cases": ["ZK proof verification", "Private transactions", "Identity management"],
+    "risks": {
+      "contract": "Experimental — no formal audit.",
+      "community": "Very early, primarily developer-focused.",
+      "structural": "ZK proving on Monad testnet is unoptimized — high gas costs."
+    },
+    "forensics": {
+      "has_admin_functions": false,
+      "admin_function_notes": "Verifier contract is immutable. One post-deployment bug fix via full redeployment.",
+      "deployer_wallet_age": "90 days",
+      "deployer_prior_deploys": 0,
+      "top_10_holder_concentration_pct": 28.7
+    },
+    "funding": {
+      "has_funding_info": true,
+      "investors": ["Ethereum Foundation"],
+      "source_note": "Received a small Ethereum Foundation privacy grant (~$50k). Treasury holds ~150k MON."
+    },
+    "founder_history": {
+      "prior_projects_found": true,
+      "details": "Lead dev is a PhD candidate in cryptography at ETH Zurich. Has published 3 papers on zk-SNARKs.",
+      "confidence_note": "Public Google Scholar profile and ETH Zurich faculty page"
+    },
+    "restricted_jurisdictions": [],
+    "team": [
+      { "name": "Dr. K. Meier", "role": "Lead / Cryptography" },
+      { "name": "anon", "role": "ZK Engineer" },
+      { "name": "anon", "role": "Frontend Engineer" },
+      { "name": "anon", "role": "Research Assistant" }
+    ],
+    "team_as_of": "2026-07-08",
+    "deployed_date": "2026-05-15",
+    "age_summary": "Deployed ~63 days ago",
+    "summary": "Orbit Zero is a zero-knowledge proof verification layer on Monad, enabling private transactions and identity solutions.",
+    "created_at": null,
+    "created_by_wallet": null
+  }
+]

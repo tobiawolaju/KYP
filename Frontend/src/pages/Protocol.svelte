@@ -2,24 +2,59 @@
   import { useLocation } from "../lib/router.svelte.js";
   import Link from "../lib/Link.svelte";
   import { getWallet } from "../lib/wallet.svelte.js";
-  import { protocols } from "../data/dummyData.js";
-  import { favorites } from "../data/dummyData.js";
   import { VERIFY_WINDOW_HOURS } from "../lib/constants.js";
+  import { getProtocol, getProtocols, getFavorites, toggleFavorite as apiToggleFavorite, commitProtocol } from "../lib/api.js";
   import ScoreBadge from "../lib/ScoreBadge.svelte";
+
+  const KYP_CONTRACT = import.meta.env.VITE_KYP_CONTRACT_ADDRESS || "0x325215e272e0f5efb33d697c356a5ccbfaf6ecaf";
+  const STAKE_ABI = ["function stake(address protocolAddress) payable returns (uint256)"];
 
   let location = useLocation();
   let id = $derived(location.pathname.split("/").pop());
-  let protocol = $derived(protocols.find((p) => p.id === id));
-  let similar = $derived(protocols.filter((p) => p.id !== protocol?.id).slice(0, 3));
+
+  let protocol = $state(null);
+  let allProtocols = $state([]);
   let isFavorited = $state(false);
   let showStakeModal = $state(false);
   let stakeAmount = $state("0.01");
   let wallet = getWallet();
   let stakeConfirmed = $state(false);
+  let stakeLoading = $state(false);
+  let stakeError = $state("");
   let deadlineTimestamp = $state("");
 
-  function toggleFavorite() {
-    isFavorited = !isFavorited;
+  let similar = $derived(allProtocols.filter((p) => p.id !== protocol?.id).slice(0, 3));
+
+  $effect(() => {
+    if (id) {
+      protocol = null;
+      getProtocol(id).then((data) => { protocol = data; }).catch(() => {});
+    }
+  });
+
+  $effect(() => {
+    getProtocols().then((data) => { allProtocols = data; }).catch(() => {});
+  });
+
+  $effect(() => {
+    if (wallet.authenticated && wallet.address && id) {
+      getFavorites(wallet.address).then((favs) => {
+        isFavorited = favs.some((f) => f.protocol_id === id);
+      }).catch(() => {});
+    }
+  });
+
+  async function toggleFavorite() {
+    if (!wallet.authenticated || !wallet.address) {
+      wallet.login?.();
+      return;
+    }
+    try {
+      const result = await apiToggleFavorite(wallet.address, id);
+      isFavorited = result.favorited;
+    } catch (err) {
+      console.error("Toggle favorite failed:", err);
+    }
   }
 
   function tierFromScore(score) {
@@ -38,15 +73,57 @@
     showStakeModal = true;
   }
 
-  function confirmCommit() {
-    let deadline = new Date(Date.now() + VERIFY_WINDOW_HOURS * 60 * 60 * 1000);
-    deadlineTimestamp = deadline.toLocaleString("en-US", {
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-    stakeConfirmed = true;
+  async function confirmCommit() {
+    stakeLoading = true;
+    stakeError = "";
+    try {
+      const ethereumProvider = await wallet.getProvider();
+      if (!ethereumProvider) throw new Error("Wallet provider not available");
+
+      const { BrowserProvider, Contract, parseEther, Interface } = await import("ethers");
+      const provider = new BrowserProvider(ethereumProvider);
+      const signer = await provider.getSigner();
+      const userAddress = await signer.getAddress();
+
+      const kyp = new Contract(KYP_CONTRACT, STAKE_ABI, signer);
+      const tx = await kyp.stake(protocol.contract_address, { value: parseEther(stakeAmount) });
+      const receipt = await tx.wait();
+
+      const iface = new Interface(["event Staked(uint256 indexed commitmentId, address indexed user, address indexed protocolAddress, uint256 amount, uint256 verifyDeadline)"]);
+      let onchainCommitmentId = null;
+      for (const log of receipt.logs) {
+        try {
+          const parsed = iface.parseLog({ topics: log.topics, data: log.data });
+          if (parsed.name === "Staked") {
+            onchainCommitmentId = Number(parsed.args.commitmentId);
+            break;
+          }
+        } catch {}
+      }
+
+      await commitProtocol({
+        user_wallet: userAddress,
+        protocol_id: protocol.id,
+        protocol_contract_address: protocol.contract_address,
+        staked_amount: parseEther(stakeAmount).toString(),
+        stake_tx_hash: receipt.hash,
+        onchain_commitment_id: onchainCommitmentId,
+      });
+
+      let deadline = new Date(Date.now() + VERIFY_WINDOW_HOURS * 60 * 60 * 1000);
+      deadlineTimestamp = deadline.toLocaleString("en-US", {
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+      stakeConfirmed = true;
+    } catch (err) {
+      console.error("Commit failed:", err);
+      stakeError = err.message || "Transaction failed";
+    } finally {
+      stakeLoading = false;
+    }
   }
 </script>
 
@@ -188,23 +265,28 @@
         {#if !stakeConfirmed}
           <div class="modal-header">
             <h3 class="modal-title">Commit to {protocol.name}</h3>
-            <p class="modal-period">{VERIFY_WINDOW_HOURS}h commitment window</p>
+            <p class="modal-period">{VERIFY_WINDOW_HOURS}h commitment window (3 checks)</p>
           </div>
-          <p class="modal-desc">Stake MON to back your intention. You have {VERIFY_WINDOW_HOURS} hours to engage onchain with this protocol. Our system automatically checks your wallet and resolves your stake when the window closes — no action needed from you. Engaged in time → your stake is returned. Didn't engage → it's forfeited.</p>
+          <p class="modal-desc">Stake MON to back your intention. We check your onchain activity every 72 hours — 3 times over 9 days. Engaged in time → your stake is returned. Miss all 3 checks → it's forfeited.</p>
           <div class="stake-input-group">
             <label for="stake-amount" class="stake-label">Stake Amount (MON)</label>
-            <input id="stake-amount" type="number" bind:value={stakeAmount} min="0.001" step="0.001" class="stake-input" />
+            <input id="stake-amount" type="number" bind:value={stakeAmount} min="0.001" step="0.001" class="stake-input" disabled={stakeLoading} />
           </div>
+          {#if stakeError}
+            <p class="stake-error">{stakeError}</p>
+          {/if}
           <div class="modal-actions">
-            <button class="modal-cancel" onclick={() => { showStakeModal = false; stakeConfirmed = false; }}>Cancel</button>
-            <button class="modal-confirm" onclick={confirmCommit}>Confirm & Stake</button>
+            <button class="modal-cancel" onclick={() => { showStakeModal = false; stakeConfirmed = false; stakeError = ""; }} disabled={stakeLoading}>Cancel</button>
+            <button class="modal-confirm" onclick={confirmCommit} disabled={stakeLoading}>
+              {stakeLoading ? "Staking..." : "Confirm & Stake"}
+            </button>
           </div>
         {:else}
           <div class="modal-success-icon">
             <span class="material-symbols-outlined">check_circle</span>
           </div>
           <h3 class="modal-title" style="text-align:center;">Stake Confirmed</h3>
-          <p class="modal-desc" style="text-align:center;">Your stake of {stakeAmount} MON has been committed to {protocol.name}.</p>
+          <p class="modal-desc" style="text-align:center;">Your stake of {stakeAmount} MON has been committed to {protocol.name}. We'll check your activity at 72h, 144h, and 216h.</p>
           <p class="modal-deadline">Resolves automatically on {deadlineTimestamp}</p>
           <div class="modal-actions" style="justify-content:center;">
             <Link to="/myprotocols" class="modal-confirm" onclick={() => { showStakeModal = false; stakeConfirmed = false; }}>View in My Protocols</Link>
@@ -243,10 +325,10 @@
     gap: 6px;
     padding: 0;
     height: 20vw;
-    background: #F3F5DB;
+    background: #fff;
     border: none;
     border-right: 1px solid var(--border);
-    font-size: 16px;
+    font-size: 11px;
     font-weight: 600;
     color: #f5c518;
     cursor: pointer;
@@ -656,6 +738,14 @@
   .modal-success-icon .material-symbols-outlined {
     font-size: 48px;
     color: var(--green);
+  }
+  .stake-error {
+    font-size: 13px;
+    color: var(--rose);
+    margin: 0 0 12px;
+    padding: 8px 12px;
+    background: var(--rose-bg);
+    border-radius: var(--radius-sm);
   }
 
   .not-found {

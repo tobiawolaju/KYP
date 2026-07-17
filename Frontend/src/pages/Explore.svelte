@@ -1,14 +1,21 @@
 <script>
   import Link from "../lib/Link.svelte";
-  import { protocols } from "../data/dummyData.js";
+  import { getProtocols } from "../lib/api.js";
 
-  let categories = $derived([...new Set(protocols.map((p) => p.category))]);
+  let allProtocols = $state([]);
+  let loading = $state(true);
+
+  $effect(() => {
+    getProtocols().then((data) => { allProtocols = data; loading = false; }).catch(() => { loading = false; });
+  });
+
+  let categories = $derived([...new Set(allProtocols.map((p) => p.category))]);
 
   let selectedCategory = $state("");
   let minScore = $state(0);
 
   let filtered = $derived(
-    protocols.filter((p) => {
+    allProtocols.filter((p) => {
       if (selectedCategory && p.category !== selectedCategory) return false;
       if (p.score < minScore) return false;
       return true;

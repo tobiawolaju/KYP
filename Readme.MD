@@ -4,58 +4,88 @@
 
 Built for the BuildAnything "Spark" hackathon on Monad.
 
-![KYP UI Flow](kyp_ui_flow.png)
-
 ---
-
-## Inspiration
-
-I'm a solo builder juggling multiple protocols, grants, and partnerships across the Monad ecosystem at once — new projects show up in my feed constantly, and my actual process for engaging with them looked like this: see a tweet, skim a site for 30 seconds, ape in or forget about it entirely. No real research, no plan, no record of whether I followed through.
-
-The problem isn't a lack of information — it's that research, intention, and action live in three completely disconnected places (a Twitter bookmark, a mental note, and whatever I actually end up doing onchain, if anything). KYP exists to close that loop for myself first, and for anyone else doing the same thing.
 
 ## The Problem
 
-Web3 engagement runs on vibes:
+DYOR is broken. You can check Google, X, YouTube — but it's easy to pick up fake or outdated information, and there's no way to know if a protocol that's safe today stays safe next month.
 
-- You hear about a protocol and have no structured way to evaluate it beyond "gut feeling + Twitter hype"
-- Even when you *do* decide to engage, there's no accountability — plans get made and quietly abandoned
-- Follow-through is entirely self-reported, which means it's basically never checked
-
-Information without action is entertainment. Intention without accountability is just a todo list you'll never open again.
+Then there's the follow-through problem: you're genuinely interested in 8–10 protocols, but you can't keep up with all of them — and you don't want a nagging app asking if you're keeping up.
 
 ## The Solution
 
-KYP is a three-layer pipeline that takes you from a raw link to verified onchain action.
+KYP runs an AI-powered background check most people don't know how to do themselves, and gives you a clear answer: is this protocol relevant to you, is it safe now, and what are the odds it stays safe?
 
-### 1. Research Layer
-Paste anything you have on a protocol — a link, an X handle, a Discord invite, whatever. An agent pulls together what it can find: team background, links, latest news, and onchain signal where available. This compiles into a single-page profile with:
-- A 0–50 score
-- Who the protocol is actually for (and who it's not for)
+Then it solves the follow-through problem too. Commit with a MON stake, and KYP checks your public wallet automatically — no forms, no check-ins, no nagging. Follow through, get your stake back. Don't, and it's forfeited. Your wallet proves it, not your word.
+
+KYP turns lurkers into stakeholders.
+
+## How It Works
+
+### 1. Research
+Paste anything you have on a protocol — a link, an X handle, a Discord invite, whatever. An AI agent runs a real background check: team background, links, latest news, onchain forensics, and community signal. This compiles into a single-page profile with:
+- A 0–50 score, broken into five tiers (Rug potential → Secured)
+- _Note: scores display as X.X/5 in the UI (e.g. 4.2) for readability — this is a deliberate scaling of the underlying 0–50 research score, not a bug._
+- Who the protocol is for — **and who it's not for**
 - Clear use cases
-- Risks flagged from what's visible onchain and structurally
+- Risks flagged from contract, community, and structural signals
+- Onchain forensics: admin/mint/pause functions, deployer wallet history, holder concentration — the kind of checks most people don't know how to run themselves
+- Current known team, protocol age, and contract verification status
 
-### 2. Action Layer
-Turns the research into concrete next steps — how to actually interact with the protocol, not just what it is (Information without action is Just Entertainment).
+### 2. Commit
+Decide to actually engage. Stake MON to back your intention — starting small, on Monad Testnet.
 
-### 3. Consistency Layer
-You decide: commit or don't. On commit, you stake a small amount of MON on Monad Testnet to back your intention. No self-reporting and no manual "verify" button — a scheduled backend job automatically checks your wallet against onchain activity as the deadline approaches and resolves your commitment the moment the window closes or engagement is detected. Real stake, real verification, no honor system.
+### 3. Verify — the 3-strike system
+Once you commit, KYP checks your **public wallet** for real onchain engagement with the protocol automatically, every 72 hours, for up to three check-ins (9 days total):
+
+- **Engage at any point** → your stake is returned immediately, no waiting out the full window
+- **Miss a check-in** → logged as a strike, no penalty yet
+- **Want to walk away early, in good standing?** You can withdraw your stake at any time, as long as you haven't missed more than one check-in
+- **Miss 3 check-ins in a row** → your stake is forfeited
+
+No self-reporting, anywhere in this loop. The check is a real RPC read against your wallet's transaction history, and the resolution — returning or forfeiting your stake — happens automatically via a scheduled backend job, not a button you have to remember to click.
 
 ## Why Onchain
 
 The stake and the verification both live onchain by necessity — the entire point is replacing "trust me, I did it" with something checkable. A self-reported todo app doesn't solve the problem; a wallet that has to prove itself does.
 
-## Design / Visual Identity
+## Design
 
-The app's colour palette and typography are inspired by Monad's official brand kit — a monochrome base with accent purple (`#6E54FF`), warm amber (`#FFAE45`), and rose (`#E24B4A`) for status signalling, paired with Inter (UI), Space Grotesk (headings), and Roboto Mono (data). No Monad logo or trademark is used.
+Visual identity — colors and typography — is inspired by Monad's official brand kit (no logo/trademark use, style reference only). Deep purple primary (`#6E54FF`) on a clean white theme, Britti Sans headlines, Inter body text, Roboto Mono for addresses, scores, and stake amounts.
 
 ## Tech Stack
 
-- **Frontend:** Svelte 5 + Vite, deployed on Vercel
-- **Backend:** Node.js, deployed on Render
-- **Research agent:** custom tooling for protocol research and profile generation
-- **Auth:** Privy (wallet-only login, embedded wallets disabled)
-- **Smart contracts:** Solidity, deployed on Monad Testnet (stake / commit / verify / slash)
+- **Frontend:** Svelte + Vite, deployed on Vercel
+- **Backend:** Node.js, deployed on Render — scheduled commitment-check worker (Render Cron Job or external trigger), Google Sheets + Apps Script for lightweight event logging
+- **Research agent:** Gemini (Google AI Studio, grounded with live web search) for protocol research and onchain forensics — chosen specifically because grounded search reduces hallucinated/fabricated results, which matters when the output is a safety assessment
+- **Auth / Wallet:** Privy — wallet-connect only, embedded wallets disabled by design (this app only works with a user's own existing wallet)
+- **Smart contracts:** Solidity, deployed on Monad Testnet
+
+## Deployed Contracts (Monad Testnet)
+
+### `KYPCommitment` — Official Submission (216h window, 3-strike model)
+- File: `Contract/src/KYPCommitment.sol`
+- Address: `0x325215e272e0f5efb33d697c356a5ccbfaf6ecaf`
+- Explorer: https://testnet.monadvision.com/address/0x325215e272e0f5efb33d697c356a5ccbfaf6ecaf
+- The current contract used in the KYP protocol. 216-hour verify window with 3-strike verification model.
+
+### `KYPCommitment` — Previous Deployment (superseded)
+- Address: `0xc5ebd0c77a1fd749bc2661e82c9682a1d53136e0`
+- Explorer: https://testnet.monadvision.com/address/0xc5ebd0c77a1fd749bc2661e82c9682a1d53136e0
+- Original deployment with 72-hour verify window. Replaced by the 216h/3-strike deployment above. Kept for transparency and audit trail.
+
+### `KYPCommitmentDemo` — Demo Only
+- File: `contract/src/KYPCommitmentDemo.sol`
+- Address: `0x98c3e4594ecfa1c45e8056932652b04cdea64e5d`
+- Explorer: https://testnet.monadvision.com/address/0x98c3e4594ecfa1c45e8056932652b04cdea64e5d
+- Identical logic to `KYPCommitment` but with a short verify window so the full check-in/slash path can be exercised live for the demo video. **Not part of the actual submission.**
+
+## Roadmap (explicitly not built for this hackathon)
+
+- Google Calendar integration for commitment reminders
+- Mainnet support (architecture already supports it — `network` is a real field, not hardcoded logic; requires real MON for gas and a fresh audit-style review before real funds are at risk)
+- KYD — reputation lookup by wallet address, for hiring/reward use cases, reusing the same onchain analysis engine
+- Multi-chain support beyond Monad
 
 ## Status
 
@@ -63,20 +93,6 @@ Built solo, in public, during the Spark hackathon window (Jul 13–19, 2026).
 
 ## Links
 
-- Live app: _[add on ship]_
+- Live app: https://knowyourprotocol.vercel.app/
 - Demo video: _[add on ship]_
-## Deployed Contracts (Monad Testnet)
-
-### `KYPCommitment` — Official Submission
-- File: `contract/src/KYPCommitment.sol`
-- Address: `0xc5ebd0c77a1fd749bc2661e82c9682a1d53136e0`
-- Explorer: https://testnet.monadvision.com/address/0xc5ebd0c77a1fd749bc2661e82c9682a1d53136e0
-- Verify window: **72 hours**
-- The real contract used in the KYP protocol. Deployed once and left untouched.
-
-### `KYPCommitmentDemo` — Demo Only
-- File: `contract/src/KYPCommitmentDemo.sol`
-- Address: `0x98c3e4594ecfa1c45e8056932652b04cdea64e5d`
-- Explorer: https://testnet.monadvision.com/address/0x98c3e4594ecfa1c45e8056932652b04cdea64e5d
-- Verify window: **5 minutes**
-- Identical logic to `KYPCommitment` but with a short verify window so the slash path can be exercised in a live demo video. **Not part of the actual submission.**
+- GitHub: https://github.com/tobiawolaju/KYP

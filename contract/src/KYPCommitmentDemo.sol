@@ -2,8 +2,9 @@
 pragma solidity ^0.8.24;
 
 /// @title KYPCommitmentDemo
-/// @notice Identical to KYPCommitment but with a 5-minute VERIFY_WINDOW for live demo purposes.
+/// @notice Identical to KYPCommitment but with a 15-minute VERIFY_WINDOW for live demo purposes.
 ///         Not part of the official submission — used only to capture slash-path footage.
+///         Backend performs 3 checks (every 5 min) before the final deadline.
 contract KYPCommitmentDemo {
     enum Status {
         Active,
@@ -23,7 +24,7 @@ contract KYPCommitmentDemo {
     address public owner;
     address public verifier;
 
-    uint256 public constant VERIFY_WINDOW = 5 minutes;
+    uint256 public constant VERIFY_WINDOW = 15 minutes;
 
     uint256 public nextCommitmentId;
     mapping(uint256 => Commitment) public commitments;

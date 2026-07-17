@@ -48,7 +48,7 @@ contract KYPCommitmentTest is Test {
         vm.prank(user);
         uint256 id = kyp.stake{value: 1 ether}(protocol);
 
-        vm.warp(block.timestamp + 73 hours);
+        vm.warp(block.timestamp + 217 hours);
 
         vm.prank(verifier);
         vm.expectRevert("deadline passed, use slash");
@@ -59,7 +59,7 @@ contract KYPCommitmentTest is Test {
         vm.prank(user);
         uint256 id = kyp.stake{value: 1 ether}(protocol);
 
-        vm.warp(block.timestamp + 73 hours);
+        vm.warp(block.timestamp + 217 hours);
 
         vm.prank(verifier);
         kyp.slash(id);
@@ -86,7 +86,7 @@ contract KYPCommitmentTest is Test {
         vm.expectRevert("not verifier");
         kyp.verify(id);
 
-        vm.warp(block.timestamp + 73 hours);
+        vm.warp(block.timestamp + 217 hours);
         vm.expectRevert("not verifier");
         kyp.slash(id);
     }
@@ -95,7 +95,7 @@ contract KYPCommitmentTest is Test {
         vm.prank(user);
         uint256 id = kyp.stake{value: 1 ether}(protocol);
 
-        vm.warp(block.timestamp + 73 hours);
+        vm.warp(block.timestamp + 217 hours);
         vm.prank(verifier);
         kyp.slash(id);
 
@@ -119,7 +119,7 @@ contract KYPCommitmentTest is Test {
     function test_NonOwnerCannotWithdraw() public {
         vm.prank(user);
         uint256 id = kyp.stake{value: 1 ether}(protocol);
-        vm.warp(block.timestamp + 73 hours);
+        vm.warp(block.timestamp + 217 hours);
         vm.prank(verifier);
         kyp.slash(id);
 

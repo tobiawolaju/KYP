@@ -2,23 +2,61 @@
   import { useLocation } from "../lib/router.svelte.js";
   import Link from "../lib/Link.svelte";
   import CommitGraph from "../lib/CommitGraph.svelte";
-  import { commitments, protocols, activityEvents } from "../data/dummyData.js";
+  import { getProtocol, fetchCommitment } from "../lib/api.js";
 
   let location = useLocation();
   let id = $derived(location.pathname.split("/").pop());
-  let commitment = $derived(commitments.find((c) => c.id === id));
-  let protocol = $derived(protocols.find((p) => p.id === commitment?.protocol_id));
-  let events = $derived(activityEvents.filter((e) => e.commitment_id === commitment?.id));
+  let commitment = $state(null);
+  let protocol = $state(null);
+  let loading = $state(true);
+  let error = $state("");
+
+  $effect(() => {
+    if (id) {
+      loading = true;
+      error = "";
+      protocol = null;
+      fetchCommitment(id)
+        .then((data) => {
+          commitment = data;
+          if (data?.protocol_id) {
+            return getProtocol(data.protocol_id);
+          }
+        })
+        .then((proto) => { if (proto) protocol = proto; })
+        .catch((err) => { error = err.message || "Failed to load commitment"; })
+        .finally(() => { loading = false; });
+    }
+  });
+
+  let events = $derived(
+    commitment ? (() => {
+      let evts = [{ commitment_id: commitment.id, event_type: "stake", timestamp: commitment.commit_timestamp }];
+      if (commitment.status === "verified") {
+        evts.push({ commitment_id: commitment.id, event_type: "verify", timestamp: commitment.verified_at || commitment.commit_timestamp });
+      } else if (commitment.status === "slashed") {
+        evts.push({ commitment_id: commitment.id, event_type: "slash", timestamp: commitment.last_check_at || commitment.commit_timestamp });
+      }
+      if (commitment.missed_count > 0) {
+        for (let i = 0; i < commitment.missed_count; i++) {
+          evts.push({ commitment_id: commitment.id, event_type: "check_missed", timestamp: commitment.last_check_at || commitment.commit_timestamp });
+        }
+      }
+      return evts;
+    })() : []
+  );
 
   function statusColor(status) {
     if (status === "verified") return "var(--blue)";
     if (status === "slashed") return "var(--rose)";
+    if (status === "withdrawn") return "var(--pink)";
     return "var(--amber)";
   }
 
   function statusBg(status) {
     if (status === "verified") return "var(--blue-bg)";
     if (status === "slashed") return "var(--rose-bg)";
+    if (status === "withdrawn") return "#FCE7F3";
     return "var(--amber-bg)";
   }
 
@@ -39,6 +77,7 @@
     if (eventType === "stake") return { label: "Stake", icon: "S", color: "var(--amber)" };
     if (eventType === "verify") return { label: "Verify", icon: "V", color: "var(--accent)" };
     if (eventType === "slash") return { label: "Slash", icon: "X", color: "var(--rose)" };
+    if (eventType === "check_missed") return { label: "Missed Check", icon: "!", color: "var(--amber)" };
     return { label: eventType, icon: "?", color: "var(--text-muted)" };
   }
 
@@ -51,13 +90,19 @@
   }
 </script>
 
-{#if commitment && protocol}
+{#if loading}
+  <div class="not-found">
+    <span class="material-symbols-outlined not-found-icon" style="animation: spin 1s linear infinite;">hourglass_top</span>
+    <h2>Loading commitment...</h2>
+  </div>
+{:else if error}
+  <div class="not-found">
+    <span class="material-symbols-outlined not-found-icon">error</span>
+    <h2>{error}</h2>
+    <Link to="/myprotocols" class="back-link">← My Protocols</Link>
+  </div>
+{:else if commitment && protocol}
   <div class="commit-detail">
-    <Link to="/myprotocols" class="back-link">
-      <span class="material-symbols-outlined">arrow_back</span>
-      My Protocols
-    </Link>
-
     <div class="detail-header">
       <div class="detail-header-left">
         {#if protocol.image}
@@ -72,6 +117,18 @@
         {commitment.status}
       </span>
     </div>
+
+    {#if commitment.status === "active" && commitment.missed_count > 0}
+      <div class="strike-section">
+        <span class="strike-label">Verification Checks:</span>
+        <div class="strike-dots">
+          {#each Array(3) as _, i}
+            <span class="strike-dot" class:missed={i < commitment.missed_count}></span>
+          {/each}
+        </div>
+        <span class="strike-count">{commitment.missed_count}/3 missed</span>
+      </div>
+    {/if}
 
     <div class="detail-meta">
       <div class="meta-item">
@@ -227,6 +284,42 @@
     border-radius: var(--radius-full);
     letter-spacing: 0.3px;
     flex-shrink: 0;
+  }
+  .strike-section {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 24px;
+    padding: 12px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+  }
+  .strike-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .strike-dots {
+    display: flex;
+    gap: 6px;
+  }
+  .strike-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--border-light);
+  }
+  .strike-dot.missed {
+    background: var(--rose);
+  }
+  .strike-count {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--rose);
+    font-weight: 600;
   }
 
   .detail-meta {

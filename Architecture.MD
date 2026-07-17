@@ -54,14 +54,18 @@
   "staked_amount": "string (wei)",
   "stake_tx_hash": "string",
   "commit_timestamp": "timestamp",
-  "verify_deadline": "timestamp (commit_timestamp + 72h)",
-  "status": "active | verified | slashed",
+  "verify_deadline": "timestamp (commit_timestamp + 216h / 9 days)",
+  "status": "active | verified | slashed | withdrawn",
   "verify_tx_hash": "string | null",
-  "verified_at": "timestamp | null"
+  "verified_at": "timestamp | null",
+  "missed_count": "number (0-3)",
+  "last_check_at": "timestamp | null"
 }
 ```
 
-Same reasoning — `network` is hardcoded `"testnet"` for the hackathon build but present as a real field, not baked into logic, so switching to mainnet later is a config change, not a rewrite.
+`verify_deadline` is now 216 hours (9 days) — the contract's `VERIFY_WINDOW`. The backend performs up to 3 verification checks at 72h intervals (check 1 at 72h, check 2 at 144h, check 3 at 216h). `missed_count` tracks how many checks failed to find onchain engagement. After 3 misses the commitment is slashed. `status` includes `"withdrawn"` for DB-only records where the user has initiated an onchain withdrawal via `POST /withdraw`.
+
+`network` is hardcoded `"testnet"` for the hackathon build but present as a real field, not baked into logic, so switching to mainnet later is a config change, not a rewrite.
 
 ### Favourites Record
 
@@ -93,16 +97,19 @@ flowchart TD
     I --> J[Wallet prompts stake tx]
     J --> K[Smart Contract:<br/>stake&#40;protocolAddress&#41;]
     K --> L[POST /commit<br/>records tx hash]
-    L --> M[(Commitment Record<br/>status: active)]
+    L --> M[(Commitment Record<br/>status: active, missed_count: 0)]
     M --> N[Dashboard: shows commitment<br/>with countdown to deadline]
-    N --> O[Scheduled job &#40;cron&#41;:<br/>scans active commitments<br/>past deadline]
+    N --> O[Scheduled job &#40;cron&#41;:<br/>scans active commitments<br/>at 72h / 144h / 216h intervals]
     O --> P{Onchain check:<br/>tx from user_wallet to<br/>protocol_contract_address<br/>after commit_timestamp?}
-    P -- Yes, before deadline --> Q[Contract: verify&#40;&#41;<br/>stake returned]
-    P -- No, deadline passed --> R[Contract: slash&#40;&#41;<br/>stake forfeited]
-    Q --> S[(status: verified)]
-    R --> T[(status: slashed)]
-    S --> N
-    T --> N
+    P -- Yes, before 216h deadline --> Q[Contract: verify&#40;&#41;<br/>stake returned]
+    P -- No, at check interval --> R[Increment missed_count<br/>Check again at next interval]
+    R --> S{missed_count == 3?}
+    S -- No --> N
+    S -- Yes --> T[Contract: slash&#40;&#41;<br/>stake forfeited]
+    Q --> U[(status: verified)]
+    T --> V[(status: slashed)]
+    U --> N
+    V --> N
 ```
 
 ---
@@ -124,22 +131,29 @@ sequenceDiagram
     F->>C: stake(protocolAddress) [payable tx]
     C-->>F: tx hash
     F->>B: POST /commit {wallet, protocol_id, tx_hash}
-    B-->>F: Commitment record created (status: active)
+    B-->>F: Commitment record created (status: active, missed_count: 0)
     F->>U: Redirect to Dashboard
 
     Note over U,RPC: User goes and actually interacts<br/>with the protocol in the real world
 
-    Sched->>B: Cron trigger: scan active commitments<br/>past their verify_deadline
-    B->>RPC: Query txs from user_wallet to protocol_contract_address<br/>after commit_timestamp
-    RPC-->>B: tx found / not found
-    alt Engagement found, before deadline
-        B->>C: verify(commitmentId)
-        C-->>B: stake returned to user
-        B-->>F: status: verified
-    else No engagement, deadline passed
-        B->>C: slash(commitmentId)
-        C-->>B: stake forfeited
-        B-->>F: status: slashed
+    loop 3 checks at 72h intervals (72h, 144h, 216h)
+        Sched->>B: Cron trigger: scan active commitments<br/>at current check interval
+        B->>RPC: Query txs from user_wallet to protocol_contract_address<br/>after commit_timestamp
+        RPC-->>B: tx found / not found
+        alt Engagement found, before 216h deadline
+            B->>C: verify(commitmentId)
+            C-->>B: stake returned to user
+            B-->>F: status: verified
+        else No engagement at this check
+            B->>B: Increment missed_count
+            alt missed_count == 3 (final check)
+                B->>C: slash(commitmentId)
+                C-->>B: stake forfeited
+                B-->>F: status: slashed
+            else missed_count < 3
+                B-->>F: still active, waiting for next check
+            end
+        end
     end
     F->>U: Dashboard updates status badge
 ```
@@ -151,7 +165,7 @@ sequenceDiagram
 | Layer | Responsibility | Talks to |
 |---|---|---|
 | Frontend (Vercel) | Research input, profile card, commit flow, dashboard | Backend API, wallet (via Privy SDK), Monad RPC (read-only for balance/tx display) |
-| Backend (Render) | `/research`, `/commit`, `/verify` endpoints; orchestrates LLM calls and RPC checks; scheduled cron for auto-resolution | LLM provider, Monad RPC, Privy (wallet-only auth), DB |
+| Backend (Render) | `/research`, `/commit`, `/verify`, `/withdraw` endpoints; orchestrates LLM calls and RPC checks; scheduled cron for 3-strike verification loop | LLM provider, Monad RPC, Privy (wallet-only auth), DB |
 | Smart Contract (Monad Testnet) | `stake()`, `verify()`, `slash()` — holds funds, enforces state transitions | Called by backend (or directly by frontend wallet for `stake()`) |
 | DB (research + commitment records) | Persists profiles and commitments | Backend only |
 
@@ -159,8 +173,8 @@ sequenceDiagram
 
 KYP uses a dual-contract setup:
 
-- **`KYPCommitment`** — the official submission contract with a 72-hour verify window (`0xc5ebd0c77a1fd749bc2661e82c9682a1d53136e0`). Deployed once and used by all real commitments.
-- **`KYPCommitmentDemo`** — an identical twin with a 5-minute verify window (`0x98c3e4594ecfa1c45e8056932652b04cdea64e5d`). Exists solely for capturing slash-path footage in the demo video. Not part of the actual submission.
+- **`KYPCommitment`** — the official submission contract with a 216-hour (9-day) verify window (`0x325215e272e0f5efb33d697c356a5ccbfaf6ecaf`). Deployed once and used by all real commitments. Backend performs 3 verification checks at 72h intervals.
+- **`KYPCommitmentDemo`** — an identical twin with a 15-minute verify window (`0x98c3e4594ecfa1c45e8056932652b04cdea64e5d`). Exists solely for capturing slash-path footage in the demo video. Backend performs 3 checks at 5-minute intervals. Not part of the actual submission.
 
 Both contracts share the same ABI surface (`stake` / `verify` / `slash` / `withdrawForfeited`). The demo contract's shortened window makes it possible to show a full stake → wait → slash cycle without waiting 72 hours.
 

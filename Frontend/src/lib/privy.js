@@ -3,7 +3,7 @@ import { PrivyProvider, usePrivy } from "@privy-io/react-auth";
 import { updateWallet } from "./wallet.svelte.js";
 
 function PrivyInner() {
-  const { ready, authenticated, user, login, logout } = usePrivy();
+  const { ready, authenticated, user, login, logout, getEthereumProvider } = usePrivy();
 
   useEffect(() => {
     updateWallet({
@@ -12,8 +12,9 @@ function PrivyInner() {
       address: user?.wallet?.address ?? null,
       login: () => login({ loginMethods: ["wallet"] }),
       logout,
+      getEthereumProvider,
     });
-  }, [ready, authenticated, user, login, logout]);
+  }, [ready, authenticated, user, login, logout, getEthereumProvider]);
 
   return null;
 }

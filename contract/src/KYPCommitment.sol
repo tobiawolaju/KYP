@@ -6,6 +6,7 @@ pragma solidity ^0.8.24;
 ///         A trusted verifier (backend wallet) checks onchain activity and
 ///         either returns the stake (verified) or forfeits it to the
 ///         protocol pool (slashed) after the deadline passes.
+///         Backend performs 3 verification checks (every 72h) over a 216h window.
 contract KYPCommitment {
     enum Status {
         Active,
@@ -25,7 +26,7 @@ contract KYPCommitment {
     address public owner;
     address public verifier;
 
-    uint256 public constant VERIFY_WINDOW = 72 hours;
+    uint256 public constant VERIFY_WINDOW = 216 hours;
 
     uint256 public nextCommitmentId;
     mapping(uint256 => Commitment) public commitments;

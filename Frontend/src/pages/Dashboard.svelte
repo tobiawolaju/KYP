@@ -2,9 +2,51 @@
   import Link from "../lib/Link.svelte";
   import CommitGraph from "../lib/CommitGraph.svelte";
   import { getWallet } from "../lib/wallet.svelte.js";
-  import { protocols, commitments, favorites, activityEvents } from "../data/dummyData.js";
+  import { getProtocols, getFavorites } from "../lib/api.js";
+  import { fetchCommitments } from "../lib/api.js";
 
   let wallet = getWallet();
+  let commitments = $state([]);
+  let loading = $state(false);
+  let protocols = $state([]);
+  let favorites = $state([]);
+
+  $effect(() => {
+    getProtocols().then((data) => { protocols = data; }).catch(() => {});
+  });
+
+  $effect(() => {
+    if (wallet.authenticated && wallet.address) {
+      loading = true;
+      Promise.all([
+        fetchCommitments(wallet.address),
+        getFavorites(wallet.address),
+      ])
+        .then(([commitData, favData]) => { commitments = commitData; favorites = favData; })
+        .catch((err) => { console.error("Failed to load data:", err); })
+        .finally(() => { loading = false; });
+    } else {
+      commitments = [];
+      favorites = [];
+    }
+  });
+
+  let activityEvents = $derived(
+    commitments.flatMap((c) => {
+      let events = [{ commitment_id: c.id, event_type: "stake", timestamp: c.commit_timestamp }];
+      if (c.status === "verified") {
+        events.push({ commitment_id: c.id, event_type: "verify", timestamp: c.verified_at || c.commit_timestamp });
+      } else if (c.status === "slashed") {
+        events.push({ commitment_id: c.id, event_type: "slash", timestamp: c.last_check_at || c.commit_timestamp });
+      }
+      if (c.missed_count > 0) {
+        for (let i = 0; i < c.missed_count; i++) {
+          events.push({ commitment_id: c.id, event_type: "check_missed", timestamp: c.last_check_at || c.commit_timestamp });
+        }
+      }
+      return events;
+    })
+  );
 
   const redactChars = [".", ":"];
   function redact(len) {
@@ -59,6 +101,18 @@
       let days = new Set();
       for (let evt of activityEvents) {
         if (evt.event_type === "slash") {
+          days.add(normalize(evt.timestamp).getTime());
+        }
+      }
+      return days;
+    })()
+  );
+
+  let daysWithMissedCheck = $derived(
+    (() => {
+      let days = new Set();
+      for (let evt of activityEvents) {
+        if (evt.event_type === "check_missed") {
           days.add(normalize(evt.timestamp).getTime());
         }
       }
@@ -146,6 +200,7 @@
     let time = normalize(day).getTime();
     if (daysWithActivity.has(time)) return "event";
     if (daysWithSlash.has(time)) return "slash";
+    if (daysWithMissedCheck.has(time)) return "missed";
     return "empty";
   }
 
@@ -155,6 +210,7 @@
     let time = normalize(day).getTime();
     if (daysWithActivity.has(time)) return ds + " — Activity";
     if (daysWithSlash.has(time)) return ds + " — Slash";
+    if (daysWithMissedCheck.has(time)) return ds + " — Missed Check";
     return ds + " — No activity";
   }
 
@@ -177,12 +233,14 @@
   function statusColor(status) {
     if (status === "verified") return "var(--blue)";
     if (status === "slashed") return "var(--rose)";
+    if (status === "withdrawn") return "var(--pink)";
     return "var(--amber)";
   }
 
   function statusBg(status) {
     if (status === "verified") return "var(--blue-bg)";
     if (status === "slashed") return "var(--rose-bg)";
+    if (status === "withdrawn") return "#FCE7F3";
     return "var(--amber-bg)";
   }
 
@@ -211,6 +269,13 @@
       </button>
     {/if}
   </div>
+
+  {#if loading}
+    <div class="loading-state">
+      <span class="material-symbols-outlined loading-icon">hourglass_top</span>
+      <p>Loading commitments...</p>
+    </div>
+  {/if}
 
   <div class="summary-section">
     <div class="summary-cards">
@@ -255,6 +320,10 @@
           <span class="legend-label">Activity</span>
         </div>
         <div class="legend-item">
+          <span class="grid-square missed"></span>
+          <span class="legend-label">Missed Check</span>
+        </div>
+        <div class="legend-item">
           <span class="grid-square slash"></span>
           <span class="legend-label">Slash</span>
         </div>
@@ -293,6 +362,18 @@
                 <span class="commit-amount">{formatWei(entry.commitment.staked_amount)}</span>
                 <span class="commit-deadline">due {formatTimestamp(entry.commitment.verify_deadline)}</span>
               </div>
+
+              {#if entry.commitment.status === "active" && entry.commitment.missed_count > 0}
+                <div class="strike-indicator">
+                  <span class="strike-label">Strikes:</span>
+                  <span class="strike-dots">
+                    {#each Array(3) as _, i}
+                      <span class="strike-dot" class:missed={i < entry.commitment.missed_count}></span>
+                    {/each}
+                  </span>
+                  <span class="strike-count">{entry.commitment.missed_count}/3</span>
+                </div>
+              {/if}
 
               <Link to={`/myprotocols/commit/${entry.commitment.id}`} class="commit-graph-link">
                 <CommitGraph
@@ -392,6 +473,20 @@
   }
   .login-btn .material-symbols-outlined {
     font-size: 18px;
+  }
+
+  .loading-state {
+    text-align: center;
+    padding: 40px 24px;
+    color: var(--text-muted);
+  }
+  .loading-icon {
+    font-size: 32px;
+    animation: spin 1s linear infinite;
+  }
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
   }
 
   :global(.research-fab) {
@@ -511,6 +606,9 @@
   }
   .grid-square.slash {
     background: var(--rose);
+  }
+  .grid-square.missed {
+    background: var(--amber);
   }
   .grid-square.empty {
     background: var(--border-light);
@@ -634,6 +732,38 @@
   .commit-deadline {
     font-size: 13px;
     color: var(--text-muted);
+  }
+  .strike-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+  }
+  .strike-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .strike-dots {
+    display: flex;
+    gap: 4px;
+  }
+  .strike-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--border-light);
+  }
+  .strike-dot.missed {
+    background: var(--rose);
+  }
+  .strike-count {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--rose);
+    font-weight: 600;
   }
   :global(.commit-graph-link) {
     display: inline-flex;

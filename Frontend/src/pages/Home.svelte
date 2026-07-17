@@ -1,8 +1,14 @@
 <script>
   import { navigate } from "../lib/router.svelte.js";
   import Link from "../lib/Link.svelte";
-  import { protocols } from "../data/dummyData.js";
+  import { getProtocols } from "../lib/api.js";
+
   let searchQuery = $state("");
+  let protocols = $state([]);
+
+  $effect(() => {
+    getProtocols().then((data) => { protocols = data; }).catch(() => {});
+  });
 
   function handleSearch(query) {
     const q = query.trim().toLowerCase();
