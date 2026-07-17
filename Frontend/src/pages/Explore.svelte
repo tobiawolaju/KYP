@@ -18,7 +18,6 @@
 
 <div class="explore-page">
   <div class="explore-header">
-    <h1 class="explore-title">Explore Protocols</h1>
     <p class="explore-subtitle">Discover and research protocols on Monad</p>
   </div>
 

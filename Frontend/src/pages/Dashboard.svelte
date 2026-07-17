@@ -263,7 +263,7 @@
   </div>
 
   <div class="favorites-section">
-    <h2 class="section-title">Your Protocols</h2>
+    <h2 class="section-title">My Protocols | {favorites.length} favourite | Committed to {commitments.length}</h2>
     <div class="favorites-list">
       {#each favoriteProtocols as entry}
         <div class="fav-card">

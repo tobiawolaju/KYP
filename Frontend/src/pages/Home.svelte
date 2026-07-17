@@ -36,7 +36,7 @@
     {/each}
   </h1>
   <p class="hero-sub">
-    Information without action is entertainment.
+    KYP turns lurkers into stakeholders.
   </p>
   <p class="hero-desc">
     You bookmark protocols. You read threads. You never follow through.<br />

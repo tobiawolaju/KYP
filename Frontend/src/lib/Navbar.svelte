@@ -7,6 +7,15 @@
 
   let isHome = $derived(location.pathname === "/");
   let showBackButton = $derived(!isHome);
+  let pageTitle = $derived.by(() => {
+    let p = location.pathname;
+    if (p === "/research") return "Research";
+    if (p === "/protocols") return "Explore Protocols";
+    if (p === "/myprotocols") return "My Protocols";
+    if (p.startsWith("/myprotocols/commit/")) return "Commit Detail";
+    if (p.startsWith("/protocol/")) return "Protocol";
+    return "";
+  });
 
   function goBack() {
     window.history.back();
@@ -23,8 +32,11 @@
 
 <nav class="navbar">
   {#if showBackButton}
-    <button class="logo back-logo" onclick={goBack} aria-label="Go back">
+    <button class="back-logo" onclick={goBack} aria-label="Go back">
       <span class="material-symbols-outlined">arrow_back</span>
+      {#if pageTitle}
+        <span class="back-title">{pageTitle}</span>
+      {/if}
     </button>
   {:else}
     <Link to="/" class="logo">KYP</Link>
@@ -86,14 +98,12 @@
   .back-logo {
     display: inline-flex;
     align-items: center;
-    justify-content: center;
+    gap: 4px;
     background: none;
     border: none;
     cursor: pointer;
     padding: 0;
     color: var(--text);
-    width: 36px;
-    height: 36px;
     border-radius: var(--radius-sm);
     transition: background 0.2s;
   }
@@ -102,6 +112,13 @@
   }
   .back-logo .material-symbols-outlined {
     font-size: 22px;
+  }
+  .back-title {
+    font-family: var(--display);
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.3px;
   }
   .desktop-links {
     display: flex;

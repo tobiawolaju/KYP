@@ -19,8 +19,7 @@
     <path d="M60 8 L112 38 L112 78 C112 106 88 126 60 136 C32 126 8 106 8 78 L8 38 Z" class="shield-border" />
   </svg>
   <div class="shield-content">
-    <span class="shield-score">{score}</span>
-    <span class="shield-max">/50</span>
+    <span class="shield-score">{(score / 10).toFixed(1)}</span>
     <span class="shield-label">{tier.label}</span>
   </div>
 </div>
@@ -98,20 +97,6 @@
   }
   .shield-sm .shield-score {
     font-size: 16px;
-  }
-  .shield-max {
-    font-family: var(--mono);
-    color: var(--text-muted);
-    line-height: 1;
-  }
-  .shield-lg .shield-max {
-    font-size: 14px;
-  }
-  .shield-md .shield-max {
-    font-size: 11px;
-  }
-  .shield-sm .shield-max {
-    font-size: 8px;
   }
   .shield-label {
     font-weight: 700;

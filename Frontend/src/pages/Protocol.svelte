@@ -60,13 +60,8 @@
           {/if}
           <h1 class="protocol-name">{protocol.name}</h1>
         </div>
-        <ScoreBadge score={protocol.score} />
       </div>
       <div class="header-meta">
-        <span class="meta-badge">
-          <span class="material-symbols-outlined">dns</span>
-          {protocol.network}
-        </span>
         <span class="meta-badge chain">{protocol.chain}</span>
         {#if protocol.contract_address}
           <span class="contract-address" title={protocol.contract_address}>
@@ -78,26 +73,22 @@
 
     <div class="profile-body">
       <div class="info-section">
-        <h3 class="section-label">
-          <span class="material-symbols-outlined">person</span>
-          Who It's For
-        </h3>
+        <h3 class="section-label">Summary</h3>
+        <div class="summary-stamp-wrapper">
+          <div class="stamp">
+            <ScoreBadge score={protocol.score} size="md" />
+          </div>
+          <p class="section-text">{protocol.summary}</p>
+        </div>
+      </div>
+
+      <div class="info-section">
+        <h3 class="section-label">Who It's For</h3>
         <p class="section-text">{protocol.who_its_for}</p>
       </div>
 
       <div class="info-section">
-        <h3 class="section-label">
-          <span class="material-symbols-outlined">description</span>
-          Summary
-        </h3>
-        <p class="section-text">{protocol.summary}</p>
-      </div>
-
-      <div class="info-section">
-        <h3 class="section-label">
-          <span class="material-symbols-outlined">use_cases</span>
-          Use Cases
-        </h3>
+        <h3 class="section-label">Use Cases</h3>
         <div class="use-cases">
           {#each protocol.use_cases as uc}
             <span class="use-case-tag">{uc}</span>
@@ -106,15 +97,11 @@
       </div>
 
       <div class="risks-section">
-        <h3 class="section-label">
-          <span class="material-symbols-outlined">warning</span>
-          Risks
-        </h3>
+        <h3 class="section-label">Risks</h3>
         <div class="risk-cards">
           {#if protocol.risks.contract}
             <div class="risk-card">
               <div class="risk-header">
-                <span class="risk-icon contract">C</span>
                 <span class="risk-type">Contract</span>
               </div>
               <p class="risk-text">{protocol.risks.contract}</p>
@@ -123,7 +110,6 @@
           {#if protocol.risks.community}
             <div class="risk-card">
               <div class="risk-header">
-                <span class="risk-icon community">Co</span>
                 <span class="risk-type">Community</span>
               </div>
               <p class="risk-text">{protocol.risks.community}</p>
@@ -132,7 +118,6 @@
           {#if protocol.risks.structural}
             <div class="risk-card">
               <div class="risk-header">
-                <span class="risk-icon structural">S</span>
                 <span class="risk-type">Structural</span>
               </div>
               <p class="risk-text">{protocol.risks.structural}</p>
@@ -142,10 +127,7 @@
       </div>
 
       <div class="links-section">
-        <h3 class="section-label">
-          <span class="material-symbols-outlined">link</span>
-          Links
-        </h3>
+        <h3 class="section-label">Links</h3>
         <div class="link-list">
           {#if protocol.links.project}
             <a href={protocol.links.project} target="_blank" rel="noreferrer" class="link-item">
@@ -192,8 +174,8 @@
   </div>
 
   <div class="floating-bar">
-    <button class="fav-btn" onclick={toggleFavorite}>
-      {isFavorited ? "★ Favourite" : "☆ Add to Favourite"}
+    <button class="fav-btn" class:faved={isFavorited} onclick={toggleFavorite}>
+      <span class="fav-star">{isFavorited ? "★" : "☆"}</span> {isFavorited ? "Favourite" : "Add to Favourite"}
     </button>
     <button class="commit-btn" onclick={handleCommit}>
       Commit
@@ -258,9 +240,10 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    gap: 6px;
     padding: 0;
     height: 20vw;
-    background: var(--surface);
+    background: #F3F5DB;
     border: none;
     border-right: 1px solid var(--border);
     font-size: 16px;
@@ -269,6 +252,18 @@
     cursor: pointer;
     font-family: var(--sans);
   }
+  .floating-bar .fav-btn .fav-star {
+    font-size: 32px;
+    color: #000;
+    line-height: 1;
+  }
+  .floating-bar .fav-btn.faved {
+    background: var(--surface);
+    color: #f5c518;
+  }
+  .floating-bar .fav-btn.faved .fav-star {
+    color: #f5c518;
+  }
   .floating-bar .commit-btn {
     flex: 1;
     display: flex;
@@ -276,7 +271,7 @@
     justify-content: center;
     padding: 0;
     height: 20vw;
-    background: var(--accent);
+    background: #5D2CB2;
     border: none;
     font-size: 16px;
     font-weight: 600;
@@ -363,24 +358,30 @@
     gap: 8px;
   }
   .section-label {
-    font-size: 12px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.6px;
-    color: var(--text-muted);
+    font-size: 20px;
+    font-weight: 700;
     margin: 0;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-  .section-label .material-symbols-outlined {
-    font-size: 16px;
+    color: var(--text);
   }
   .section-text {
     font-size: 15px;
     line-height: 1.65;
     color: var(--text-secondary);
     margin: 0;
+  }
+  .summary-stamp-wrapper {
+    position: relative;
+  }
+  .stamp {
+    position: absolute;
+    top: 50%;
+    right: 12px;
+    transform: translateY(-50%) rotate(-12deg);
+    opacity: 0.75;
+    pointer-events: none;
+  }
+  .summary-stamp-wrapper .section-text {
+    position: relative;
   }
   .use-cases {
     display: flex;
@@ -398,28 +399,22 @@
   .risks-section {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 0;
   }
   .risk-cards {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 20px;
   }
   .risk-card {
-    background: var(--surface);
-    border: 1px solid var(--border-light);
-    border-radius: var(--radius-md);
-    padding: 16px;
-    transition: border-color 0.2s;
-  }
-  .risk-card:hover {
-    border-color: var(--rose-bg);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
   }
   .risk-header {
     display: flex;
     align-items: center;
     gap: 8px;
-    margin-bottom: 6px;
   }
   .risk-icon {
     width: 24px;
