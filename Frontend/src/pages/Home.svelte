@@ -1,10 +1,12 @@
 <script>
   import { navigate } from "../lib/router.svelte.js";
   import Link from "../lib/Link.svelte";
+  import VideoOverlay from "../lib/VideoOverlay.svelte";
   import { getProtocols } from "../lib/api.js";
 
   let searchQuery = $state("");
   let protocols = $state([]);
+  let showVideo = $state(false);
 
   $effect(() => {
     getProtocols().then((data) => { protocols = data; }).catch(() => {});
@@ -57,7 +59,10 @@
 </div>
 
 <div class="floating-search">
-  <Link to="/protocols" class="explore-btn">Explore Protocols</Link>
+  <div class="btn-row">
+    <Link to="/protocols" class="explore-btn">Explore Protocols</Link>
+    <button class="how-btn" onclick={() => { showVideo = true; }}>How it works</button>
+  </div>
   <div class="search-bar">
     <span class="material-symbols-outlined search-icon">search</span>
     <input
@@ -72,6 +77,8 @@
     </button>
   </div>
 </div>
+
+<VideoOverlay bind:open={showVideo} videoId="PKtnafFtfEo" />
 
 <style>
   .home-page {
@@ -170,11 +177,15 @@
     margin: 0;
     box-sizing: border-box;
   }
+  .btn-row {
+    display: flex;
+    width: 100%;
+  }
   :global(.explore-btn) {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 100vw;
+    width: 70vw;
     height: 20vw;
     background: var(--accent);
     color: #fff !important;
@@ -182,7 +193,23 @@
     font-weight: 600;
     text-decoration: none;
     border: none;
+    border-right: 2px solid var(--bg);
     cursor: pointer;
+  }
+  .how-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30vw;
+    height: 20vw;
+    background: #6025c5;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 600;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    font-family: var(--sans);
   }
   .search-bar {
     display: flex;
@@ -245,6 +272,9 @@
       height: 5vw;
     }
     :global(.explore-btn) {
+      height: 5vw;
+    }
+    .how-btn {
       height: 5vw;
     }
   }
