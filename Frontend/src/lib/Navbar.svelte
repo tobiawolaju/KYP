@@ -2,13 +2,17 @@
   import Link from "./Link.svelte";
   import { useLocation } from "./router.svelte.js";
   import { getTheme, toggleTheme } from "./theme.svelte.js";
+  import { getWallet } from "./wallet.svelte.js";
 
   let location = useLocation();
   let drawerOpen = $state(false);
   let theme = getTheme();
+  let wallet = getWallet();
 
   let isHome = $derived(location.pathname === "/");
-  let showBackButton = $derived(!isHome);
+  let isMyProtocols = $derived(location.pathname === "/myprotocols");
+  let showLogo = $derived(isHome || (isMyProtocols && wallet.authenticated));
+  let showBackButton = $derived(!showLogo);
   let pageTitle = $derived.by(() => {
     let p = location.pathname;
     if (p === "/research") return "Research";
@@ -33,15 +37,15 @@
 </script>
 
 <nav class="navbar">
-  {#if showBackButton}
+  {#if showLogo}
+    <Link to="/" class="logo">KYP</Link>
+  {:else}
     <button class="back-logo" onclick={goBack} aria-label="Go back">
       <span class="material-symbols-outlined">arrow_back</span>
       {#if pageTitle}
         <span class="back-title">{pageTitle}</span>
       {/if}
     </button>
-  {:else}
-    <Link to="/" class="logo">KYP</Link>
   {/if}
   <div class="desktop-links">
     <Link to="/research" class="nav-link">Research</Link>
