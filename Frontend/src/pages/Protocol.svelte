@@ -175,7 +175,7 @@
 
   <div class="floating-bar">
     <button class="fav-btn" class:faved={isFavorited} onclick={toggleFavorite}>
-      <span class="fav-star">{isFavorited ? "★" : "☆"}</span> {isFavorited ? "Favourite" : "Add to Favourite"}
+      {isFavorited ? "Saved!" : "Save to Favourite"} <span class="fav-star">{isFavorited ? "★" : "☆"}</span>
     </button>
     <button class="commit-btn" onclick={handleCommit}>
       Commit
@@ -248,21 +248,17 @@
     border-right: 1px solid var(--border);
     font-size: 16px;
     font-weight: 600;
-    color: #000;
+    color: #f5c518;
     cursor: pointer;
     font-family: var(--sans);
   }
   .floating-bar .fav-btn .fav-star {
     font-size: 32px;
-    color: #000;
+    color: #f5c518;
     line-height: 1;
   }
   :global(.dark) .floating-bar .fav-btn {
     background: #1a1a1a;
-    color: #fff;
-  }
-  :global(.dark) .floating-bar .fav-btn .fav-star {
-    color: #fff;
   }
   .floating-bar .fav-btn.faved {
     background: var(--surface);
