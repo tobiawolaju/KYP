@@ -36,11 +36,14 @@
   .overlay {
     position: fixed;
     inset: 0;
-    background: #000;
+    background: #fff;
     z-index: 1000;
     display: flex;
     align-items: center;
     justify-content: center;
+  }
+  :global(.dark) .overlay {
+    background: #000;
   }
   .close-btn {
     position: fixed;
@@ -52,7 +55,7 @@
     color: #fff;
     cursor: pointer;
     padding: 16px;
-    border-radius: 4px;
+    border-radius: 100%;
     transition: background 0.2s;
     display: flex;
     align-items: center;
