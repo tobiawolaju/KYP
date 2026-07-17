@@ -497,7 +497,7 @@
     align-items: center;
     gap: 6px;
     padding: 12px 20px;
-    background: var(--accent);
+    background: #6025c5;
     color: #fff;
     border-radius: 0;
     font-size: 14px;
@@ -577,9 +577,9 @@
     color: var(--text);
   }
   .activity-grid-wrapper {
-    background: var(--surface);
-    border: 1px solid var(--border-light);
-    border-radius: var(--radius-lg);
+    background: transparent;
+    border: none;
+    border-radius: 0;
     padding: 20px;
   }
   .activity-grid {
@@ -616,17 +616,22 @@
   .grid-legend {
     display: flex;
     align-items: center;
-    gap: 14px;
+    gap: 6px;
     margin-top: 12px;
-    justify-content: flex-end;
+    flex-wrap: wrap;
   }
   .legend-item {
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 5px;
+    gap: 3px;
+    padding: 3px 6px;
+  }
+  .legend-item .grid-square {
+    width: 7px;
+    height: 7px;
   }
   .legend-label {
-    font-size: 11px;
+    font-size: 10px;
     color: var(--text-muted);
     font-weight: 500;
   }
