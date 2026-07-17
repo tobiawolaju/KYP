@@ -45,7 +45,7 @@ const router = Router();
   }
 */
 
-router.post("/research", (req, res) => {
+router.post("/research", async (req, res) => {
   const { input_raw, wallet_address } = req.body;
 
   if (!input_raw) {
@@ -105,7 +105,7 @@ router.post("/research", (req, res) => {
     created_by_wallet: wallet_address || null,
   };
 
-  insert("research", example);
+  await insert("research", example);
 
   console.log("[RESEARCH] Created research record:", example.id, "for input:", input_raw);
 

@@ -15,7 +15,7 @@ router.get("/verify", async (req, res, next) => {
       return res.status(400).json({ error: true, message: "commitment_id query parameter is required" });
     }
 
-    const commitment = getById("commitments", commitment_id);
+    const commitment = await getById("commitments", commitment_id);
     if (!commitment) {
       return res.status(404).json({ error: true, message: "Commitment not found" });
     }
@@ -40,7 +40,7 @@ router.get("/verify", async (req, res, next) => {
     let result;
     if (hasEngagement) {
       const tx = await callVerify(commitment.onchain_commitment_id);
-      result = update("commitments", commitment.id, {
+      result = await update("commitments", commitment.id, {
         status: "verified",
         verify_tx_hash: tx.txHash,
         verified_at: now.toISOString(),
@@ -48,7 +48,7 @@ router.get("/verify", async (req, res, next) => {
       });
     } else {
       const tx = await callSlash(commitment.onchain_commitment_id);
-      result = update("commitments", commitment.id, {
+      result = await update("commitments", commitment.id, {
         status: "slashed",
         verify_tx_hash: tx.txHash,
         missed_count: commitment.missed_count + 1,
@@ -71,7 +71,7 @@ router.post("/verify/check", async (req, res, next) => {
       return res.status(400).json({ error: true, message: "Missing required field: commitment_id" });
     }
 
-    const commitment = getById("commitments", commitment_id);
+    const commitment = await getById("commitments", commitment_id);
     if (!commitment) {
       return res.status(404).json({ error: true, message: "Commitment not found" });
     }
@@ -90,7 +90,7 @@ router.post("/verify/check", async (req, res, next) => {
 
     if (hasEngagement) {
       const tx = await callVerify(commitment.onchain_commitment_id);
-      const result = update("commitments", commitment.id, {
+      const result = await update("commitments", commitment.id, {
         status: "verified",
         verify_tx_hash: tx.txHash,
         verified_at: now.toISOString(),
@@ -105,7 +105,7 @@ router.post("/verify/check", async (req, res, next) => {
 
     if (newMissedCount >= MAX_MISSED_CHECKS) {
       const tx = await callSlash(commitment.onchain_commitment_id);
-      const result = update("commitments", commitment.id, {
+      const result = await update("commitments", commitment.id, {
         status: "slashed",
         verify_tx_hash: tx.txHash,
         missed_count: newMissedCount,
@@ -116,7 +116,7 @@ router.post("/verify/check", async (req, res, next) => {
       return res.json(result);
     }
 
-    const result = update("commitments", commitment.id, {
+    const result = await update("commitments", commitment.id, {
       missed_count: newMissedCount,
       last_check_at: now.toISOString(),
     });

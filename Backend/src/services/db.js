@@ -1,41 +1,50 @@
-const path = require("path");
-const fs = require("fs");
-const low = require("lowdb");
-const FileSync = require("lowdb/adapters/FileSync");
+const { db } = require("./firebase");
 
-const DB_PATH = process.env.DB_PATH || path.join(__dirname, "../../data/db.json");
-const PROTOCOLS_SEED = require("../../data/protocols.json");
-
-const adapter = new FileSync(DB_PATH);
-const db = low(adapter);
-
-db.defaults({ commitments: [], research: [], protocols: [], favorites: [] }).write();
-
-if (db.get("protocols").size().value() === 0) {
-  db.get("protocols").push(...PROTOCOLS_SEED).write();
-  console.log("[DB] Seeded protocols from protocols.json:", PROTOCOLS_SEED.length, "records");
+function ref(collection) {
+  return db.ref(collection);
 }
 
-function getAll(collection) {
-  return db.get(collection).value();
+async function getAll(collection) {
+  const snapshot = await ref(collection).once("value");
+  const val = snapshot.val();
+  if (!val) return [];
+  return Object.values(val);
 }
 
-function getById(collection, id) {
-  return db.get(collection).find({ id }).value();
+async function getById(collection, id) {
+  const snapshot = await ref(collection).child(id).once("value");
+  return snapshot.val() || null;
 }
 
-function insert(collection, record) {
-  db.get(collection).push(record).write();
+async function insert(collection, record) {
+  const id = record.id || require("crypto").randomUUID();
+  record.id = id;
+  await ref(collection).child(id).set(record);
   return record;
 }
 
-function update(collection, id, fields) {
-  db.get(collection).find({ id }).assign(fields).write();
-  return getById(collection, id);
+async function update(collection, id, fields) {
+  await ref(collection).child(id).update(fields);
+  const updated = await getById(collection, id);
+  return updated;
 }
 
-function query(collection, predicate) {
-  return db.get(collection).filter(predicate).value();
+async function query(collection, predicate) {
+  const all = await getAll(collection);
+  return all.filter(predicate);
 }
 
-module.exports = { db, getAll, getById, insert, update, query };
+async function remove(collection, id) {
+  await ref(collection).child(id).remove();
+}
+
+async function removeWhere(collection, predicate) {
+  const all = await getAll(collection);
+  const toRemove = all.filter(predicate);
+  for (const item of toRemove) {
+    await ref(collection).child(item.id).remove();
+  }
+  return toRemove;
+}
+
+module.exports = { getAll, getById, insert, update, query, remove, removeWhere };

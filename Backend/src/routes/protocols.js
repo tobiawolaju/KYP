@@ -3,8 +3,8 @@ const { getAll, getById } = require("../services/db");
 
 const router = Router();
 
-router.get("/protocols", (req, res) => {
-  let protocols = getAll("protocols");
+router.get("/protocols", async (req, res) => {
+  let protocols = await getAll("protocols");
 
   const { network, category, minScore } = req.query;
 
@@ -15,7 +15,7 @@ router.get("/protocols", (req, res) => {
     protocols = protocols.filter((p) => p.category === category);
   }
   if (minScore) {
-    const min = Number(minScore);
+    const min = parseInt(minScore, 10);
     if (!isNaN(min)) {
       protocols = protocols.filter((p) => p.score >= min);
     }
@@ -24,8 +24,8 @@ router.get("/protocols", (req, res) => {
   res.json(protocols);
 });
 
-router.get("/protocols/:id", (req, res) => {
-  const protocol = getById("protocols", req.params.id);
+router.get("/protocols/:id", async (req, res) => {
+  const protocol = await getById("protocols", req.params.id);
   if (!protocol) {
     return res.status(404).json({ error: true, message: "Protocol not found" });
   }

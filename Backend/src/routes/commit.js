@@ -6,24 +6,24 @@ const router = Router();
 
 const VERIFY_WINDOW_MS = 216 * 60 * 60 * 1000;
 
-router.get("/commitments", (req, res) => {
+router.get("/commitments", async (req, res) => {
   const { wallet } = req.query;
   if (!wallet) {
     return res.status(400).json({ error: true, message: "wallet query parameter is required" });
   }
-  const records = query("commitments", (c) => c.user_wallet.toLowerCase() === wallet.toLowerCase());
+  const records = await query("commitments", (c) => c.user_wallet.toLowerCase() === wallet.toLowerCase());
   res.json(records);
 });
 
-router.get("/commitments/:id", (req, res) => {
-  const record = getById("commitments", req.params.id);
+router.get("/commitments/:id", async (req, res) => {
+  const record = await getById("commitments", req.params.id);
   if (!record) {
     return res.status(404).json({ error: true, message: "Commitment not found" });
   }
   res.json(record);
 });
 
-router.post("/commit", (req, res) => {
+router.post("/commit", async (req, res) => {
   const { user_wallet, protocol_id, protocol_contract_address, staked_amount, stake_tx_hash, onchain_commitment_id } = req.body;
 
   if (!user_wallet || !protocol_id || !protocol_contract_address || !staked_amount || !stake_tx_hash) {
@@ -55,7 +55,7 @@ router.post("/commit", (req, res) => {
     last_check_at: null,
   };
 
-  insert("commitments", record);
+  await insert("commitments", record);
 
   console.log("[COMMIT] Saved commitment:", record.id, "for wallet:", user_wallet);
 

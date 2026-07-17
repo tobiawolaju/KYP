@@ -18,7 +18,7 @@ async function runCheck(commitment) {
 
   if (hasEngagement) {
     const tx = await callVerify(commitment.onchain_commitment_id);
-    const result = update("commitments", commitment.id, {
+    const result = await update("commitments", commitment.id, {
       status: "verified",
       verify_tx_hash: tx.txHash,
       verified_at: now.toISOString(),
@@ -32,7 +32,7 @@ async function runCheck(commitment) {
 
   if (newMissedCount >= MAX_MISSED_CHECKS) {
     const tx = await callSlash(commitment.onchain_commitment_id);
-    const result = update("commitments", commitment.id, {
+    const result = await update("commitments", commitment.id, {
       status: "slashed",
       verify_tx_hash: tx.txHash,
       missed_count: newMissedCount,
@@ -42,7 +42,7 @@ async function runCheck(commitment) {
     return result;
   }
 
-  const result = update("commitments", commitment.id, {
+  const result = await update("commitments", commitment.id, {
     missed_count: newMissedCount,
     last_check_at: now.toISOString(),
   });
@@ -53,7 +53,7 @@ async function runCheck(commitment) {
 async function tick() {
   console.log("[WORKER] Tick started at", new Date().toISOString());
 
-  const allCommitments = query("commitments", (c) => c.status === "active");
+  const allCommitments = await query("commitments", (c) => c.status === "active");
   console.log(`[WORKER] Found ${allCommitments.length} active commitments`);
 
   const now = Date.now();
@@ -95,7 +95,7 @@ async function main() {
   const intervalMs = parseInt(process.env.WORKER_INTERVAL_MS, 10) || 60 * 60 * 1000;
   console.log(`[WORKER] Next check in ${intervalMs / 60000} minutes`);
 
-  setInterval(tick, intervalMs);
+  setInterval(() => tick().catch((err) => console.error("[WORKER] Tick error:", err.message)), intervalMs);
 }
 
 main().catch((err) => {

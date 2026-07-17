@@ -12,7 +12,7 @@ router.post("/withdraw", async (req, res, next) => {
       return res.status(400).json({ error: true, message: "Missing required field: commitment_id" });
     }
 
-    const commitment = getById("commitments", commitment_id);
+    const commitment = await getById("commitments", commitment_id);
     if (!commitment) {
       return res.status(404).json({ error: true, message: "Commitment not found" });
     }
@@ -31,7 +31,7 @@ router.post("/withdraw", async (req, res, next) => {
     const now = new Date();
     const tx = await callVerify(commitment.onchain_commitment_id);
 
-    const result = update("commitments", commitment.id, {
+    const result = await update("commitments", commitment.id, {
       status: "withdrawn",
       verify_tx_hash: tx.txHash,
       verified_at: now.toISOString(),
