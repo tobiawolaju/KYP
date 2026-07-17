@@ -1,9 +1,11 @@
 <script>
   import Link from "./Link.svelte";
   import { useLocation } from "./router.svelte.js";
+  import { getTheme, toggleTheme } from "./theme.svelte.js";
 
   let location = useLocation();
   let drawerOpen = $state(false);
+  let theme = getTheme();
 
   let isHome = $derived(location.pathname === "/");
   let showBackButton = $derived(!isHome);
@@ -46,6 +48,9 @@
     <Link to="/protocols" class="nav-link">Explore Protocols</Link>
     <Link to="/myprotocols" class="nav-link">My Protocols</Link>
   </div>
+  <button class="theme-toggle" onclick={toggleTheme} aria-label="Toggle theme">
+    <span class="material-symbols-outlined">{theme.dark ? "light_mode" : "dark_mode"}</span>
+  </button>
   <button class="hamburger" onclick={toggleDrawer} aria-label="Menu">
     <span class="material-symbols-outlined">menu</span>
   </button>
@@ -65,6 +70,10 @@
         <Link to="/protocols" class="drawer-link" onclick={closeDrawer}>Explore Protocols</Link>
         <Link to="/myprotocols" class="drawer-link" onclick={closeDrawer}>My Protocols</Link>
       </div>
+      <button class="drawer-theme-toggle" onclick={toggleTheme}>
+        <span class="material-symbols-outlined">{theme.dark ? "light_mode" : "dark_mode"}</span>
+        {theme.dark ? "Light Mode" : "Dark Mode"}
+      </button>
     </div>
   </div>
 {/if}
@@ -82,6 +91,9 @@
     background: rgba(250, 250, 249, 0.85);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
+  }
+  :global(.dark) .navbar {
+    background: rgba(15, 15, 15, 0.85);
   }
   :global(.logo) {
     font-family: var(--display);
@@ -155,6 +167,48 @@
     background: var(--surface-hover);
   }
   .hamburger .material-symbols-outlined {
+    font-size: 22px;
+  }
+  .theme-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    color: var(--text);
+    cursor: pointer;
+    padding: 6px;
+    border-radius: var(--radius-sm);
+    transition: background 0.2s;
+  }
+  .theme-toggle:hover {
+    background: var(--surface-hover);
+  }
+  .theme-toggle .material-symbols-outlined {
+    font-size: 22px;
+  }
+  .drawer-theme-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 16px 12px;
+    font-size: 18px;
+    font-weight: 500;
+    font-family: var(--sans);
+    width: 100%;
+    margin-top: 24px;
+    border-top: 1px solid var(--border-light);
+    transition: background 0.2s, color 0.2s;
+  }
+  .drawer-theme-toggle:hover {
+    background: var(--surface-hover);
+    color: var(--accent);
+  }
+  .drawer-theme-toggle .material-symbols-outlined {
     font-size: 22px;
   }
 
@@ -233,6 +287,9 @@
       display: flex;
       align-items: center;
       justify-content: center;
+    }
+    .theme-toggle {
+      display: none;
     }
   }
 </style>

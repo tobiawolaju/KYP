@@ -376,7 +376,7 @@
     align-items: center;
     gap: 8px;
     background: transparent;
-    color: #000;
+    color: var(--text);
     border: 1px solid var(--border);
     border-radius: 0;
     padding: 10px 18px;

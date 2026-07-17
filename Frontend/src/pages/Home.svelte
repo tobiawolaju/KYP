@@ -109,14 +109,32 @@
       );
     }
   }
+  :global(.dark) .hero-title::before {
+    background: repeating-linear-gradient(
+      to right,
+      rgba(0,0,0,1) 0px,
+      rgba(0,0,0,1) 2px,
+      transparent 2px,
+      transparent 5%
+    );
+    @media (min-width: 768px) {
+      background: repeating-linear-gradient(
+        to right,
+        rgba(0,0,0,1) 0px,
+        rgba(0,0,0,1) 4px,
+        transparent 4px,
+        transparent 5%
+      );
+    }
+  }
   .letter {
     display: inline-block;
     animation: letterPulse 3s ease-in-out infinite;
   }
   @keyframes letterPulse {
-    0%, 100% { background-color: transparent; color: #000; }
+    0%, 100% { background-color: transparent; color: var(--text); }
     30% { background-color: var(--accent); color: #fff; }
-    60% { background-color: transparent; color: #000; }
+    60% { background-color: transparent; color: var(--text); }
   }
   .hero-sub {
     font-size: 20px;
@@ -125,7 +143,7 @@
   }
   .hero-desc {
     font-size: 22.5px;
-    color: #000 !important;
+    color: var(--text) !important;
     margin: 0 0 32px;
     line-height: 1.6;
   }

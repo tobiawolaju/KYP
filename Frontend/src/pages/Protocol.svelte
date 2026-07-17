@@ -257,6 +257,13 @@
     color: #000;
     line-height: 1;
   }
+  :global(.dark) .floating-bar .fav-btn {
+    background: #1a1a1a;
+    color: #fff;
+  }
+  :global(.dark) .floating-bar .fav-btn .fav-star {
+    color: #fff;
+  }
   .floating-bar .fav-btn.faved {
     background: var(--surface);
     color: #f5c518;

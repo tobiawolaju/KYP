@@ -18,6 +18,10 @@ function PrivyInner() {
   return null;
 }
 
+function getTheme() {
+  return document.documentElement.classList.contains("dark") ? "dark" : "light";
+}
+
 export default function PrivyApp() {
   return React.createElement(
     PrivyProvider,
@@ -26,6 +30,9 @@ export default function PrivyApp() {
       config: {
         loginMethods: ["wallet"],
         embeddedWallets: { createOnLogin: "off" },
+      },
+      appearance: {
+        theme: getTheme(),
       },
     },
     React.createElement(PrivyInner)
