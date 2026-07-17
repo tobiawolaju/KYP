@@ -1,5 +1,6 @@
 <script>
-  import { useLocation } from "./lib/router.svelte.js";
+  import { useLocation, navigate } from "./lib/router.svelte.js";
+  import { getWallet } from "./lib/wallet.svelte.js";
   import Navbar from "./lib/Navbar.svelte";
   import PrivyHost from "./lib/PrivyHost.svelte";
   import Home from "./pages/Home.svelte";
@@ -11,6 +12,13 @@
 
   let location = useLocation();
   let path = $derived(location.pathname);
+  let wallet = getWallet();
+
+  $effect(() => {
+    if (path === "/" && wallet.authenticated) {
+      navigate("/myprotocols");
+    }
+  });
 </script>
 
 <PrivyHost />
