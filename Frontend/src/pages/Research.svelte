@@ -29,64 +29,67 @@
 
 <section class="research-page">
   <div class="research-inner">
-    <div class="research-icon">
-      <span class="material-symbols-outlined">science</span>
-    </div>
     <h1 class="research-title">Search Protocols</h1>
     <p class="research-subtitle">Find and analyze any protocol on Monad</p>
-    <div class="search-bar">
-      <span class="material-symbols-outlined search-icon">search</span>
-      <input
-        type="text"
-        class="search-input"
-        placeholder="Search for a protocol..."
-        bind:value={searchQuery}
-        onkeydown={handleKeydown}
-      />
-      <button class="search-btn" onclick={handleSearch} aria-label="Search">
-        <span class="material-symbols-outlined">arrow_forward</span>
-      </button>
-    </div>
   </div>
 </section>
 
+<div class="floating-search">
+  <div class="search-bar">
+    <span class="material-symbols-outlined search-icon">search</span>
+    <input
+      type="text"
+      class="search-input"
+      placeholder="Search a protocol..."
+      bind:value={searchQuery}
+      onkeydown={handleKeydown}
+    />
+    <button class="search-btn" onclick={handleSearch} aria-label="Search">
+      <span class="material-symbols-outlined">arrow_forward</span>
+    </button>
+  </div>
+</div>
+
 <style>
   .research-page {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: calc(100vh - 200px);
-    padding: 0;
+    min-height: 100vh;
+    background: var(--bg);
   }
   .research-inner {
-    width: 100%;
+    padding: 64px 32px 48px;
     text-align: center;
   }
-  .research-icon {
-    width: 64px;
-    height: 64px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, rgba(124, 58, 237, 0.1) 0%, rgba(167, 139, 250, 0.1) 100%);
-    color: var(--accent);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 auto 20px;
-  }
-  .research-icon .material-symbols-outlined {
-    font-size: 28px;
-  }
   .research-title {
-    font-size: 28px;
-    font-weight: 800;
+    font-size: clamp(48px, 10vw, 160px);
+    font-weight: 900;
     color: var(--text);
-    margin: 0 0 6px;
-    letter-spacing: -0.5px;
+    margin: 0 0 16px;
+    letter-spacing: -1.5px;
+    line-height: 1.1;
   }
   .research-subtitle {
-    font-size: 15px;
-    color: var(--text-muted);
-    margin: 0 0 28px;
+    font-size: 22.5px;
+    color: var(--text);
+    margin: 0;
+  }
+  @media (min-width: 641px) {
+    .research-title {
+      font-size: calc(clamp(48px, 10vw, 160px) * 0.65);
+    }
+    .research-subtitle {
+      font-size: 18px;
+    }
+  }
+
+  .floating-search {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    z-index: 50;
+    width: 100vw;
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
   }
   .search-bar {
     display: flex;
@@ -95,11 +98,10 @@
     border: none;
     border-radius: 0;
     padding: 0 0 0 14px;
-    box-shadow: none;
-    transition: border-color 0.2s, box-shadow 0.2s;
+    box-shadow: var(--shadow-lg);
   }
   .search-bar:focus-within {
-    box-shadow: none;
+    border-color: var(--accent);
   }
   .search-icon {
     font-size: 20px;

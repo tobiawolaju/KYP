@@ -1,4 +1,5 @@
 <script>
+  import { onMount } from "svelte";
   import Link from "../lib/Link.svelte";
   import { getProtocols } from "../lib/api.js";
 
@@ -14,6 +15,12 @@
   let selectedCategory = $state("");
   let minScore = $state(0);
 
+  let catOpen = $state(false);
+  let scoreOpen = $state(false);
+
+  let catLabel = $derived(selectedCategory || "All");
+  let scoreLabel = $derived(minScore === 0 ? "Any" : `${minScore}+`);
+
   let filtered = $derived(
     allProtocols.filter((p) => {
       if (selectedCategory && p.category !== selectedCategory) return false;
@@ -21,6 +28,26 @@
       return true;
     })
   );
+
+  function pickCat(val) {
+    selectedCategory = val;
+    catOpen = false;
+  }
+  function pickScore(val) {
+    minScore = val;
+    scoreOpen = false;
+  }
+
+  function handleClickOutside(e) {
+    if (!e.target.closest(".dd-wrap")) {
+      catOpen = false;
+      scoreOpen = false;
+    }
+  }
+  onMount(() => {
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
+  });
 </script>
 
 <div class="explore-page">
@@ -29,28 +56,38 @@
   </div>
 
   <div class="filters">
-    <div class="filter-group">
-      <label class="filter-label" for="cat">Category</label>
-      <select id="cat" bind:value={selectedCategory}>
-        <option value="">All</option>
-        {#each categories as cat}
-          <option value={cat}>{cat}</option>
-        {/each}
-      </select>
+    <div class="dd-wrap">
+      <button class="dd-trigger" onclick={() => { catOpen = !catOpen; scoreOpen = false; }}>
+        <span class="dd-label">Category</span>
+        <span class="dd-value">{catLabel}</span>
+        <span class="material-symbols-outlined dd-chevron">expand_more</span>
+      </button>
+      {#if catOpen}
+        <div class="dd-menu">
+          <button class="dd-item" class:active={selectedCategory === ""} onclick={() => pickCat("")}>All</button>
+          {#each categories as cat}
+            <button class="dd-item" class:active={selectedCategory === cat} onclick={() => pickCat(cat)}>{cat}</button>
+          {/each}
+        </div>
+      {/if}
     </div>
 
-    <div class="filter-group">
-      <label class="filter-label" for="score">Min score</label>
-      <select id="score" bind:value={minScore}>
-        <option value={0}>0</option>
-        <option value={10}>10</option>
-        <option value={20}>20</option>
-        <option value={30}>30</option>
-        <option value={40}>40</option>
-        <option value={50}>50</option>
-      </select>
+    <div class="dd-wrap">
+      <button class="dd-trigger" onclick={() => { scoreOpen = !scoreOpen; catOpen = false; }}>
+        <span class="dd-label">Min score</span>
+        <span class="dd-value">{scoreLabel}</span>
+        <span class="material-symbols-outlined dd-chevron">expand_more</span>
+      </button>
+      {#if scoreOpen}
+        <div class="dd-menu">
+          {#each [0, 10, 20, 30, 40, 50] as s}
+            <button class="dd-item" class:active={minScore === s} onclick={() => pickScore(s)}>
+              {#if s === 0}Any{:else}{s}+{/if}
+            </button>
+          {/each}
+        </div>
+      {/if}
     </div>
-
   </div>
 
   <div class="protocol-grid">
@@ -109,41 +146,78 @@
 
   .filters {
     display: flex;
-    gap: 12px;
-    margin-bottom: 32px;
+    gap: 6px;
+    margin-bottom: 20px;
     flex-wrap: wrap;
-    align-items: flex-end;
-    padding: 16px 20px;
-    background: var(--surface);
-    border: 1px solid var(--border-light);
-    border-radius: 0;
+    align-items: center;
   }
-  .filter-group {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
+  .dd-wrap {
+    position: relative;
   }
-  .filter-label {
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: var(--text-muted);
-  }
-  .filter-group select {
-    font-family: var(--sans);
-    font-size: 14px;
-    padding: 6px 10px;
-    border-radius: 0;
+  .dd-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px;
     border: 1px solid var(--border);
-    background: var(--bg);
+    border-radius: 0;
+    background: var(--surface);
     color: var(--text);
-    min-width: 120px;
-    accent-color: var(--accent);
+    font-family: var(--sans);
+    font-size: 13px;
+    cursor: pointer;
+    transition: border-color 0.15s;
+    white-space: nowrap;
   }
-  .filter-group select:focus {
-    outline: none;
+  .dd-trigger:hover {
     border-color: var(--accent);
+  }
+  .dd-label {
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+  .dd-value {
+    font-weight: 600;
+    color: var(--accent);
+  }
+  .dd-chevron {
+    font-size: 16px;
+    color: var(--text-muted);
+    transition: transform 0.15s;
+  }
+  .dd-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    margin-top: 4px;
+    min-width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 0;
+    z-index: 50;
+    padding: 2px 0;
+  }
+  .dd-item {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 6px 12px;
+    border: none;
+    border-radius: 0;
+    background: none;
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.1s;
+    white-space: nowrap;
+  }
+  .dd-item:hover {
+    background: var(--surface-hover);
+  }
+  .dd-item.active {
+    color: var(--accent);
+    font-weight: 600;
   }
   .result-count {
     margin-left: auto;
