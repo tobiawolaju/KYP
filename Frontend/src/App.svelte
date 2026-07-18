@@ -19,6 +19,11 @@
       navigate("/myprotocols");
     }
   });
+
+  $effect(() => {
+    path;
+    window.scrollTo(0, 0);
+  });
 </script>
 
 <PrivyHost />
