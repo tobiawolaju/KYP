@@ -155,12 +155,7 @@
               </div>
             </div>
           </div>
-          <p class="card-summary">{protocol.summary}</p>
-          <div class="card-tags">
-            {#each (protocol.use_cases || []).slice(0, 2) as uc}
-              <span class="tag">{uc}</span>
-            {/each}
-          </div>
+          <p class="card-summary">{protocol.plain_summary || protocol.summary}</p>
         </Link>
       {/each}
     </div>
@@ -376,18 +371,6 @@
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
-  }
-  .card-tags {
-    display: flex;
-    gap: 4px;
-  }
-  .tag {
-    font-size: 11px;
-    padding: 3px 8px;
-    border-radius: var(--radius-sm);
-    background: var(--surface-hover);
-    color: var(--text-secondary);
-    font-weight: 500;
   }
 
   .status-box {
