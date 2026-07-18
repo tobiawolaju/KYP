@@ -52,6 +52,8 @@ function normalizeProtocol(p) {
 
   p.deep_research_status = p.deep_research_status ?? "pending";
   p.deep_researched_at = p.deep_researched_at ?? null;
+  p.deep_research_error = p.deep_research_error ?? null;
+  p.deep_research_version = p.deep_research_version ?? null;
 
   p.created_at = p.created_at ?? null;
   p.created_by_wallet = p.created_by_wallet ?? null;
