@@ -1,25 +1,12 @@
 <script>
   import { navigate } from "../lib/router.svelte.js";
-  import { getProtocols } from "../lib/api.js";
 
   let searchQuery = $state("");
-  let protocols = $state([]);
-
-  $effect(() => {
-    getProtocols().then((data) => { protocols = data; }).catch(() => {});
-  });
 
   function handleSearch() {
-    const q = searchQuery.trim().toLowerCase();
+    const q = searchQuery.trim();
     if (!q) return;
-    const matches = protocols.filter((p) =>
-      p.name.toLowerCase().includes(q)
-    );
-    if (matches.length === 1) {
-      navigate(`/protocol/${matches[0].id}`);
-    } else {
-      navigate("/protocols");
-    }
+    navigate(`/protocols?q=${encodeURIComponent(q)}`);
   }
 
   function handleKeydown(e) {

@@ -7,6 +7,7 @@
   let status = $state("idle");
   let errorMsg = $state("");
   let coldTimer = null;
+  let searchQuery = $state("");
 
   function loadProtocols() {
     clearTimeout(coldTimer);
@@ -37,6 +38,11 @@
     allProtocols.filter((p) => {
       if (selectedCategory && p.category !== selectedCategory) return false;
       if ((p.score ?? 0) < minScore) return false;
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        const haystack = `${p.name} ${p.category} ${p.subcategory || ""} ${p.allCategories || ""}`.toLowerCase();
+        if (!haystack.includes(q)) return false;
+      }
       return true;
     })
   );
@@ -57,6 +63,8 @@
     }
   }
   onMount(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("q")) searchQuery = params.get("q");
     document.addEventListener("click", handleClickOutside);
     return () => document.removeEventListener("click", handleClickOutside);
   });
@@ -68,6 +76,21 @@
   </div>
 
   <div class="filters">
+    <div class="search-wrap">
+      <span class="material-symbols-outlined search-icon">search</span>
+      <input
+        type="text"
+        class="search-input"
+        placeholder="Search protocols..."
+        bind:value={searchQuery}
+      />
+      {#if searchQuery}
+        <button class="search-clear" onclick={() => { searchQuery = ""; }}>
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      {/if}
+    </div>
+
     <div class="dd-wrap">
       <button class="dd-trigger" onclick={() => { catOpen = !catOpen; scoreOpen = false; }}>
         <span class="dd-label">Category</span>
@@ -173,6 +196,50 @@
     margin-bottom: 20px;
     flex-wrap: wrap;
     align-items: center;
+  }
+  .search-wrap {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex: 1;
+    min-width: 200px;
+    border: 1px solid var(--border);
+    border-radius: 0;
+    background: var(--surface);
+    padding: 0 10px;
+  }
+  .search-wrap:focus-within {
+    border-color: var(--accent);
+  }
+  .search-wrap .search-icon {
+    font-size: 18px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+  }
+  .search-wrap .search-input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    padding: 6px 0;
+    font-size: 13px;
+    color: var(--text);
+    outline: none;
+    font-family: var(--sans);
+  }
+  .search-wrap .search-input::placeholder {
+    color: var(--text-muted);
+  }
+  .search-clear {
+    display: flex;
+    align-items: center;
+    border: none;
+    background: none;
+    cursor: pointer;
+    padding: 2px;
+    color: var(--text-muted);
+  }
+  .search-clear .material-symbols-outlined {
+    font-size: 16px;
   }
   .dd-wrap {
     position: relative;

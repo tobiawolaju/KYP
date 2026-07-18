@@ -2,25 +2,14 @@
   import { navigate } from "../lib/router.svelte.js";
   import Link from "../lib/Link.svelte";
   import VideoOverlay from "../lib/VideoOverlay.svelte";
-  import { getProtocols } from "../lib/api.js";
 
   let searchQuery = $state("");
-  let protocols = $state([]);
   let showVideo = $state(false);
 
-  $effect(() => {
-    getProtocols().then((data) => { protocols = data; }).catch(() => {});
-  });
-
   function handleSearch(query) {
-    const q = query.trim().toLowerCase();
+    const q = query.trim();
     if (!q) return;
-    const match = protocols.find(
-      (p) => p.name.toLowerCase() === q || p.id.toLowerCase() === q
-    );
-    if (match) {
-      navigate(`/protocol/${match.id}`);
-    }
+    navigate(`/protocols?q=${encodeURIComponent(q)}`);
   }
 
   function handleTopSearch() {
