@@ -71,9 +71,7 @@
 </script>
 
 <div class="explore-page">
-  <div class="explore-header">
-    <p class="explore-subtitle">Discover and research protocols on Monad</p>
-  </div>
+
 
   <div class="filters">
     <div class="search-wrap">

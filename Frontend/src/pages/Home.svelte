@@ -71,8 +71,12 @@
       bind:value={searchQuery}
       onkeydown={handleTopKeydown}
     />
-    <button class="search-btn" onclick={handleTopSearch} aria-label="Search">
-      <span class="material-symbols-outlined">arrow_forward</span>
+    <button class="search-btn" onclick={handleTopSearch} aria-label="Search" disabled={searching}>
+      {#if searching}
+        <span class="material-symbols-outlined spin">progress_activity</span>
+      {:else}
+        <span class="material-symbols-outlined">arrow_forward</span>
+      {/if}
     </button>
   </div>
 </div>
@@ -258,6 +262,16 @@
   }
   .search-btn:hover {
     opacity: 0.9;
+  }
+  .search-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+  .spin {
+    animation: spin 1s linear infinite;
+  }
+  @keyframes spin {
+    to { transform: rotate(360deg); }
   }
   .search-btn .material-symbols-outlined {
     font-size: 18px;
