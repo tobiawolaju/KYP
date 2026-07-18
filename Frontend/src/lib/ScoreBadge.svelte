@@ -40,22 +40,25 @@
     transition: none;
   }
   .shield.stamped {
-    animation: stampIn 0.4s cubic-bezier(0.12, 0.8, 0.3, 1.1) forwards;
+    animation: stampIn 0.5s cubic-bezier(0.12, 0.8, 0.3, 1.1) forwards;
   }
   @keyframes stampIn {
     0% {
       opacity: 0;
-      transform: rotate(-6deg) scale(1.8);
-      filter: blur(2px);
+      transform: rotate(-6deg) scale(2.2);
+      filter: blur(4px);
     }
-    60% {
-      opacity: 0.9;
-      transform: rotate(-6deg) scale(0.92);
+    40% {
+      opacity: 1;
+      transform: rotate(-6deg) scale(0.88);
       filter: blur(0.5px);
     }
-    80% {
-      transform: rotate(-6deg) scale(1.04);
+    60% {
+      transform: rotate(-6deg) scale(1.06);
       filter: blur(0);
+    }
+    80% {
+      transform: rotate(-6deg) scale(0.97);
     }
     100% {
       opacity: 0.82;
@@ -66,15 +69,26 @@
   .shield.stamped::after {
     content: "";
     position: absolute;
-    inset: -2px;
+    inset: -4px;
     border-radius: 50%;
-    background: radial-gradient(ellipse at center, rgba(0,0,0,0.03) 0%, transparent 70%);
+    background: radial-gradient(ellipse at center, rgba(0,0,0,0.04) 0%, transparent 70%);
     pointer-events: none;
     opacity: 0;
-    animation: inkBleed 0.4s 0.3s ease forwards;
+    animation: inkBleed 0.5s 0.35s ease forwards;
   }
   @keyframes inkBleed {
     to { opacity: 1; }
+  }
+  .shield.stamped::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+    mix-blend-mode: multiply;
+    pointer-events: none;
+    border-radius: inherit;
+    opacity: 0;
+    animation: inkBleed 0.5s 0.35s ease forwards;
   }
   .shield-lg {
     width: 104px;
@@ -155,18 +169,18 @@
     mix-blend-mode: normal;
   }
   .shield-lg .shield-label {
-    font-size: 22px;
-    padding: 3px 8px;
-    margin-top: 4px;
+    font-size: 48px;
+    padding: 4px 12px;
+    margin-top: 6px;
   }
   .shield-md .shield-label {
-    font-size: 18px;
-    padding: 2px 6px;
-    margin-top: 2px;
+    font-size: 40px;
+    padding: 3px 10px;
+    margin-top: 4px;
   }
   .shield-sm .shield-label {
-    font-size: 13px;
-    padding: 1px 4px;
-    margin-top: 0px;
+    font-size: 29px;
+    padding: 2px 8px;
+    margin-top: 2px;
   }
 </style>
