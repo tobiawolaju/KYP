@@ -491,7 +491,7 @@
     display: flex;
     justify-content: flex-end;
     margin-top: 32px;
-    transform: rotate(-18deg);
+    transform: scale(0.8);
     opacity: 0.85;
     pointer-events: none;
     align-self: flex-end;
