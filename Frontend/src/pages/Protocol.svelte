@@ -187,6 +187,9 @@
           {/if}
           <h1 class="protocol-name">{protocol.name}</h1>
         </div>
+        <div class="badge-top">
+          <ScoreBadge score={protocol.score} size="lg" />
+        </div>
       </div>
       <div class="header-meta">
         <span class="meta-badge chain">{protocol.chain}</span>
@@ -281,10 +284,6 @@
           </div>
         </div>
       {/if}
-    </div>
-
-    <div class="badge-bottom">
-      <ScoreBadge score={protocol.score} size="lg" />
     </div>
   </div>
 
@@ -483,14 +482,9 @@
     color: var(--text-secondary);
     margin: 0;
   }
-  .badge-bottom {
-    display: flex;
-    justify-content: flex-end;
-    margin-top: 32px;
-    transform: scale(0.8);
-    opacity: 0.85;
-    pointer-events: none;
-    align-self: flex-end;
+  .badge-top {
+    flex-shrink: 0;
+    align-self: center;
   }
   .use-cases {
     display: flex;
