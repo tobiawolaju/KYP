@@ -29,6 +29,25 @@
 
   let similar = $derived(allProtocols.filter((p) => p.id !== protocol?.id).slice(0, 3));
 
+  let deepCountdown = $state(0);
+  let deepTimer = null;
+
+  function startDeepCountdown() {
+    clearInterval(deepTimer);
+    deepCountdown = 40;
+    deepTimer = setInterval(() => {
+      deepCountdown--;
+      if (deepCountdown <= 0) {
+        clearInterval(deepTimer);
+        loadProtocol(id);
+      }
+    }, 1000);
+  }
+
+  function isDeepResearchPending(p) {
+    return p && (p.deep_research_status === "pending" || p.deep_research_status === "running");
+  }
+
   function loadProtocol(protocolId) {
     clearTimeout(coldTimer);
     loadStatus = "fetching";
@@ -38,12 +57,20 @@
       if (loadStatus === "fetching") loadStatus = "waking";
     }, 4000);
     getProtocol(protocolId)
-      .then((data) => { clearTimeout(coldTimer); protocol = data; loadStatus = "success"; })
+      .then((data) => {
+        clearTimeout(coldTimer);
+        protocol = data;
+        loadStatus = "success";
+        if (isDeepResearchPending(data)) {
+          startDeepCountdown();
+        }
+      })
       .catch((err) => { clearTimeout(coldTimer); loadError = err.message || "Protocol not found"; loadStatus = "error"; });
   }
 
   $effect(() => {
     if (id) loadProtocol(id);
+    return () => { clearInterval(deepTimer); };
   });
 
   $effect(() => {
@@ -161,6 +188,12 @@
   </div>
 {:else if protocol}
   <div class="protocol-page">
+    {#if isDeepResearchPending(protocol)}
+      <div class="deep-research-banner">
+        <span class="material-symbols-outlined banner-icon spin">progress_activity</span>
+        <span class="banner-text">Deep research running in the background — refreshing in {deepCountdown}s</span>
+      </div>
+    {/if}
     <div class="profile-header">
       <div class="header-top">
         <div class="name-shield-row">
@@ -770,6 +803,22 @@
     flex-direction: column;
     align-items: center;
     gap: 12px;
+  }
+  .deep-research-banner {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    background: #e8740c;
+    color: #fff;
+    border-radius: var(--radius-md);
+    margin-bottom: 24px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .banner-icon {
+    font-size: 20px;
+    flex-shrink: 0;
   }
   .loading-icon {
     font-size: 40px;
