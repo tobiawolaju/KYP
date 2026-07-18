@@ -1,4 +1,5 @@
 const { db } = require("./firebase");
+const { normalizeProtocol } = require("./protocolSchema");
 
 function ref(collection) {
   return db.ref(collection);
@@ -47,4 +48,4 @@ async function removeWhere(collection, predicate) {
   return toRemove;
 }
 
-module.exports = { getAll, getById, insert, update, query, remove, removeWhere };
+module.exports = { getAll, getById, insert, update, query, remove, removeWhere, normalizeProtocol };

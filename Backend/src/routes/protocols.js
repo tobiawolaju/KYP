@@ -1,5 +1,5 @@
 const { Router } = require("express");
-const { getAll, getById } = require("../services/db");
+const { getAll, getById, normalizeProtocol } = require("../services/db");
 
 const router = Router();
 
@@ -21,7 +21,7 @@ router.get("/protocols", async (req, res) => {
     }
   }
 
-  res.json(protocols);
+  res.json(protocols.map(normalizeProtocol));
 });
 
 router.get("/protocols/:id", async (req, res) => {
@@ -29,7 +29,7 @@ router.get("/protocols/:id", async (req, res) => {
   if (!protocol) {
     return res.status(404).json({ error: true, message: "Protocol not found" });
   }
-  res.json(protocol);
+  res.json(normalizeProtocol(protocol));
 });
 
 module.exports = router;

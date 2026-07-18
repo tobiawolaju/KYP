@@ -3,7 +3,7 @@ require("dotenv").config();
 const axios = require("axios");
 const cheerio = require("cheerio");
 const { GoogleGenAI } = require("@google/genai");
-const { query, update } = require("./db");
+const { query, update, normalizeProtocol } = require("./db");
 
 const ai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY,
@@ -166,6 +166,8 @@ Rules:
       const merged = deepMerge(existing, geminiFields);
 
       merged.image = logo || existing.image;
+
+      normalizeProtocol(merged);
 
       if (!isValidProtocol(merged)) {
         console.error(`[FLASH] Merge validation failed for "${existing.name}". Skipping Firebase update.`);

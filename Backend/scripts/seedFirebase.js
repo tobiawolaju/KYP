@@ -20,6 +20,7 @@ admin.initializeApp({
 
 const db = admin.database();
 const TEMPLATE = require("../data/protocols.json")[0];
+const { normalizeProtocol } = require("../src/services/protocolSchema");
 
 const CSV_URL = "https://raw.githubusercontent.com/monad-crypto/protocols/refs/heads/main/protocols-testnet.csv";
 
@@ -220,6 +221,7 @@ async function uploadProtocols(protocols) {
   const ref = db.ref("protocols");
   for (const protocol of protocols) {
     const clean = stripFirebaseStripped(protocol);
+    normalizeProtocol(clean);
     await ref.child(protocol.id).set(clean);
   }
   console.log(`[SEED] Protocols uploaded: ${protocols.length}`);
