@@ -113,7 +113,7 @@
       rgba(255,255,255,1) 0px,
       rgba(255,255,255,1) 2px,
       transparent 2px,
-      transparent 5%
+      transparent 1.667%
     );
     @media (min-width: 768px) {
       background: repeating-linear-gradient(
@@ -121,7 +121,7 @@
         rgba(255,255,255,1) 0px,
         rgba(255,255,255,1) 4px,
         transparent 4px,
-        transparent 5%
+        transparent 1.667%
       );
     }
   }
@@ -131,7 +131,7 @@
       rgba(0,0,0,1) 0px,
       rgba(0,0,0,1) 2px,
       transparent 2px,
-      transparent 5%
+      transparent 1.667%
     );
     @media (min-width: 768px) {
       background: repeating-linear-gradient(
@@ -139,7 +139,7 @@
         rgba(0,0,0,1) 0px,
         rgba(0,0,0,1) 4px,
         transparent 4px,
-        transparent 5%
+        transparent 1.667%
       );
     }
   }
