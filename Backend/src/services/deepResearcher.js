@@ -183,6 +183,7 @@ function mapGeminiToFirebase(json) {
 }
 
 async function deepResearch(protocolId) {
+  console.log(`[DEEP] deepResearch called for id: "${protocolId}"`);
   const protocol = await getById("protocols", protocolId);
 
   if (!protocol) {
@@ -219,6 +220,7 @@ async function deepResearch(protocolId) {
       forensics: protocol.forensics,
     }, null, 2));
 
+    console.log(`[DEEP] Calling Gemini for "${protocol.name}"...`);
     const response = await ai.models.generateContent({
       model: "gemini-3.5-flash",
       contents: prompt,
@@ -237,6 +239,7 @@ async function deepResearch(protocolId) {
     const merged = deepMerge(protocol, geminiFields);
 
     const { score, score_max, breakdown } = computeScore(evidence, merged);
+    console.log(`[DEEP] Score computed for "${protocol.name}": ${score}/${score_max}`, breakdown);
     merged.score = score;
     merged.score_max = score_max;
 
@@ -264,6 +267,7 @@ async function deepResearch(protocolId) {
     }
 
     await update("protocols", protocolId, merged);
+    console.log(`[DEEP] Firebase updated for "${protocol.name}"`);
     console.log(`[DEEP] "${protocol.name}" — completed (score: ${score}/${score_max})`);
 
     return { status: "completed", score, score_max, breakdown, changes: changes.length };

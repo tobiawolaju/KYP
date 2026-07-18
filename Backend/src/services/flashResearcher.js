@@ -28,6 +28,8 @@ async function getLogoFromWebsite(website) {
 }
 
 async function flashResearch(protocol) {
+  console.log(`[FLASH] Starting flash research for "${protocol}"`);
+
   const prompt = `
 [protocol] = ${protocol}
 
@@ -96,6 +98,7 @@ Rules:
 `;
 
   try {
+    console.log(`[FLASH] Calling Gemini for "${protocol}"...`);
     const response = await ai.models.generateContent({
       model: "gemini-3.5-flash",
       contents: prompt,
@@ -125,6 +128,7 @@ Rules:
       }
 
       const existing = protocols[0];
+      console.log(`[FLASH] Matched Firebase protocol: "${existing.name}" (id: ${existing.id})`);
 
       if (!needsResearch(existing)) {
         console.log(
@@ -167,8 +171,10 @@ Rules:
       }
 
       await update("protocols", existing.id, merged);
+      console.log(`[FLASH] Firebase updated for "${existing.name}"`);
 
       if (merged.deep_research_status === "pending" && merged.score === null) {
+        console.log(`[FLASH] Triggering DeepResearcher for "${existing.name}"`);
         deepResearch(existing.id).catch((err) => {
           console.error(`[FLASH] DeepResearcher trigger failed for "${existing.name}":`, err.message);
         });
