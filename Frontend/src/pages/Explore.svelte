@@ -40,7 +40,7 @@
       if ((p.score ?? 0) < minScore) return false;
       if (searchQuery) {
         const q = searchQuery.toLowerCase();
-        const haystack = `${p.name} ${p.category} ${p.subcategory || ""} ${p.allCategories || ""}`.toLowerCase();
+        const haystack = `${p.name} ${p.category} ${p.subcategory || ""}`.toLowerCase();
         if (!haystack.includes(q)) return false;
       }
       return true;

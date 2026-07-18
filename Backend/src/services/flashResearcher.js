@@ -35,7 +35,6 @@ Using this query [protocol], return a TRUE JSON object with exactly this structu
   "protocolName": "",
   "description": "",
   "category": "",
-  "allCategories": "",
   "chain": "",
   "website": "",
   "logo": "",
@@ -45,7 +44,6 @@ Using this query [protocol], return a TRUE JSON object with exactly this structu
     "discord": ""
   },
   "contracts": [],
-  "contract_address": "",
   "deployed_date": "",
   "age_summary": "",
   "forensics": {
@@ -83,14 +81,7 @@ Rules:
   Example:
   "DeFi"
 
-- allCategories MUST contain all categories separated by "::"
-  Example:
-  "DeFi::DEX::AMM"
-
 - contracts MUST be an array of deployed contract addresses.
-
-- contract_address MUST be the primary contract address if one exists,
-  otherwise "".
 
 - deployed_date should be YYYY-MM-DD when known, otherwise "".
 
@@ -255,11 +246,7 @@ function mapGeminiToFirebase(json) {
 
   if (isMeaningful(json.description)) result.summary = json.description;
   if (isMeaningful(json.category)) result.category = json.category;
-  if (isMeaningful(json.allCategories))
-    result.allCategories = json.allCategories;
   if (isMeaningful(json.chain)) result.chain = json.chain;
-  if (isMeaningful(json.contract_address))
-    result.contract_address = json.contract_address;
   if (isMeaningful(json.deployed_date))
     result.deployed_date = json.deployed_date;
   if (isMeaningful(json.age_summary)) result.age_summary = json.age_summary;

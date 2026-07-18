@@ -162,7 +162,6 @@ function normalizeProtocols(rows) {
         name,
         category: row.ctype,
         subcategory: row.csubtype,
-        allCategories: row.all_categories,
         contracts: [],
       };
     }
@@ -183,7 +182,6 @@ function normalizeProtocols(rows) {
     protocol.network = "testnet";
     protocol.category = p.category;
     protocol.subcategory = p.subcategory;
-    protocol.allCategories = p.allCategories;
     protocol.contracts = p.contracts;
     return protocol;
   });

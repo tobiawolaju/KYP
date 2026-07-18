@@ -12,7 +12,6 @@
       "discord": "https://discord.gg/aetherswap",
       "github": "https://github.com/aetherswap/core"
     },
-    "contract_address": "0x7a2b3c4d5e6f708192a3b4c5d6e7f8091a2b3c4d",
     "contract_verified": true,
     "score": 42,
     "score_max": 50,
@@ -68,7 +67,6 @@
       "discord": null,
       "github": "https://github.com/monadlend/protocol"
     },
-    "contract_address": "0x8b9c0d1e2f3a4b5c6d7e8f901a2b3c4d5e6f7089",
     "contract_verified": true,
     "score": 38,
     "score_max": 50,
@@ -126,7 +124,6 @@
       "discord": "https://discord.gg/nexusperps",
       "github": null
     },
-    "contract_address": "0x9c0d1e2f3a4b5c6d7e8f901a2b3c4d5e6f7a8b9c0",
     "contract_verified": true,
     "score": 45,
     "score_max": 50,
@@ -186,7 +183,6 @@
       "discord": "https://discord.gg/leafgardens",
       "github": "https://github.com/leafgardens/contracts"
     },
-    "contract_address": "0x0d1e2f3a4b5c6d7e8f901a2b3c4d5e6f7a8b9c0d1",
     "contract_verified": false,
     "score": 29,
     "score_max": 50,
@@ -237,7 +233,6 @@
       "discord": null,
       "github": "https://github.com/basebridge/relayers"
     },
-    "contract_address": "0x1e2f3a4b5c6d7e8f901a2b3c4d5e6f7a8b9c0d1e2f",
     "contract_verified": true,
     "score": 34,
     "score_max": 50,
@@ -292,7 +287,6 @@
       "discord": "https://discord.gg/hivedao",
       "github": "https://github.com/hivedao/framework"
     },
-    "contract_address": "0x2f3a4b5c6d7e8f901a2b3c4d5e6f7a8b9c0d1e2f3a",
     "contract_verified": true,
     "score": 40,
     "score_max": 50,
@@ -351,7 +345,6 @@
       "discord": "https://discord.gg/prismmoney",
       "github": null
     },
-    "contract_address": "0x3a4b5c6d7e8f901a2b3c4d5e6f7a8b9c0d1e2f3a4b",
     "contract_verified": false,
     "score": 31,
     "score_max": 50,
@@ -404,7 +397,6 @@
       "discord": null,
       "github": "https://github.com/orbitzero/app"
     },
-    "contract_address": "0x4b5c6d7e8f901a2b3c4d5e6f7a8b9c0d1e2f3a4b5c",
     "contract_verified": true,
     "score": 27,
     "score_max": 50,

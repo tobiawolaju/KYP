@@ -19,7 +19,6 @@ const router = Router();
       "discord": "string|null",
       "github": "string|null"
     },
-    "contract_address": "string",
     "contract_verified": "boolean",
     "score": "number (0-50)",
     "score_max": 50,
@@ -65,7 +64,6 @@ router.post("/research", async (req, res) => {
       discord: null,
       github: "https://github.com/example/protocol",
     },
-    contract_address: "0x000000000000000000000000000000000000dEaD",
     contract_verified: false,
     score: 35,
     score_max: 50,

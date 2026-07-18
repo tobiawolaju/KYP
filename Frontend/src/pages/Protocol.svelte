@@ -100,7 +100,9 @@
       const userAddress = await signer.getAddress();
 
       const kyp = new Contract(KYP_CONTRACT, STAKE_ABI, signer);
-      const tx = await kyp.stake(protocol.contract_address, { value: parseEther(stakeAmount) });
+      const protocolAddr = protocol.contracts?.[0]?.address;
+      if (!protocolAddr) throw new Error("No contract address found for this protocol");
+      const tx = await kyp.stake(protocolAddr, { value: parseEther(stakeAmount) });
       const receipt = await tx.wait();
 
       const iface = new Interface(["event Staked(uint256 indexed commitmentId, address indexed user, address indexed protocolAddress, uint256 amount, uint256 verifyDeadline)"]);
@@ -118,7 +120,7 @@
       await commitProtocol({
         user_wallet: userAddress,
         protocol_id: protocol.id,
-        protocol_contract_address: protocol.contract_address,
+        protocol_contract_address: protocolAddr,
         staked_amount: parseEther(stakeAmount).toString(),
         stake_tx_hash: receipt.hash,
         onchain_commitment_id: onchainCommitmentId,
@@ -170,9 +172,9 @@
       </div>
       <div class="header-meta">
         <span class="meta-badge chain">{protocol.chain}</span>
-        {#if protocol.contract_address}
-          <span class="contract-address" title={protocol.contract_address}>
-            {protocol.contract_address.slice(0, 6)}...{protocol.contract_address.slice(-4)}
+        {#if protocol.contracts?.[0]?.address}
+          <span class="contract-address" title={protocol.contracts[0].address}>
+            {protocol.contracts[0].address.slice(0, 6)}...{protocol.contracts[0].address.slice(-4)}
           </span>
         {/if}
       </div>

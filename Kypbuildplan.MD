@@ -17,9 +17,10 @@ Fast enrichment. Triggers on every user search.
 **Flow:** User searches "kuru" → FlashResearcher calls Gemini → merges result into Firebase protocol record → frontend navigates to Explore.
 
 **What it fills:**
-- summary, category, subcategory, allCategories, chain
+- summary, category, subcategory, chain
 - links (project, twitter, discord)
-- contracts, contract_address, deployed_date, age_summary
+- contracts[] (contract name + address array)
+- deployed_date, age_summary
 - forensics (admin_function_notes, deployer_wallet_age)
 - founder_history (details, confidence_note)
 - image (via Google favicon service)
@@ -31,9 +32,13 @@ Fast enrichment. Triggers on every user search.
 - use_cases (no use-case extraction yet)
 - team, restricted_jurisdictions
 - who_its_for / who_its_not_for
+- deep_research_status (managed by DeepResearcher, defaults to "pending")
+- deep_researched_at (managed by DeepResearcher, defaults to null)
 
 **Guarantees:**
-- Normalized protocol schema via `normalizeProtocol()` — every protocol in Firebase has the same shape
+- Canonical protocol schema via `normalizeProtocol()` — every protocol in Firebase has the same shape
+- Contract addresses live in `contracts[]` array (sole source of truth)
+- `plain_summary` field reserved for DeepResearcher (not yet filled)
 - Never overwrites existing Firebase data with empty values (deepMerge + isMeaningful)
 - Skips protocols that already have a real image (already researched)
 - Logs every field change for debugging
@@ -45,6 +50,7 @@ Deep analysis. Triggers separately (on-demand or scheduled).
 **Purpose:** Fill the fields FlashResearcher doesn't — the fields that require deeper analysis, cross-referencing, and judgment calls.
 
 **What it would fill:**
+- **plain_summary** — human-readable protocol description (1-3 sentences, different from Gemini's `summary`)
 - **score / score_max** — computed from on-chain data, audit status, team doxxing, funding, community strength
 - **risks** (contract, community, structural) — actual risk analysis, not just data extraction
 - **funding** (has_funding_info, investors, source_note) — funding research from public sources
@@ -190,8 +196,12 @@ Still TODO:
 
 ## Current status snapshot
 
-**Done:** Phase 0 (architecture), Phase 1 (contract deployed + tested), Phase 2 (FlashResearcher + normalization), Phase 3&4 (frontend mostly built)
+**Done:** Phase 0 (architecture), Phase 1 (contract deployed + tested), Phase 2 (FlashResearcher + normalization + schema cleanup), Phase 3&4 (frontend mostly built)
 
-**Next up:** DeepResearcher agent (the scoring/risk engine), then Phase 5 integration, then Phase 6 polish.
+**Schema (canonical):** id, name, image, chain, network, category, subcategory, plain_summary (null), summary, who_its_for, who_its_not_for, deployed_date, age_summary, team_as_of, score, score_max, contract_verified, links{}, risks{}, forensics{}, funding{}, founder_history{}, contracts[]{name, address, type}, use_cases[], team[], restricted_jurisdictions[], deep_research_status ("pending"), deep_researched_at (null), created_at, created_by_wallet
+
+**Seeded:** 226 protocols from Monad testnet registry CSV (no contract_address, no allCategories — removed from schema). All protocols include `deep_research_status: "pending"` and `deep_researched_at: null`.
+
+**Next up:** DeepResearcher agent (the scoring/risk engine, fills plain_summary + score + risks + funding + use_cases + team + who_its_for/not_for), then Phase 5 integration, then Phase 6 polish.
 
 **Key risk:** Score is still static seed data. DeepResearcher is the single most important missing piece — it turns a demo with fake scores into a real product.

@@ -6,11 +6,10 @@ function normalizeProtocol(p) {
   p.network = p.network ?? "";
   p.category = p.category ?? "";
   p.subcategory = p.subcategory ?? "";
-  p.allCategories = p.allCategories ?? "";
+  p.plain_summary = p.plain_summary ?? null;
   p.summary = p.summary ?? "";
   p.who_its_for = p.who_its_for ?? "";
   p.who_its_not_for = p.who_its_not_for ?? "";
-  p.contract_address = p.contract_address ?? "";
   p.deployed_date = p.deployed_date ?? "";
   p.age_summary = p.age_summary ?? "";
   p.team_as_of = p.team_as_of ?? "";
@@ -50,6 +49,9 @@ function normalizeProtocol(p) {
   p.use_cases = p.use_cases ?? [];
   p.team = p.team ?? [];
   p.restricted_jurisdictions = p.restricted_jurisdictions ?? [];
+
+  p.deep_research_status = p.deep_research_status ?? "pending";
+  p.deep_researched_at = p.deep_researched_at ?? null;
 
   p.created_at = p.created_at ?? null;
   p.created_by_wallet = p.created_by_wallet ?? null;
