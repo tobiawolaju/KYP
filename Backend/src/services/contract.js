@@ -6,7 +6,9 @@ const RPC_URL = process.env.MONAD_TESTNET_RPC;
 const PRIVATE_KEY = process.env.VERIFIER_PRIVATE_KEY;
 const CONTRACT_ADDRESS = process.env.KYP_CONTRACT_ADDRESS;
 
-const ABI_PATH = path.join(__dirname, "../../../Contract/abi/KYPCommitment.json");
+// NOTE: If KYPCommitment.sol is redeployed, re-copy the updated ABI from
+// Contract/abi/KYPCommitment.json into Backend/abi/KYPCommitment.json
+const ABI_PATH = path.join(__dirname, "../../abi/KYPCommitment.json");
 const abi = JSON.parse(fs.readFileSync(ABI_PATH, "utf8"));
 
 const provider = new ethers.JsonRpcProvider(RPC_URL);
