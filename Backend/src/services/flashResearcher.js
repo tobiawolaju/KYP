@@ -1,7 +1,5 @@
 require("dotenv").config();
 
-const axios = require("axios");
-const cheerio = require("cheerio");
 const { GoogleGenAI } = require("@google/genai");
 const { query, update, normalizeProtocol } = require("./db");
 
@@ -9,42 +7,20 @@ const ai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY,
 });
 
+// TODO(Hackathon):
+// We currently use Google's favicon service because it is fast and
+// reliable for most websites. After the hackathon replace this with
+// a dedicated logo provider (Brandfetch / Logo.dev / custom scraper)
+// to obtain higher-resolution brand logos instead of favicons.
 async function getLogoFromWebsite(website) {
   if (!website) return "";
 
   try {
-    const { data } = await axios.get(website, {
-      timeout: 10000,
-      headers: {
-        "User-Agent": "Mozilla/5.0",
-      },
-    });
+    const url = new URL(website);
 
-    const $ = cheerio.load(data);
-
-    const selectors = [
-      'link[rel="icon"]',
-      'link[rel="shortcut icon"]',
-      'link[rel="apple-touch-icon"]',
-      'link[rel="mask-icon"]',
-    ];
-
-    for (const selector of selectors) {
-      const href = $(selector).attr("href");
-      if (href) {
-        return new URL(href, website).href;
-      }
-    }
-
-    const ogImage = $('meta[property="og:image"]').attr("content");
-    if (ogImage) {
-      return new URL(ogImage, website).href;
-    }
-
-    // fallback
-    return new URL("/favicon.ico", website).href;
+    return `https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=${encodeURIComponent(url.origin)}&size=256`;
   } catch (err) {
-    console.warn("Logo fetch failed:", err.message);
+    console.warn("Logo URL generation failed:", err.message);
     return "";
   }
 }
@@ -143,19 +119,24 @@ Rules:
       const normalize = (s) => s.toLowerCase().replace(/[\s\-_.]/g, "");
       const queryName = normalize(json.protocolName);
 
-      const protocols = await query("protocols", (p) =>
-        p.name && normalize(p.name) === queryName
+      const protocols = await query(
+        "protocols",
+        (p) => p.name && normalize(p.name) === queryName,
       );
 
       if (protocols.length === 0) {
-        console.log(`[FLASH] No Firebase match for "${json.protocolName}", skipping update`);
+        console.log(
+          `[FLASH] No Firebase match for "${json.protocolName}", skipping update`,
+        );
         return { status: "proceed", data: json };
       }
 
       const existing = protocols[0];
 
       if (!needsResearch(existing)) {
-        console.log(`[FLASH] "${existing.name}" already has valid image, skipping`);
+        console.log(
+          `[FLASH] "${existing.name}" already has valid image, skipping`,
+        );
         return { status: "proceed", data: json };
       }
 
@@ -170,7 +151,9 @@ Rules:
       normalizeProtocol(merged);
 
       if (!isValidProtocol(merged)) {
-        console.error(`[FLASH] Merge validation failed for "${existing.name}". Skipping Firebase update.`);
+        console.error(
+          `[FLASH] Merge validation failed for "${existing.name}". Skipping Firebase update.`,
+        );
         return { status: "proceed", data: json };
       }
 
@@ -181,9 +164,13 @@ Rules:
         return { status: "proceed", data: json };
       }
 
-      console.log(`[FLASH] "${existing.name}" — ${changes.length} field(s) changed:`);
+      console.log(
+        `[FLASH] "${existing.name}" — ${changes.length} field(s) changed:`,
+      );
       for (const c of changes) {
-        console.log(`  ${c.path}: ${JSON.stringify(c.old)} → ${JSON.stringify(c.new)}`);
+        console.log(
+          `  ${c.path}: ${JSON.stringify(c.old)} → ${JSON.stringify(c.new)}`,
+        );
       }
 
       await update("protocols", existing.id, merged);
@@ -215,7 +202,11 @@ function isMeaningful(value) {
 
 function isRealImage(value) {
   if (!value || typeof value !== "string") return false;
-  return value.startsWith("http://") || value.startsWith("https://") || value.startsWith("data:");
+  return (
+    value.startsWith("http://") ||
+    value.startsWith("https://") ||
+    value.startsWith("data:")
+  );
 }
 
 function needsResearch(protocol) {
@@ -226,7 +217,12 @@ function isValidProtocol(protocol) {
   if (!protocol.id) return false;
   if (!protocol.name || typeof protocol.name !== "string") return false;
   if (!protocol.category || typeof protocol.category !== "string") return false;
-  if (!protocol.links || typeof protocol.links !== "object" || Array.isArray(protocol.links)) return false;
+  if (
+    !protocol.links ||
+    typeof protocol.links !== "object" ||
+    Array.isArray(protocol.links)
+  )
+    return false;
   return true;
 }
 
@@ -236,7 +232,8 @@ function mapGeminiToFirebase(json) {
   if (isMeaningful(json.website)) links.project = json.website;
   if (isMeaningful(json.socials?.x)) links.twitter = json.socials.x;
   if (isMeaningful(json.socials?.discord)) links.discord = json.socials.discord;
-  if (isMeaningful(json.socials?.telegram)) links.telegram = json.socials.telegram;
+  if (isMeaningful(json.socials?.telegram))
+    links.telegram = json.socials.telegram;
 
   const forensics = {};
 
@@ -258,16 +255,20 @@ function mapGeminiToFirebase(json) {
 
   if (isMeaningful(json.description)) result.summary = json.description;
   if (isMeaningful(json.category)) result.category = json.category;
-  if (isMeaningful(json.allCategories)) result.allCategories = json.allCategories;
+  if (isMeaningful(json.allCategories))
+    result.allCategories = json.allCategories;
   if (isMeaningful(json.chain)) result.chain = json.chain;
-  if (isMeaningful(json.contract_address)) result.contract_address = json.contract_address;
-  if (isMeaningful(json.deployed_date)) result.deployed_date = json.deployed_date;
+  if (isMeaningful(json.contract_address))
+    result.contract_address = json.contract_address;
+  if (isMeaningful(json.deployed_date))
+    result.deployed_date = json.deployed_date;
   if (isMeaningful(json.age_summary)) result.age_summary = json.age_summary;
   if (isMeaningful(json.contracts)) result.contracts = json.contracts;
 
   if (Object.keys(links).length > 0) result.links = links;
   if (Object.keys(forensics).length > 0) result.forensics = forensics;
-  if (Object.keys(founderHistory).length > 0) result.founder_history = founderHistory;
+  if (Object.keys(founderHistory).length > 0)
+    result.founder_history = founderHistory;
 
   return result;
 }
