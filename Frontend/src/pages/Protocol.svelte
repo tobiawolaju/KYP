@@ -182,11 +182,9 @@
       <div class="info-section">
         <h3 class="section-label">Summary</h3>
         <div class="summary-stamp-wrapper">
-          {#if protocol.score}
-            <div class="stamp">
-              <ScoreBadge score={protocol.score} size="md" />
-            </div>
-          {/if}
+          <div class="stamp">
+            <ScoreBadge score={protocol.score} size="md" />
+          </div>
           <p class="section-text">{protocol.summary}</p>
         </div>
       </div>
