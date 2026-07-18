@@ -1,12 +1,22 @@
 <script>
   import { navigate } from "../lib/router.svelte.js";
+  import { flashResearch } from "../lib/api.js";
 
   let searchQuery = $state("");
+  let searching = $state(false);
 
-  function handleSearch() {
+  async function handleSearch() {
     const q = searchQuery.trim();
-    if (!q) return;
-    navigate(`/protocols?q=${encodeURIComponent(q)}`);
+    if (!q || searching) return;
+    searching = true;
+    try {
+      await flashResearch(q);
+      navigate(`/protocols?q=${encodeURIComponent(q)}`);
+    } catch (e) {
+      navigate(`/protocols?q=${encodeURIComponent(q)}`);
+    } finally {
+      searching = false;
+    }
   }
 
   function handleKeydown(e) {

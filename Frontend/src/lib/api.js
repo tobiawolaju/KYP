@@ -74,3 +74,10 @@ export function toggleFavorite(wallet, protocol_id) {
     body: JSON.stringify({ wallet, protocol_id }),
   });
 }
+
+export function flashResearch(query) {
+  return request("/flash-research", {
+    method: "POST",
+    body: JSON.stringify({ query }),
+  });
+}

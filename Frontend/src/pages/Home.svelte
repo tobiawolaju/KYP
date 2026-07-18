@@ -2,14 +2,24 @@
   import { navigate } from "../lib/router.svelte.js";
   import Link from "../lib/Link.svelte";
   import VideoOverlay from "../lib/VideoOverlay.svelte";
+  import { flashResearch } from "../lib/api.js";
 
   let searchQuery = $state("");
   let showVideo = $state(false);
+  let searching = $state(false);
 
-  function handleSearch(query) {
+  async function handleSearch(query) {
     const q = query.trim();
-    if (!q) return;
-    navigate(`/protocols?q=${encodeURIComponent(q)}`);
+    if (!q || searching) return;
+    searching = true;
+    try {
+      await flashResearch(q);
+      navigate(`/protocols?q=${encodeURIComponent(q)}`);
+    } catch (e) {
+      navigate(`/protocols?q=${encodeURIComponent(q)}`);
+    } finally {
+      searching = false;
+    }
   }
 
   function handleTopSearch() {

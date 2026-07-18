@@ -8,6 +8,7 @@ const verifyRoutes = require("./routes/verify");
 const withdrawRoutes = require("./routes/withdraw");
 const protocolsRoutes = require("./routes/protocols");
 const favoritesRoutes = require("./routes/favorites");
+const flashResearchRoutes = require("./routes/flashResearch");
 
 const app = express();
 
@@ -20,6 +21,7 @@ app.use(verifyRoutes);
 app.use(withdrawRoutes);
 app.use(protocolsRoutes);
 app.use(favoritesRoutes);
+app.use(flashResearchRoutes);
 
 app.use(errorHandler);
 
