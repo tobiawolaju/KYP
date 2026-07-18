@@ -2,6 +2,7 @@ const BASE = import.meta.env.VITE_BACKEND_URL || "http://localhost:3001";
 
 async function request(path, options = {}) {
   const res = await fetch(`${BASE}${path}`, {
+    cache: "no-store",
     headers: { "Content-Type": "application/json", ...options.headers },
     ...options,
   });

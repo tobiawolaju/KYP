@@ -23,13 +23,27 @@
   let stakeError = $state("");
   let deadlineTimestamp = $state("");
 
+  let loadStatus = $state("idle");
+  let loadError = $state("");
+  let coldTimer = null;
+
   let similar = $derived(allProtocols.filter((p) => p.id !== protocol?.id).slice(0, 3));
 
+  function loadProtocol(protocolId) {
+    clearTimeout(coldTimer);
+    loadStatus = "fetching";
+    loadError = "";
+    protocol = null;
+    coldTimer = setTimeout(() => {
+      if (loadStatus === "fetching") loadStatus = "waking";
+    }, 4000);
+    getProtocol(protocolId)
+      .then((data) => { clearTimeout(coldTimer); protocol = data; loadStatus = "success"; })
+      .catch((err) => { clearTimeout(coldTimer); loadError = err.message || "Protocol not found"; loadStatus = "error"; });
+  }
+
   $effect(() => {
-    if (id) {
-      protocol = null;
-      getProtocol(id).then((data) => { protocol = data; }).catch(() => {});
-    }
+    if (id) loadProtocol(id);
   });
 
   $effect(() => {
@@ -127,7 +141,23 @@
   }
 </script>
 
-{#if protocol}
+{#if loadStatus === "fetching" || loadStatus === "waking"}
+  <div class="protocol-loading">
+    <span class="material-symbols-outlined loading-icon spin">progress_activity</span>
+    {#if loadStatus === "waking"}
+      <p class="loading-text">Server is waking up...</p>
+      <p class="loading-sub">Free tier backend takes ~30s on first request</p>
+    {:else}
+      <p class="loading-text">Loading protocol...</p>
+    {/if}
+  </div>
+{:else if loadStatus === "error"}
+  <div class="protocol-loading error">
+    <span class="material-symbols-outlined loading-icon">error</span>
+    <p class="loading-text">{loadError}</p>
+    <button class="retry-btn" onclick={() => loadProtocol(id)}>Try Again</button>
+  </div>
+{:else if protocol}
   <div class="protocol-page">
     <div class="profile-header">
       <div class="header-top">
@@ -295,12 +325,6 @@
       </div>
     </div>
   {/if}
-{:else}
-  <div class="not-found">
-    <span class="material-symbols-outlined not-found-icon">search_off</span>
-    <h2>Protocol not found</h2>
-    <Link to="/" class="back-link">← Back to research</Link>
-  </div>
 {/if}
 
 <style>
@@ -416,9 +440,6 @@
     font-family: var(--mono);
     font-weight: 600;
   }
-  .meta-badge .material-symbols-outlined {
-    font-size: 14px;
-  }
   .meta-badge.chain {
     background: var(--surface-hover);
     color: var(--text-secondary);
@@ -501,22 +522,6 @@
     align-items: center;
     gap: 8px;
   }
-  .risk-icon {
-    width: 24px;
-    height: 24px;
-    border-radius: var(--radius-sm);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 10px;
-    font-weight: 700;
-    font-family: var(--mono);
-    color: #fff;
-    flex-shrink: 0;
-  }
-  .risk-icon.contract { background: var(--rose); }
-  .risk-icon.community { background: var(--amber); }
-  .risk-icon.structural { background: var(--blue); }
   .risk-type {
     font-size: 13px;
     font-weight: 600;
@@ -748,6 +753,51 @@
     border-radius: var(--radius-sm);
   }
 
+  .protocol-loading {
+    text-align: center;
+    padding: 80px 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+  .loading-icon {
+    font-size: 40px;
+    color: var(--accent);
+  }
+  .protocol-loading.error .loading-icon {
+    color: var(--rose);
+  }
+  .loading-text {
+    font-size: 15px;
+    color: var(--text-muted);
+    margin: 0;
+  }
+  .loading-sub {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 0;
+    opacity: 0.7;
+  }
+  .retry-btn {
+    margin-top: 8px;
+    padding: 10px 20px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: var(--sans);
+  }
+  .spin {
+    animation: spin 1.2s linear infinite;
+  }
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
   .not-found {
     padding: 80px 24px;
     text-align: center;
@@ -761,14 +811,6 @@
   .not-found h2 {
     color: var(--text-muted);
     margin-bottom: 16px;
-  }
-  :global(.back-link) {
-    color: var(--accent);
-    font-weight: 500;
-    text-decoration: none;
-  }
-  :global(.back-link:hover) {
-    opacity: 0.8;
   }
   @media (min-width: 641px) {
     .floating-bar .fav-btn,

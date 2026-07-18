@@ -4,11 +4,23 @@
   import { getProtocols } from "../lib/api.js";
 
   let allProtocols = $state([]);
-  let loading = $state(true);
+  let status = $state("idle");
+  let errorMsg = $state("");
+  let coldTimer = null;
 
-  $effect(() => {
-    getProtocols().then((data) => { allProtocols = data; loading = false; }).catch(() => { loading = false; });
-  });
+  function loadProtocols() {
+    clearTimeout(coldTimer);
+    status = "fetching";
+    errorMsg = "";
+    coldTimer = setTimeout(() => {
+      if (status === "fetching") status = "waking";
+    }, 4000);
+    getProtocols()
+      .then((data) => { clearTimeout(coldTimer); allProtocols = data; status = "success"; })
+      .catch((err) => { clearTimeout(coldTimer); errorMsg = err.message || "Failed to load protocols"; status = "error"; });
+  }
+
+  $effect(() => { loadProtocols(); });
 
   let categories = $derived([...new Set(allProtocols.map((p) => p.category))]);
 
@@ -90,35 +102,53 @@
     </div>
   </div>
 
-  <div class="protocol-grid">
-    {#each filtered as protocol}
-      <Link to={`/protocol/${protocol.id}`} class="protocol-card">
-        <div class="card-top">
-          <div class="card-titles">
-            {#if protocol.image}
-              <img src={protocol.image} alt={protocol.name} class="card-logo" />
-            {/if}
-            <div class="card-name-group">
-              <h3 class="card-name">{protocol.name}</h3>
-              <span class="card-category">{protocol.category}</span>
+  {#if status === "fetching" || status === "waking"}
+    <div class="status-box">
+      <span class="material-symbols-outlined status-icon spin">progress_activity</span>
+      {#if status === "waking"}
+        <p class="status-text">Server is waking up...</p>
+        <p class="status-sub">Free tier backend takes ~30s on first request</p>
+      {:else}
+        <p class="status-text">Loading protocols...</p>
+      {/if}
+    </div>
+  {:else if status === "error"}
+    <div class="status-box error">
+      <span class="material-symbols-outlined status-icon">error</span>
+      <p class="status-text">{errorMsg}</p>
+      <button class="retry-btn" onclick={loadProtocols}>Try Again</button>
+    </div>
+  {:else if status === "success"}
+    <div class="protocol-grid">
+      {#each filtered as protocol}
+        <Link to={`/protocol/${protocol.id}`} class="protocol-card">
+          <div class="card-top">
+            <div class="card-titles">
+              {#if protocol.image}
+                <img src={protocol.image} alt={protocol.name} class="card-logo" />
+              {/if}
+              <div class="card-name-group">
+                <h3 class="card-name">{protocol.name}</h3>
+                <span class="card-category">{protocol.category}</span>
+              </div>
             </div>
           </div>
-        </div>
-        <p class="card-summary">{protocol.summary}</p>
-        <div class="card-tags">
-          {#each protocol.use_cases.slice(0, 2) as uc}
-            <span class="tag">{uc}</span>
-          {/each}
-        </div>
-      </Link>
-    {/each}
-  </div>
-
-  {#if filtered.length === 0}
-    <div class="empty-state">
-      <span class="material-symbols-outlined empty-icon">search_off</span>
-      <p>No protocols match your filters.</p>
+          <p class="card-summary">{protocol.summary}</p>
+          <div class="card-tags">
+            {#each protocol.use_cases.slice(0, 2) as uc}
+              <span class="tag">{uc}</span>
+            {/each}
+          </div>
+        </Link>
+      {/each}
     </div>
+
+    {#if filtered.length === 0}
+      <div class="empty-state">
+        <span class="material-symbols-outlined empty-icon">search_off</span>
+        <p>No protocols match your filters.</p>
+      </div>
+    {/if}
   {/if}
 </div>
 
@@ -130,13 +160,6 @@
   }
   .explore-header {
     margin-bottom: 32px;
-  }
-  .explore-title {
-    font-size: 32px;
-    font-weight: 800;
-    margin: 0 0 6px;
-    color: var(--text);
-    letter-spacing: -0.5px;
   }
   .explore-subtitle {
     font-size: 15px;
@@ -219,20 +242,6 @@
     color: var(--accent);
     font-weight: 600;
   }
-  .result-count {
-    margin-left: auto;
-    justify-content: flex-end;
-  }
-  .count-badge {
-    font-family: var(--mono);
-    font-size: 13px;
-    color: var(--text-muted);
-    padding: 6px 12px;
-    border-radius: 0;
-    background: var(--accent-bg);
-    color: var(--accent);
-    font-weight: 600;
-  }
 
   .protocol-grid {
     display: grid;
@@ -302,31 +311,6 @@
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
-  .card-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 8px;
-    margin-top: auto;
-    padding-top: 12px;
-    border-top: 1px solid var(--border-light);
-  }
-  .card-network {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    font-family: var(--mono);
-    font-size: 11px;
-    padding: 3px 8px;
-    border-radius: var(--radius-sm);
-    background: var(--accent-bg);
-    color: var(--accent);
-    text-transform: uppercase;
-    font-weight: 600;
-  }
-  .card-network .material-symbols-outlined {
-    font-size: 13px;
-  }
   .card-tags {
     display: flex;
     gap: 4px;
@@ -340,6 +324,50 @@
     font-weight: 500;
   }
 
+  .status-box {
+    text-align: center;
+    padding: 64px 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+  .status-icon {
+    font-size: 40px;
+    color: var(--accent);
+  }
+  .status-box.error .status-icon {
+    color: var(--rose);
+  }
+  .status-text {
+    font-size: 15px;
+    color: var(--text-muted);
+    margin: 0;
+  }
+  .status-sub {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 0;
+    opacity: 0.7;
+  }
+  .retry-btn {
+    margin-top: 8px;
+    padding: 10px 20px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: var(--sans);
+  }
+  .spin {
+    animation: spin 1.2s linear infinite;
+  }
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
   .empty-state {
     text-align: center;
     padding: 64px 24px;
