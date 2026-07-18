@@ -127,8 +127,8 @@ Built and live:
 - [x] Visual identity locked and applied consistently
 - [x] Routing: `/`, `/protocol/:id`, `/protocols`, `/dashboard`, `/dashboard/commit/:id`
 - [x] Home — hero with grid background, featured protocols grid
-- [x] Protocol page — ScoreBadge shield (5-tier), who it's for, risks, links, favorite toggle, similar protocols, commit modal
-- [x] Explore — filter by category, score range, search
+- [x] Protocol page — ScoreBadge shield (5-tier) in header top-right, who it's for, risks, SVG link icons, favorite toggle, commit modal
+- [x] Explore — filter by category, score range, search, clean cards (logo + name + category + plain_summary only)
 - [x] Dashboard — wallet address, total staked, activity grid, per-protocol commit graphs
 - [x] Commit Detail page — expanded commit graph + activity list + stake balance
 - [x] CommitGraph component — reusable, mini/expanded sizes
@@ -136,7 +136,7 @@ Built and live:
 - [x] ScoreBadge always renders (defaults to 0/Rug potential for unscored protocols)
 
 Still TODO:
-- [ ] DeepResearcher integration — show "Analyzing..." state when status is `running`, poll every 15s, auto-refresh on `completed`
+- [x] DeepResearcher integration — orange countdown banner, auto-refresh every 40s while pending/running
 - [ ] Wire real wallet connect via Privy end-to-end
 - [ ] Wire real contract calls for `stake()` from the commit modal
 
@@ -164,10 +164,10 @@ Still TODO:
 
 ## Current status snapshot
 
-**Done:** Phase 0 (architecture), Phase 1 (contract), Phase 2 (FlashResearcher + DeepResearcher + normalization), Phase 3&4 (frontend mostly built)
+**Done:** Phase 0 (architecture), Phase 1 (contract), Phase 2 (FlashResearcher + DeepResearcher + normalization), Phase 3&4 (frontend mostly built — DeepResearcher UI, countdown banner, ScoreBadge in header, SVG link icons, scroll-to-top, Explore card cleanup)
 
 **Schema (canonical):** id, name, image, chain, network, category, subcategory, plain_summary, summary, who_its_for, who_its_not_for, deployed_date, age_summary, team_as_of, score, score_max, contract_verified, links{}, risks{}, forensics{}, funding{}, founder_history[], contracts[], use_cases[], team[], restricted_jurisdictions[], deep_research_status, deep_researched_at, deep_research_error, deep_research_version, created_at, created_by_wallet
 
 **Seeded:** 226 protocols, all with `deep_research_status: "pending"`
 
-**Next up:** Phase 4 frontend (DeepResearcher UI integration — polling + "Analyzing..." state), then Phase 5 e2e testing, then Phase 6 polish.
+**Next up:** Wire real wallet + contract calls (Phase 4 remainder), then Phase 5 e2e testing, then Phase 6 polish.
