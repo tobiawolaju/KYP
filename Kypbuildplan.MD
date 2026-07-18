@@ -6,15 +6,100 @@ Scope discipline rule: if a step isn't done by its deadline, cut it — don't le
 
 ---
 
+## Architecture — Two-Agent Research Pipeline
+
+KYP uses a two-agent research architecture. Both agents call Gemini, but they serve different purposes and run at different times.
+
+### Agent 1: FlashResearcher (built, live)
+
+Fast enrichment. Triggers on every user search.
+
+**Flow:** User searches "kuru" → FlashResearcher calls Gemini → merges result into Firebase protocol record → frontend navigates to Explore.
+
+**What it fills:**
+- summary, category, subcategory, allCategories, chain
+- links (project, twitter, discord)
+- contracts, contract_address, deployed_date, age_summary
+- forensics (admin_function_notes, deployer_wallet_age)
+- founder_history (details, confidence_note)
+- image (via Google favicon service)
+
+**What it does NOT fill:**
+- score / score_max (no scoring logic yet)
+- risks (no risk analysis yet)
+- funding (no funding research yet)
+- use_cases (no use-case extraction yet)
+- team, restricted_jurisdictions
+- who_its_for / who_its_not_for
+
+**Guarantees:**
+- Normalized protocol schema via `normalizeProtocol()` — every protocol in Firebase has the same shape
+- Never overwrites existing Firebase data with empty values (deepMerge + isMeaningful)
+- Skips protocols that already have a real image (already researched)
+- Logs every field change for debugging
+
+### Agent 2: DeepResearcher (planned, not built)
+
+Deep analysis. Triggers separately (on-demand or scheduled).
+
+**Purpose:** Fill the fields FlashResearcher doesn't — the fields that require deeper analysis, cross-referencing, and judgment calls.
+
+**What it would fill:**
+- **score / score_max** — computed from on-chain data, audit status, team doxxing, funding, community strength
+- **risks** (contract, community, structural) — actual risk analysis, not just data extraction
+- **funding** (has_funding_info, investors, source_note) — funding research from public sources
+- **use_cases** — extracted from protocol docs/code, not just Gemini's guess
+- **who_its_for / who_its_not_for** — user persona analysis
+- **team** — team member research, prior projects, doxxing status
+- **restricted_jurisdictions** — regulatory awareness
+- **contract_verified** — on-chain verification status
+
+**How it differs from FlashResearcher:**
+| | FlashResearcher | DeepResearcher |
+|---|---|---|
+| Speed | < 5s | 30s–2min |
+| Trigger | Every search | On-demand / scheduled |
+| Depth | Surface data extraction | Deep analysis + scoring |
+| Risk | Low (enrichment only) | Higher (writes scores, risks) |
+| Prompt | Single factual prompt | Multi-step analysis prompt |
+
+**Architecture options (TBD):**
+1. **Sequential:** FlashResearcher runs first (fast), DeepResearcher runs after (background)
+2. **On-demand:** User clicks "Deep Research" on a protocol page
+3. **Scheduled:** Cron job runs DeepResearcher on all protocols nightly
+4. **Hybrid:** Flash on search + Deep on first visit to protocol page
+
+### Why two agents instead of one?
+
+1. **User experience** — Search is instant (< 5s). Deep research takes time. Don't block the search flow.
+2. **Cost** — Flash is cheap (single Gemini call). Deep is expensive (multiple calls, web scraping, analysis).
+3. **Reliability** — Flash failing doesn't break search. Deep failing doesn't break the app.
+4. **Progressive enhancement** — Protocol works with just Flash. Deep makes it better.
+
+### The scoring problem
+
+Currently, `score` is static seed data. No agent computes it. This is the single biggest gap in the product — the score shield is the hero UI element, but it's fake.
+
+DeepResearcher must solve this. Score computation should consider:
+- Contract audit status (audited = higher score)
+- Team doxxing (public team = higher score)
+- Funding (VC-backed = higher score, but also = centralization risk)
+- Community size and activity
+- Deployment age (older = more trusted)
+- Admin function risk (upgradeable = lower score)
+- Top holder concentration (high = lower score)
+
+Score range: 0–50, mapped to 5 tiers (Rug potential / High risk / Caution / Solid / Secured).
+
+---
+
 ## Phase 0 — Architecture (tonight, ~45 min) ✅ DONE
 
-Full details in [`ARCHITECTURE.md`](./ARCHITECTURE.md) — data models, flow diagram, sequence diagram, component map.
-
-- [x] Define the exact data model for a "protocol research" record (name, links, score, use cases, risks, summary) → see `ARCHITECTURE.md`
-- [x] Define the exact data model for a "commitment" (user wallet, protocol, staked amount, commit timestamp, verify condition, status: active/verified/slashed) → see `ARCHITECTURE.md`
-- [x] Decide the single onchain "did they actually engage" check → any tx from `user_wallet` to `protocol_contract_address` where `tx.timestamp > commit_timestamp`, checked via RPC and triggered by backend (not a trustless oracle — right tradeoff for the timeline)
-- [x] Sketch the 3 screens you actually need: (1) Research input + profile view, (2) Action/commit flow, (3) Dashboard of active commitments + status
-- [x] Write down what you are explicitly NOT building tonight → Google Calendar integration, multi-agent research pipeline, commitment-conflict checking, sybil/duplicate-wallet protection, slashed-stake payout logic, KYD lookup extension — all parked as roadmap bullets
+- [x] Define the exact data model for a "protocol research" record → see `ARCHITECTURE.md`
+- [x] Define the exact data model for a "commitment" → see `ARCHITECTURE.md`
+- [x] Decide the single onchain "did they actually engage" check
+- [x] Sketch the 3 screens you actually need
+- [x] Write down what you are explicitly NOT building tonight
 
 ## Phase 1 — Smart Contract (tonight, ~1.5–2 hrs)
 
@@ -41,48 +126,61 @@ Contract drafted: [`KYPCommitment.sol`](./KYPCommitment.sol). Test suite drafted
 
 All contract work done: written, tested (20/20 including demo twin), deployed, verified on explorer, exercised live on testnet (stake, verify, and slash all confirmed with real tx hashes), and pushed to a public GitHub repo with clean commit history.
 
-## Phase 2 — Backend (in progress)
+## Phase 2 — Backend ✅ MOSTLY DONE
 
-- [ ] Set up Node.js server skeleton on Render
-- [ ] Build `/research` endpoint: takes a link/handle, returns structured profile (name, description, score, use cases, risks) — start with a single well-crafted prompt to an LLM with web access rather than multiple chained agents
+Built and live:
+- [x] Node.js/Express server on Render
+- [x] FlashResearcher agent: Gemini research → Firebase enrichment (deep merge, normalization, change detection)
+- [x] Canonical protocol schema via `normalizeProtocol()` — every protocol in Firebase has the same shape
+- [x] `GET /protocols` and `GET /protocols/:id` — normalized responses
+- [x] `POST /flash-research` — triggers FlashResearcher, returns status
+- [x] Logo scraping replaced with Google favicon service (no axios/cheerio dependency)
+- [x] Firebase Realtime Database abstraction (getAll, getById, insert, update, query)
+- [x] Seed script pulls from Monad testnet registry CSV
+
+Still TODO:
+- [ ] DeepResearcher agent — fills score, risks, funding, use_cases, team, who_its_for/not_for (see Architecture section above)
 - [ ] Build `/commit` endpoint: writes commitment record, triggers/records the onchain stake tx
 - [ ] Build `/verify` endpoint: reads onchain activity for a wallet + protocol pair, updates commitment status
-- [ ] **Build scheduled auto-resolution script**: periodic job (Render Cron Job, or an external scheduler hitting a `/resolve-due-commitments` endpoint) that scans all `active` commitments, checks each via RPC, and calls `verify()` or `slash()` on the ones that are due — no manual button click required, resolves automatically the moment a deadline passes or engagement is detected. Confirm Render plan supports Cron Jobs before committing to that path; fall back to an external trigger (cron-job.org / GitHub Actions scheduled workflow) if not.
+- [ ] Build scheduled auto-resolution script: periodic job that scans all `active` commitments, checks each via RPC, and calls `verify()` or `slash()` on the ones that are due
 - [ ] Add basic error handling (bad link, LLM failure, RPC failure) — no unhandled crashes during a live demo
 
-## Phase 3 & 4 — Frontend (well ahead of plan, built on dummy data)
+## Phase 3 & 4 — Frontend ✅ MOSTLY DONE
 
-Stack note: frontend is Svelte + Vite (not React as originally assumed) — routing, structure, and all prompts adjusted accordingly.
+Stack: Svelte + Vite, Monad-brand-inspired white theme, Privy for wallet auth.
 
-Visual identity locked: Monad-brand-inspired white theme (`#6E54FF` primary purple, `#DDD7FE` light fill, `#85E6FF`/`#B9E3F9`/`#FF8EE4`/`#FFAE45` secondary accents, red/rose for slashed state), Britti Sans/Inter/Roboto Mono typography, Privy for wallet auth (wallet-only, embedded wallets disabled).
-
-- [x] Visual identity picked and applied consistently (not default Tailwind/shadcn look)
-- [x] Routing set up: `/`, `/protocol/:id`, `/protocols` (explore), `/dashboard`, `/dashboard/commit/:id`
-- [x] Dummy data file with 8 protocols, commitments, favorites, activity events
-- [x] Home — hero + featured protocols grid
-- [x] Protocol page — score shield (5-tier: Rug potential/High risk/Caution/Solid/Secured), who it's for / who it's NOT for, risks, verification badge, age fact, team section, use cases, links, favorite toggle, similar protocols with tier tags, commit modal
-- [x] Explore (`/protocols`) — filter by network, category, score range (TVL filter deliberately excluded — no real data source yet)
-- [x] Dashboard — wallet address, total staked, streak calculation, aggregate GitHub-style activity grid (merged across protocols), per-protocol commit graphs (real timeline with empty-day cells, not floating dots), FAB for "+ Research new protocol", wallet disconnect
+Built and live:
+- [x] Visual identity locked and applied consistently
+- [x] Routing: `/`, `/protocol/:id`, `/protocols`, `/dashboard`, `/dashboard/commit/:id`
+- [x] Home — hero with grid background, featured protocols grid
+- [x] Protocol page — ScoreBadge shield (5-tier), who it's for, risks, links, favorite toggle, similar protocols, commit modal
+- [x] Explore — filter by category, score range, search
+- [x] Dashboard — wallet address, total staked, activity grid, per-protocol commit graphs
 - [x] Commit Detail page — expanded commit graph + activity list + stake balance
-- [x] CommitGraph component — reusable, mini/expanded sizes, cyan/red/muted day-cell timeline logic
-- [x] Static "Testnet" network badge (no live mainnet toggle — correctly scoped, `network` field ready for future use)
-- [x] Commit/stake modal copy updated: fixed 72h period stated explicitly, auto-resolution explained (no manual verify button implied)
-- [ ] Wire real wallet connect via Privy end-to-end (currently scaffolded — confirm live connect/disconnect works, not just UI states)
-- [ ] Replace dummy data reads with real backend calls once Phase 2 endpoints are live (`/research`, `/commit`, `/verify`)
-- [ ] Wire real contract calls for `stake()` from the commit modal (currently navigates to dashboard without a real tx)
+- [x] CommitGraph component — reusable, mini/expanded sizes
+- [x] Frontend guards for missing protocol fields (hide empty sections, never crash)
+- [x] ScoreBadge always renders (defaults to 0/Rug potential for unscored protocols)
+
+Still TODO:
+- [ ] Wire real wallet connect via Privy end-to-end
+- [ ] Replace dummy data reads with real backend calls
+- [ ] Wire real contract calls for `stake()` from the commit modal
+- [ ] DeepResearcher integration — show "Analyzing..." state when DeepResearcher is running, update protocol page live when results arrive
 
 ## Phase 5 — Integration + End-to-End Test
 
-- [ ] Full flow test: paste a real protocol link → get profile → commit → stake tx confirms onchain → simulate engagement tx → verify updates status
-- [ ] Test the FAIL path too: commit, don't engage, confirm slash logic actually triggers (judges may test this)
+- [ ] Full flow test: search a protocol → FlashResearcher enriches → protocol page loads with full data
+- [ ] Test DeepResearcher flow: trigger deep analysis → score/risks/funding populated → protocol page updates
+- [ ] Test the FAIL path: commit, don't engage, confirm slash logic actually triggers (judges may test this)
 - [ ] Test with a fresh wallet with zero prior history — make sure app doesn't break on empty state
 - [ ] Fix broken states, loading states, error states — no blank screens
+- [ ] Test normalization: search for a brand-new protocol not in seed data → verify it gets full schema in Firebase
 
 ## Phase 6 — Polish + Submission Assets
 
-- [ ] Finalize README (problem, solution, stack, links) — already drafted, fill in final links
-- [ ] Record demo video (under 3 min): show research → commit → stake → verify, live, no cuts hiding fake data
-- [ ] Write submission form answers (Description, Problem, Solution) — reuse README language, keep tight
+- [ ] Finalize README (problem, solution, stack, links)
+- [ ] Record demo video (under 3 min): show search → FlashResearcher enriches → DeepResearcher scores → commit → stake → verify, live, no cuts hiding fake data
+- [ ] Write submission form answers (Description, Problem, Solution)
 - [ ] Push final commits with clear messages (avoid "final final v2" — judging agent checks commit history)
 - [ ] Post about it on X, grab the post URL for submission
 - [ ] Double check: contract address included, testnet clearly labeled, project URL live and working
@@ -90,6 +188,10 @@ Visual identity locked: Monad-brand-inspired white theme (`#6E54FF` primary purp
 
 ---
 
-## Tonight's realistic target
+## Current status snapshot
 
-Given the clock, aim to close out **Phase 0 and Phase 1** tonight (architecture + contract deployed and tested). That's the part everything else depends on, and it's the least risky to do late at night when you're more likely to make sloppy frontend/UI calls. Fresh eyes tomorrow for UI design and the research agent prompt.
+**Done:** Phase 0 (architecture), Phase 1 (contract deployed + tested), Phase 2 (FlashResearcher + normalization), Phase 3&4 (frontend mostly built)
+
+**Next up:** DeepResearcher agent (the scoring/risk engine), then Phase 5 integration, then Phase 6 polish.
+
+**Key risk:** Score is still static seed data. DeepResearcher is the single most important missing piece — it turns a demo with fake scores into a real product.
