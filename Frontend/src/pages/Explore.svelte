@@ -36,6 +36,7 @@
 
   let filtered = $derived(
     allProtocols.filter((p) => {
+      if (p.deep_research_status !== "completed") return false;
       if (selectedCategory && p.category !== selectedCategory) return false;
       if ((p.score ?? 0) < minScore) return false;
       if (searchQuery) {
