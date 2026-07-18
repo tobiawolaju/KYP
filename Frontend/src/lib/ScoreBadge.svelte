@@ -169,7 +169,7 @@
     mix-blend-mode: normal;
   }
   .shield-lg .shield-label {
-    font-size: 48px;
+    font-size: 28px;
     padding: 4px 12px;
     margin-top: 6px;
   }
