@@ -485,6 +485,7 @@
   .badge-top {
     flex-shrink: 0;
     align-self: center;
+    transform: scale(0.7);
   }
   .use-cases {
     display: flex;

@@ -10,9 +10,15 @@
   }
 
   let tier = $derived(tierFromScore(score));
+  let stamped = $state(false);
+
+  $effect(() => {
+    const t = setTimeout(() => { stamped = true; }, 150);
+    return () => clearTimeout(t);
+  });
 </script>
 
-<div class="shield" style="--shield-color: {tier.color};" class:shield-sm={size === "sm"} class:shield-md={size === "md"} class:shield-lg={size === "lg"}>
+<div class="shield" class:stamped style="--shield-color: {tier.color};" class:shield-sm={size === "sm"} class:shield-md={size === "md"} class:shield-lg={size === "lg"}>
   <svg viewBox="0 0 120 140" class="shield-svg">
     <path d="M60 2 L116 34 L116 78 C116 108 90 128 60 138 C30 128 4 108 4 78 L4 34 Z" class="shield-border-outer" />
     <path d="M60 8 L112 38 L112 78 C112 106 88 126 60 136 C32 126 8 106 8 78 L8 38 Z" class="shield-bg" />
@@ -29,6 +35,46 @@
     position: relative;
     flex-shrink: 0;
     transform: rotate(-6deg);
+    opacity: 0;
+    filter: blur(2px);
+    transition: none;
+  }
+  .shield.stamped {
+    animation: stampIn 0.4s cubic-bezier(0.12, 0.8, 0.3, 1.1) forwards;
+  }
+  @keyframes stampIn {
+    0% {
+      opacity: 0;
+      transform: rotate(-6deg) scale(1.8);
+      filter: blur(2px);
+    }
+    60% {
+      opacity: 0.9;
+      transform: rotate(-6deg) scale(0.92);
+      filter: blur(0.5px);
+    }
+    80% {
+      transform: rotate(-6deg) scale(1.04);
+      filter: blur(0);
+    }
+    100% {
+      opacity: 0.82;
+      transform: rotate(-6deg) scale(1);
+      filter: blur(0);
+    }
+  }
+  .shield.stamped::after {
+    content: "";
+    position: absolute;
+    inset: -2px;
+    border-radius: 50%;
+    background: radial-gradient(ellipse at center, rgba(0,0,0,0.03) 0%, transparent 70%);
+    pointer-events: none;
+    opacity: 0;
+    animation: inkBleed 0.4s 0.3s ease forwards;
+  }
+  @keyframes inkBleed {
+    to { opacity: 1; }
   }
   .shield-lg {
     width: 104px;
@@ -106,19 +152,20 @@
     text-transform: uppercase;
     line-height: 1;
     border-radius: 3px;
+    mix-blend-mode: normal;
   }
   .shield-lg .shield-label {
-    font-size: 10px;
-    padding: 2px 6px;
+    font-size: 22px;
+    padding: 3px 8px;
     margin-top: 4px;
   }
   .shield-md .shield-label {
-    font-size: 8px;
-    padding: 2px 5px;
+    font-size: 18px;
+    padding: 2px 6px;
     margin-top: 2px;
   }
   .shield-sm .shield-label {
-    font-size: 6px;
+    font-size: 13px;
     padding: 1px 4px;
     margin-top: 0px;
   }
