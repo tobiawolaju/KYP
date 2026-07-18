@@ -36,7 +36,7 @@
   let filtered = $derived(
     allProtocols.filter((p) => {
       if (selectedCategory && p.category !== selectedCategory) return false;
-      if (p.score < minScore) return false;
+      if ((p.score ?? 0) < minScore) return false;
       return true;
     })
   );
@@ -135,7 +135,7 @@
           </div>
           <p class="card-summary">{protocol.summary}</p>
           <div class="card-tags">
-            {#each protocol.use_cases.slice(0, 2) as uc}
+            {#each (protocol.use_cases || []).slice(0, 2) as uc}
               <span class="tag">{uc}</span>
             {/each}
           </div>

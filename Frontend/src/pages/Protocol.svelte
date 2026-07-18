@@ -197,7 +197,7 @@
       <div class="info-section">
         <h3 class="section-label">Use Cases</h3>
         <div class="use-cases">
-          {#each protocol.use_cases as uc}
+          {#each (protocol.use_cases || []) as uc}
             <span class="use-case-tag">{uc}</span>
           {/each}
         </div>
@@ -273,7 +273,7 @@
               <h4>{sp.name}</h4>
               <span class="similar-category">{sp.category}</span>
             </div>
-            <span class="card-score" style="color: {tierFromScore(sp.score).color}">{sp.score}/50</span>
+            <span class="card-score" style="color: {tierFromScore(sp.score ?? 0).color}">{sp.score ?? 0}/50</span>
           </Link>
         {/each}
       </div>
