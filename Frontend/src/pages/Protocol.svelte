@@ -3,7 +3,7 @@
   import Link from "../lib/Link.svelte";
   import { getWallet } from "../lib/wallet.svelte.js";
   import { VERIFY_WINDOW_HOURS } from "../lib/constants.js";
-  import { getProtocol, getProtocols, getFavorites, toggleFavorite as apiToggleFavorite, commitProtocol } from "../lib/api.js";
+  import { getProtocol, getFavorites, toggleFavorite as apiToggleFavorite, commitProtocol } from "../lib/api.js";
   import ScoreBadge from "../lib/ScoreBadge.svelte";
 
   const KYP_CONTRACT = import.meta.env.VITE_KYP_CONTRACT_ADDRESS || "0x325215e272e0f5efb33d697c356a5ccbfaf6ecaf";
@@ -13,7 +13,6 @@
   let id = $derived(location.pathname.split("/").pop());
 
   let protocol = $state(null);
-  let allProtocols = $state([]);
   let isFavorited = $state(false);
   let showStakeModal = $state(false);
   let stakeAmount = $state("0.01");
@@ -26,8 +25,6 @@
   let loadStatus = $state("idle");
   let loadError = $state("");
   let coldTimer = null;
-
-  let similar = $derived(allProtocols.filter((p) => p.id !== protocol?.id).slice(0, 3));
 
   let deepCountdown = $state(0);
   let deepTimer = null;
@@ -74,10 +71,6 @@
   });
 
   $effect(() => {
-    getProtocols().then((data) => { allProtocols = data; }).catch(() => {});
-  });
-
-  $effect(() => {
     if (wallet.authenticated && wallet.address && id) {
       getFavorites(wallet.address).then((favs) => {
         isFavorited = favs.some((f) => f.protocol_id === id);
@@ -96,14 +89,6 @@
     } catch (err) {
       console.error("Toggle favorite failed:", err);
     }
-  }
-
-  function tierFromScore(score) {
-    if (score >= 41) return { label: "Secured", color: "var(--accent)" };
-    if (score >= 31) return { label: "Solid", color: "var(--accent)" };
-    if (score >= 21) return { label: "Caution", color: "var(--amber)" };
-    if (score >= 11) return { label: "High risk", color: "color-mix(in srgb, var(--rose), var(--amber) 50%)" };
-    return { label: "Rug potential", color: "var(--rose)" };
   }
 
   function handleCommit() {
@@ -216,12 +201,7 @@
     <div class="profile-body">
       <div class="info-section">
         <h3 class="section-label">Summary</h3>
-        <div class="summary-stamp-wrapper">
-          <div class="stamp">
-            <ScoreBadge score={protocol.score} size="md" />
-          </div>
-          <p class="section-text">{protocol.summary}</p>
-        </div>
+        <p class="section-text">{protocol.summary}</p>
       </div>
 
       {#if protocol.who_its_for}
@@ -307,20 +287,9 @@
       {/if}
     </div>
 
-    <section class="similar-section">
-      <h2 class="section-title">Similar Protocols</h2>
-      <div class="similar-grid">
-        {#each similar as sp}
-          <Link to={`/protocol/${sp.id}`} class="similar-card">
-            <div class="similar-info">
-              <h4>{sp.name}</h4>
-              <span class="similar-category">{sp.category}</span>
-            </div>
-            <span class="card-score" style="color: {tierFromScore(sp.score ?? 0).color}">{sp.score ?? 0}/50</span>
-          </Link>
-        {/each}
-      </div>
-    </section>
+    <div class="badge-bottom">
+      <ScoreBadge score={protocol.score} size="lg" />
+    </div>
   </div>
 
   <div class="floating-bar">
@@ -518,19 +487,14 @@
     color: var(--text-secondary);
     margin: 0;
   }
-  .summary-stamp-wrapper {
-    position: relative;
-  }
-  .stamp {
-    position: absolute;
-    top: 50%;
-    right: 12px;
-    transform: translateY(-50%) rotate(-12deg);
-    opacity: 0.75;
+  .badge-bottom {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 32px;
+    transform: rotate(-18deg);
+    opacity: 0.85;
     pointer-events: none;
-  }
-  .summary-stamp-wrapper .section-text {
-    position: relative;
+    align-self: flex-end;
   }
   .use-cases {
     display: flex;
@@ -607,55 +571,6 @@
     font-size: 16px;
   }
 
-  .similar-section {
-    margin-top: 48px;
-    border-top: 1px solid var(--border-light);
-    padding-top: 32px;
-  }
-  .section-title {
-    font-size: 20px;
-    font-weight: 700;
-    margin: 0 0 16px;
-    color: var(--text);
-  }
-  .similar-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 12px;
-  }
-  :global(.similar-card) {
-    background: var(--surface);
-    border: 1px solid var(--border-light);
-    border-radius: var(--radius-md);
-    padding: 16px;
-    text-decoration: none;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
-  }
-  :global(.similar-card:hover) {
-    border-color: var(--accent-border);
-    box-shadow: var(--shadow-sm);
-    transform: translateY(-1px);
-  }
-  :global(.similar-card h4) {
-    margin: 0;
-    font-size: 15px;
-    font-weight: 600;
-    color: var(--text);
-  }
-  .similar-info {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    min-width: 0;
-  }
-  .similar-category {
-    font-size: 11px;
-    color: var(--text-muted);
-    font-weight: 500;
-  }
   .card-score {
     font-family: var(--mono);
     font-size: 14px;
