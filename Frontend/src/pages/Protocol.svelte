@@ -182,86 +182,96 @@
       <div class="info-section">
         <h3 class="section-label">Summary</h3>
         <div class="summary-stamp-wrapper">
-          <div class="stamp">
-            <ScoreBadge score={protocol.score} size="md" />
-          </div>
+          {#if protocol.score}
+            <div class="stamp">
+              <ScoreBadge score={protocol.score} size="md" />
+            </div>
+          {/if}
           <p class="section-text">{protocol.summary}</p>
         </div>
       </div>
 
-      <div class="info-section">
-        <h3 class="section-label">Who It's For</h3>
-        <p class="section-text">{protocol.who_its_for}</p>
-      </div>
-
-      <div class="info-section">
-        <h3 class="section-label">Use Cases</h3>
-        <div class="use-cases">
-          {#each (protocol.use_cases || []) as uc}
-            <span class="use-case-tag">{uc}</span>
-          {/each}
+      {#if protocol.who_its_for}
+        <div class="info-section">
+          <h3 class="section-label">Who It's For</h3>
+          <p class="section-text">{protocol.who_its_for}</p>
         </div>
-      </div>
+      {/if}
 
-      <div class="risks-section">
-        <h3 class="section-label">Risks</h3>
-        <div class="risk-cards">
-          {#if protocol.risks.contract}
-            <div class="risk-card">
-              <div class="risk-header">
-                <span class="risk-type">Contract</span>
-              </div>
-              <p class="risk-text">{protocol.risks.contract}</p>
-            </div>
-          {/if}
-          {#if protocol.risks.community}
-            <div class="risk-card">
-              <div class="risk-header">
-                <span class="risk-type">Community</span>
-              </div>
-              <p class="risk-text">{protocol.risks.community}</p>
-            </div>
-          {/if}
-          {#if protocol.risks.structural}
-            <div class="risk-card">
-              <div class="risk-header">
-                <span class="risk-type">Structural</span>
-              </div>
-              <p class="risk-text">{protocol.risks.structural}</p>
-            </div>
-          {/if}
+      {#if protocol.use_cases && protocol.use_cases.length > 0}
+        <div class="info-section">
+          <h3 class="section-label">Use Cases</h3>
+          <div class="use-cases">
+            {#each protocol.use_cases as uc}
+              <span class="use-case-tag">{uc}</span>
+            {/each}
+          </div>
         </div>
-      </div>
+      {/if}
 
-      <div class="links-section">
-        <h3 class="section-label">Links</h3>
-        <div class="link-list">
-          {#if protocol.links.project}
-            <a href={protocol.links.project} target="_blank" rel="noreferrer" class="link-item">
-              <span class="material-symbols-outlined">language</span>
-              Website
-            </a>
-          {/if}
-          {#if protocol.links.twitter}
-            <a href={protocol.links.twitter} target="_blank" rel="noreferrer" class="link-item">
-              <span class="material-symbols-outlined">tag</span>
-              X
-            </a>
-          {/if}
-          {#if protocol.links.discord}
-            <a href={protocol.links.discord} target="_blank" rel="noreferrer" class="link-item">
-              <span class="material-symbols-outlined">chat</span>
-              Discord
-            </a>
-          {/if}
-          {#if protocol.links.github}
-            <a href={protocol.links.github} target="_blank" rel="noreferrer" class="link-item">
-              <span class="material-symbols-outlined">code</span>
-              GitHub
-            </a>
-          {/if}
+      {#if protocol.risks}
+        <div class="risks-section">
+          <h3 class="section-label">Risks</h3>
+          <div class="risk-cards">
+            {#if protocol.risks.contract}
+              <div class="risk-card">
+                <div class="risk-header">
+                  <span class="risk-type">Contract</span>
+                </div>
+                <p class="risk-text">{protocol.risks.contract}</p>
+              </div>
+            {/if}
+            {#if protocol.risks.community}
+              <div class="risk-card">
+                <div class="risk-header">
+                  <span class="risk-type">Community</span>
+                </div>
+                <p class="risk-text">{protocol.risks.community}</p>
+              </div>
+            {/if}
+            {#if protocol.risks.structural}
+              <div class="risk-card">
+                <div class="risk-header">
+                  <span class="risk-type">Structural</span>
+                </div>
+                <p class="risk-text">{protocol.risks.structural}</p>
+              </div>
+            {/if}
+          </div>
         </div>
-      </div>
+      {/if}
+
+      {#if protocol.links}
+        <div class="links-section">
+          <h3 class="section-label">Links</h3>
+          <div class="link-list">
+            {#if protocol.links.project}
+              <a href={protocol.links.project} target="_blank" rel="noreferrer" class="link-item">
+                <span class="material-symbols-outlined">language</span>
+                Website
+              </a>
+            {/if}
+            {#if protocol.links.twitter}
+              <a href={protocol.links.twitter} target="_blank" rel="noreferrer" class="link-item">
+                <span class="material-symbols-outlined">tag</span>
+                X
+              </a>
+            {/if}
+            {#if protocol.links.discord}
+              <a href={protocol.links.discord} target="_blank" rel="noreferrer" class="link-item">
+                <span class="material-symbols-outlined">chat</span>
+                Discord
+              </a>
+            {/if}
+            {#if protocol.links.github}
+              <a href={protocol.links.github} target="_blank" rel="noreferrer" class="link-item">
+                <span class="material-symbols-outlined">code</span>
+                GitHub
+              </a>
+            {/if}
+          </div>
+        </div>
+      {/if}
     </div>
 
     <section class="similar-section">
