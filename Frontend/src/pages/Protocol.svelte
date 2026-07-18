@@ -186,6 +186,15 @@
             <img src={protocol.image} alt={protocol.name} class="protocol-logo" />
           {/if}
           <h1 class="protocol-name">{protocol.name}</h1>
+          <button
+            class="fav-btn"
+            class:faved={isFavorited}
+            onclick={toggleFavorite}
+            aria-label={isFavorited ? "Remove from favourites" : "Add to favourites"}
+            title={isFavorited ? "Remove from favourites" : "Add to favourites"}
+          >
+            <span class="fav-star" aria-hidden="true">{isFavorited ? "★" : "☆"}</span>
+          </button>
         </div>
         <div class="badge-top">
           <ScoreBadge score={protocol.score} size="lg" />
@@ -288,9 +297,6 @@
   </div>
 
   <div class="floating-bar">
-    <button class="fav-btn" class:faved={isFavorited} onclick={toggleFavorite}>
-      {isFavorited ? "Saved!" : "Save to Favourite"} <span class="fav-star">{isFavorited ? "★" : "☆"}</span>
-    </button>
     <button class="commit-btn" onclick={handleCommit}>
       Commit
     </button>
@@ -348,40 +354,9 @@
     display: flex;
     z-index: 50;
   }
-  .floating-bar .fav-btn {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    padding: 0;
-    height: 20vw;
-    background: #fff;
-    border: none;
-    border-right: 1px solid var(--border);
-    font-size: 11px;
-    font-weight: 600;
-    color: #f5c518;
-    cursor: pointer;
-    font-family: var(--sans);
-  }
-  .floating-bar .fav-btn .fav-star {
-    font-size: 32px;
-    color: #f5c518;
-    line-height: 1;
-  }
-  :global(.dark) .floating-bar .fav-btn {
-    background: #1a1a1a;
-  }
-  .floating-bar .fav-btn.faved {
-    background: var(--surface);
-    color: #f5c518;
-  }
-  .floating-bar .fav-btn.faved .fav-star {
-    color: #f5c518;
-  }
   .floating-bar .commit-btn {
-    flex: 1;
+    width: 100vw;
+    flex: 0 0 100vw;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -419,6 +394,31 @@
     border-radius: var(--radius-sm);
     object-fit: cover;
     flex-shrink: 0;
+  }
+  .fav-btn {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    background: transparent;
+    border: none;
+    color: #f5c518;
+    cursor: pointer;
+    font-family: var(--sans);
+    line-height: 1;
+  }
+  .fav-btn .fav-star {
+    font-size: 32px;
+    color: #f5c518;
+    line-height: 1;
+  }
+  .fav-btn:focus-visible {
+    outline: 2px solid #f5c518;
+    outline-offset: 2px;
+    border-radius: 999px;
   }
   .protocol-name {
     font-size: 36px;
@@ -776,7 +776,6 @@
     margin-bottom: 16px;
   }
   @media (min-width: 641px) {
-    .floating-bar .fav-btn,
     .floating-bar .commit-btn {
       height: 5vw;
     }
