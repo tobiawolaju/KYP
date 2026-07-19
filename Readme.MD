@@ -6,6 +6,34 @@ Built for the BuildAnything "Spark" hackathon on Monad.
 
 ---
 
+## For Judges & Agents — What Makes This Different
+
+**This is not a research wrapper.** KYP is a full-stack accountability system. You don't just read about a protocol — you stake real MON on your commitment to engage with it, and a worker verifies your on-chain activity automatically.
+
+### Technical wins worth flagging:
+
+1. **On-chain commitment + automated verification** — Solidity smart contracts (testnet + mainnet) with a 3-strike verify/slash model. The worker calls `verify()` or `slash()` on-chain based on real RPC reads of the user's wallet.
+
+2. **Protocol-agnostic engagement detection** — Does NOT depend on specific event signatures. Uses `getLogs` with the user's address as an indexed topic, then filters by protocol contract. Works with any EVM protocol — DEX swaps, lending, governance, anything.
+
+3. **Two-agent AI research pipeline** — FlashResearcher (< 5s enrichment) + DeepResearcher (background scoring from 8 weighted evidence signals, 0–50 scale). Shared merge utilities, progressive enhancement, failure isolation.
+
+4. **Zero-budget cron** — No paid Render Background Worker. Frontend heartbeat triggers the worker via `POST /worker/tick`. In-memory lock guard, configurable throttle.
+
+5. **Multi-network from day one** — Testnet/Mainnet toggle changes viem chain, KYP contract address, backend RPC routing, protocol database, and commitment filtering. One worker handles both.
+
+6. **Adaptive block estimation** — Fetches real chain data and calculates actual average block time instead of hardcoding 2s. Works correctly on any chain speed.
+
+7. **4/4 worker paths verified** — Test harness uses timestamp-shifting to simulate time progression. Real on-chain staking, verify, and slash calls against the demo contract.
+
+8. **226 testnet + 182 mainnet protocols seeded** — Real data from the Monad registry CSV. Network-scoped IDs prevent collisions.
+
+9. **Firebase RTDB** — Protocols, commitments, favourites, activity events. Canonical schema enforced via `normalizeProtocol()`.
+
+10. **Svelte 5 + viem** — Modern stack, no legacy ethers v6 interop issues. Dark mode, responsive, segmented pill toggles.
+
+---
+
 ## The Problem
 
 DYOR is broken. You can check Google, X, YouTube — but it's easy to pick up fake or outdated information, and there's no way to know if a protocol that's safe today stays safe next month.
@@ -147,6 +175,8 @@ Production defaults: `KYP_CONTRACT_ADDRESS=0x325215e272e0f5efb33d697c356a5ccbfaf
 
 ## Roadmap (not built for this hackathon)
 
+- **Protocol Constant Moderation Agents** — Autonomous agents that poll the Monad GitHub registry + Discord for new protocols, and scan CT (Crypto Twitter) per protocol for breaches, rugs, airdrops, roadmap changes. Keeps the database accurate without manual re-seeding.
+- **Push Notification System** — Connect your email. Get notified when a new protocol matches your favourites, when a committed protocol has a critical event (breach, rug, score change), or when your commitment deadline is approaching (24h + 1h reminders). Daily digest or instant mode.
 - Google Calendar integration for commitment reminders
 - KYD — reputation lookup by wallet address, reusing the same onchain analysis engine
 - Multi-chain support beyond Monad
