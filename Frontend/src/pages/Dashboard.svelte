@@ -57,8 +57,13 @@
     return s;
   }
 
-  function handleDisconnect() {
-    wallet.logout?.();
+  function handleAuthAction() {
+    if (!wallet.ready) return;
+    if (wallet.authenticated) {
+      wallet.logout?.();
+      return;
+    }
+    wallet.login?.();
   }
 
   let favoriteProtocols = $derived(
@@ -68,12 +73,6 @@
       let events = commit ? activityEvents.filter((e) => e.commitment_id === commit.id) : [];
       return { ...fav, protocol: proto, commitment: commit, events };
     })
-  );
-
-  let activeCommitments = $derived(commitments.filter((c) => c.status === "active"));
-
-  let totalStaked = $derived(
-    activeCommitments.reduce((sum, c) => sum + Number(c.staked_amount) / 1e18, 0)
   );
 
   function normalize(d) {
@@ -202,21 +201,6 @@
     <div class="dash-title-group">
       <h1 class="dash-title">My Protocols</h1>
     </div>
-    {#if !wallet.ready}
-      <button class="login-btn" disabled aria-label="Checking wallet session">
-        <span class="material-symbols-outlined loading-icon">hourglass_top</span>
-        Connecting...
-      </button>
-    {:else if wallet.authenticated}
-      <button class="disconnect-btn" onclick={handleDisconnect} aria-label="Disconnect Wallet">
-        <span class="material-symbols-outlined">logout</span>
-      </button>
-    {:else}
-      <button class="login-btn" onclick={() => wallet.login?.()} aria-label="Login">
-        <span class="material-symbols-outlined">account_balance_wallet</span>
-        Connect Wallet
-      </button>
-    {/if}
   </div>
 
   {#if !wallet.ready}
@@ -237,10 +221,15 @@
         <span class="summary-label">Wallet</span>
         <span class="summary-value mono">{wallet.authenticated ? truncate(wallet.address) : redact(12)}</span>
       </div>
-      <div class="summary-card">
-        <span class="summary-label">Total Staked</span>
-        <span class="summary-value mono">{wallet.authenticated ? totalStaked.toFixed(3) + " MON" : redact(8)}</span>
-      </div>
+      <button
+        class="summary-card auth-card"
+        onclick={handleAuthAction}
+        disabled={!wallet.ready}
+        aria-label={wallet.ready ? (wallet.authenticated ? "Logout" : "Login") : "Checking wallet session"}
+      >
+        <span class="summary-label">{wallet.ready ? (wallet.authenticated ? "Logout" : "Login") : "Connecting"}</span>
+        <span class="summary-value mono">{wallet.ready ? (wallet.authenticated ? truncate(wallet.address) : "Connect Wallet") : "Please wait"}</span>
+      </button>
     </div>
   </div>
 
@@ -379,46 +368,24 @@
     color: var(--text-muted);
     margin: 0;
   }
-  .disconnect-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--rose-bg);
-    color: var(--rose);
-    border: none;
-    border-radius: 0;
-    width: 45px;
-    height: 40px;
+  .auth-card {
+    width: 100%;
+    text-align: left;
+    font-family: inherit;
     cursor: pointer;
-    transition: opacity 0.2s;
   }
-  .disconnect-btn:hover {
-    opacity: 0.8;
-  }
-  .disconnect-btn .material-symbols-outlined {
-    font-size: 20px;
-  }
-  .login-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background: transparent;
-    color: var(--text);
-    border: 1px solid var(--border);
-    border-radius: 0;
-    padding: 10px 18px;
-    font-size: 14px;
-    font-weight: 600;
-    font-family: var(--sans);
-    cursor: pointer;
-    transition: opacity 0.2s, transform 0.15s;
-  }
-  .login-btn:hover {
-    opacity: 0.9;
+  .auth-card:hover:not(:disabled) {
+    border-color: var(--accent);
+    box-shadow: var(--shadow-sm);
     transform: translateY(-1px);
   }
-  .login-btn .material-symbols-outlined {
-    font-size: 18px;
+  .auth-card:disabled {
+    cursor: wait;
+    opacity: 0.75;
+  }
+  .auth-card:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
   }
 
   .loading-state {
