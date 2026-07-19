@@ -501,25 +501,29 @@
 
   :global(.research-fab) {
     position: fixed;
-    bottom: 24px;
-    right: 24px;
-    display: inline-flex;
+    bottom: 0;
+    left: 0;
+    width: 100vw;
+    display: flex;
     align-items: center;
+    justify-content: center;
     gap: 6px;
-    padding: 12px 20px;
-    background: #6025c5;
+    padding: 0;
+    height: 20vw;
+    background: #5D2CB2;
     color: #fff;
+    border: none;
     border-radius: 0;
-    font-size: 14px;
+    font-family: var(--sans);
+    font-size: 16px;
     font-weight: 600;
     text-decoration: none;
     white-space: nowrap;
-    transition: opacity 0.2s, transform 0.15s;
+    cursor: pointer;
     z-index: 50;
   }
   :global(.research-fab:hover) {
     opacity: 0.9;
-    transform: translateY(-1px);
   }
   :global(.research-fab .material-symbols-outlined) {
     font-size: 18px;
@@ -814,6 +818,12 @@
     opacity: 0.8;
   }
 
+
+  @media (min-width: 641px) {
+    :global(.research-fab) {
+      height: 5vw;
+    }
+  }
 
   @media (max-width: 600px) {
     .summary-cards {
