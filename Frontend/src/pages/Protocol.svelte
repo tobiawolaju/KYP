@@ -182,12 +182,14 @@
       const { createWalletClient, custom, parseAbi, decodeEventLog, parseEther, http, createPublicClient } = await import("viem");
       const { monadTestnet } = await import("viem/chains");
 
+      const userAddress = wallet.address;
+      if (!userAddress) throw new Error("No connected wallet address");
+
       const walletClient = createWalletClient({
+        account: userAddress,
         chain: monadTestnet,
         transport: custom(ethereumProvider),
       });
-
-      const [userAddress] = await walletClient.getAddresses();
 
       const protocolAddr = protocol.contracts?.[0]?.address;
       if (!protocolAddr) throw new Error("No contract address found for this protocol");
