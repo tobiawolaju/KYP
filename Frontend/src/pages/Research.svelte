@@ -1,5 +1,6 @@
 <script>
   import { navigate } from "../lib/router.svelte.js";
+  import Link from "../lib/Link.svelte";
   import { flashResearch } from "../lib/api.js";
 
   let searchQuery = $state("");
@@ -32,6 +33,10 @@
 </section>
 
 <div class="floating-search">
+  <div class="btn-row">
+    <Link to="/protocols" class="explore-btn">Explore Protocols</Link>
+    <button class="research-btn" onclick={handleSearch} disabled={searching}>Research</button>
+  </div>
   <div class="search-bar">
     <span class="material-symbols-outlined search-icon">search</span>
     <input
@@ -91,6 +96,44 @@
     padding: 0;
     margin: 0;
     box-sizing: border-box;
+  }
+  .btn-row {
+    display: flex;
+    width: 100%;
+  }
+  :global(.explore-btn) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 50vw;
+    height: 20vw;
+    background: var(--accent);
+    color: #fff !important;
+    font-size: 16px;
+    font-weight: 600;
+    text-decoration: none;
+    border: none;
+    border-right: 2px solid var(--bg);
+    cursor: pointer;
+  }
+  .research-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 50vw;
+    height: 20vw;
+    background: #6025c5;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 600;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    font-family: var(--sans);
+  }
+  .research-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
   }
   .search-bar {
     display: flex;
