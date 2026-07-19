@@ -258,7 +258,12 @@
     <div class="dash-title-group">
       <h1 class="dash-title">My Protocols</h1>
     </div>
-    {#if wallet.authenticated}
+    {#if !wallet.ready}
+      <button class="login-btn" disabled aria-label="Checking wallet session">
+        <span class="material-symbols-outlined loading-icon">hourglass_top</span>
+        Connecting...
+      </button>
+    {:else if wallet.authenticated}
       <button class="disconnect-btn" onclick={handleDisconnect} aria-label="Disconnect Wallet">
         <span class="material-symbols-outlined">logout</span>
       </button>
@@ -270,7 +275,12 @@
     {/if}
   </div>
 
-  {#if loading}
+  {#if !wallet.ready}
+    <div class="loading-state">
+      <span class="material-symbols-outlined loading-icon">hourglass_top</span>
+      <p>Checking wallet session...</p>
+    </div>
+  {:else if loading}
     <div class="loading-state">
       <span class="material-symbols-outlined loading-icon">hourglass_top</span>
       <p>Loading commitments...</p>

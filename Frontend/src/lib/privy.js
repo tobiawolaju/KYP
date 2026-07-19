@@ -1,20 +1,52 @@
 import React, { useEffect } from "react";
-import { PrivyProvider, usePrivy } from "@privy-io/react-auth";
+import { PrivyProvider, usePrivy, useWallets } from "@privy-io/react-auth";
+import { navigate } from "./router.svelte.js";
 import { updateWallet } from "./wallet.svelte.js";
+
+const POST_LOGIN_REDIRECT_KEY = "kyp_post_login_redirect";
+
+function getWalletAddress(user, wallets) {
+  return (
+    wallets?.[0]?.address ??
+    user?.wallet?.address ??
+    user?.linkedAccounts?.find((account) => account.type === "wallet")?.address ??
+    null
+  );
+}
 
 function PrivyInner() {
   const { ready, authenticated, user, login, logout, getEthereumProvider } = usePrivy();
+  const { ready: walletsReady, wallets } = useWallets();
+  const address = getWalletAddress(user, wallets);
 
   useEffect(() => {
     updateWallet({
-      ready,
+      ready: ready && (!authenticated || walletsReady),
       authenticated,
-      address: user?.wallet?.address ?? null,
-      login: () => login({ loginMethods: ["wallet"] }),
+      address,
+      login: () => {
+        sessionStorage.setItem(POST_LOGIN_REDIRECT_KEY, window.location.pathname || "/myprotocols");
+        login({ loginMethods: ["wallet"] });
+      },
       logout,
-      getEthereumProvider,
+      getEthereumProvider: async () => {
+        if (wallets?.[0]) return wallets[0].getEthereumProvider();
+        return getEthereumProvider();
+      },
     });
-  }, [ready, authenticated, user, login, logout, getEthereumProvider]);
+  }, [ready, walletsReady, authenticated, user, wallets, address, login, logout, getEthereumProvider]);
+
+  useEffect(() => {
+    if (!ready || !authenticated) return;
+
+    const redirectTo = sessionStorage.getItem(POST_LOGIN_REDIRECT_KEY);
+    if (redirectTo) {
+      sessionStorage.removeItem(POST_LOGIN_REDIRECT_KEY);
+      navigate(redirectTo === "/" ? "/myprotocols" : redirectTo);
+    } else if (window.location.pathname === "/") {
+      navigate("/myprotocols");
+    }
+  }, [ready, authenticated]);
 
   return null;
 }
