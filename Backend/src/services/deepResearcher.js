@@ -61,6 +61,7 @@ Rules:
 - plain_summary should be accessible to a non-technical reader.
 - risks should be specific and actionable, not vague warnings.
 - evidence is for the scoring engine. Be as precise as possible.
+- The \`evidence\` object drives a numeric score. You must NEVER provide a non-null/non-"unknown" value in \`evidence\` (admin_function_risk, audit_sources, community_size, holder_concentration_pct, liquidity_depth, team_verified, funding_known) without also writing the corresponding narrative explanation in \`risks.contract\`, \`risks.community\`, or \`risks.structural\`. Evidence and risk text must be consistent and travel together — if you can score it, you can explain it in one sentence.
 - If information cannot be verified, set it to null or empty.
 `;
 
@@ -240,10 +241,23 @@ async function deepResearch(protocolId) {
 
     const { score, score_max, breakdown } = computeScore(evidence, merged);
     console.log(`[DEEP] Score computed for "${protocol.name}": ${score}/${score_max}`, breakdown);
-    merged.score = score;
-    merged.score_max = score_max;
 
-    merged.deep_research_status = "completed";
+    const hasRiskText =
+      isMeaningful(merged.risks?.contract) ||
+      isMeaningful(merged.risks?.community) ||
+      isMeaningful(merged.risks?.structural);
+
+    if (score > 0 && !hasRiskText) {
+      console.warn(`[DEEP] "${protocol.name}" — score computed (${score}) but no risk text provided. Withholding score, marking for retry.`);
+      merged.score = null;
+      merged.score_max = null;
+      merged.deep_research_status = "pending";
+    } else {
+      merged.score = score;
+      merged.score_max = score_max;
+      merged.deep_research_status = "completed";
+    }
+
     merged.deep_researched_at = new Date().toISOString();
     merged.deep_research_error = null;
     merged.deep_research_version = DEEP_RESEARCH_VERSION;
@@ -252,13 +266,13 @@ async function deepResearch(protocolId) {
 
     const changes = findChanges(protocol, merged);
     if (changes.length === 0) {
-      console.log(`[DEEP] "${protocol.name}" — no changes after research, marking completed`);
+      console.log(`[DEEP] "${protocol.name}" — no changes after research, preserving computed status`);
       await update("protocols", protocolId, {
-        deep_research_status: "completed",
+        deep_research_status: merged.deep_research_status,
         deep_researched_at: new Date().toISOString(),
         deep_research_version: DEEP_RESEARCH_VERSION,
       });
-      return { status: "completed", changes: 0 };
+      return { status: merged.deep_research_status, changes: 0 };
     }
 
     console.log(`[DEEP] "${protocol.name}" — ${changes.length} field(s) changed:`);
@@ -268,9 +282,15 @@ async function deepResearch(protocolId) {
 
     await update("protocols", protocolId, merged);
     console.log(`[DEEP] Firebase updated for "${protocol.name}"`);
-    console.log(`[DEEP] "${protocol.name}" — completed (score: ${score}/${score_max})`);
+    console.log(`[DEEP] "${protocol.name}" — ${merged.deep_research_status} (score: ${merged.score}/${merged.score_max})`);
 
-    return { status: "completed", score, score_max, breakdown, changes: changes.length };
+    return {
+      status: merged.deep_research_status,
+      score: merged.score,
+      score_max: merged.score_max,
+      breakdown,
+      changes: changes.length,
+    };
   } catch (err) {
     console.error(`[DEEP] Research failed for "${protocol.name}":`, err.message);
 
