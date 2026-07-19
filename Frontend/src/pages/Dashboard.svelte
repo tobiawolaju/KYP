@@ -218,17 +218,18 @@
   <div class="summary-section">
     <div class="summary-cards">
       <div class="summary-card">
-        <span class="summary-label">Wallet</span>
+        <span class="summary-label">Account</span>
         <span class="summary-value mono">{wallet.authenticated ? truncate(wallet.address) : redact(12)}</span>
       </div>
       <button
         class="summary-card auth-card"
+        class:authenticated={wallet.authenticated}
         onclick={handleAuthAction}
         disabled={!wallet.ready}
         aria-label={wallet.ready ? (wallet.authenticated ? "Logout" : "Login") : "Checking wallet session"}
       >
         <span class="summary-label">{wallet.ready ? (wallet.authenticated ? "Logout" : "Login") : "Connecting"}</span>
-        <span class="summary-value mono">{wallet.ready ? (wallet.authenticated ? truncate(wallet.address) : "Connect Wallet") : "Please wait"}</span>
+        <span class="summary-value mono">{wallet.ready ? (wallet.authenticated ? "Disconnect wallet" : "Connect Wallet") : "Please wait"}</span>
       </button>
     </div>
   </div>
@@ -373,11 +374,18 @@
     text-align: left;
     font-family: inherit;
     cursor: pointer;
+    border-color: var(--accent);
+  }
+  .auth-card.authenticated {
+    border-color: var(--rose);
   }
   .auth-card:hover:not(:disabled) {
     border-color: var(--accent);
     box-shadow: var(--shadow-sm);
     transform: translateY(-1px);
+  }
+  .auth-card.authenticated:hover:not(:disabled) {
+    border-color: var(--rose);
   }
   .auth-card:disabled {
     cursor: wait;
