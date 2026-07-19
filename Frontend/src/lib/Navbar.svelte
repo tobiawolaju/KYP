@@ -49,18 +49,20 @@
       {/if}
     </button>
   {/if}
-  <div class="desktop-links">
-    <Link to="/research" class="nav-link">Research</Link>
-    <Link to="/protocols" class="nav-link">Explore Protocols</Link>
-    <Link to="/myprotocols" class="nav-link">My Protocols</Link>
+  <div class="desktop-right">
+    <div class="desktop-links">
+      <Link to="/research" class="nav-link">Research</Link>
+      <Link to="/protocols" class="nav-link">Explore Protocols</Link>
+      <Link to="/myprotocols" class="nav-link">My Protocols</Link>
+    </div>
+    <div class="network-pill">
+      <button class="network-option" class:active={!network.isMainnet} onclick={() => { if (network.isMainnet) toggleNetwork(); }}>Testnet</button>
+      <button class="network-option" class:active={network.isMainnet} onclick={() => { if (!network.isMainnet) toggleNetwork(); }}>Mainnet</button>
+    </div>
+    <button class="theme-toggle" onclick={toggleTheme} aria-label="Toggle theme">
+      <span class="material-symbols-outlined">{theme.dark ? "light_mode" : "dark_mode"}</span>
+    </button>
   </div>
-  <div class="network-pill">
-    <button class="network-option" class:active={!network.isMainnet} onclick={() => { if (network.isMainnet) toggleNetwork(); }}>Testnet</button>
-    <button class="network-option" class:active={network.isMainnet} onclick={() => { if (!network.isMainnet) toggleNetwork(); }}>Mainnet</button>
-  </div>
-  <button class="theme-toggle" onclick={toggleTheme} aria-label="Toggle theme">
-    <span class="material-symbols-outlined">{theme.dark ? "light_mode" : "dark_mode"}</span>
-  </button>
   <button class="hamburger" onclick={toggleDrawer} aria-label="Menu">
     <span class="material-symbols-outlined">menu</span>
   </button>
@@ -145,6 +147,11 @@
     font-weight: 700;
     color: var(--text);
     letter-spacing: -0.3px;
+  }
+  .desktop-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
   .desktop-links {
     display: flex;
@@ -345,19 +352,13 @@
     .navbar {
       padding: 12px 20px;
     }
-    .desktop-links {
+    .desktop-right {
       display: none;
     }
     .hamburger {
       display: flex;
       align-items: center;
       justify-content: center;
-    }
-    .theme-toggle {
-      display: none;
-    }
-    .network-pill {
-      display: none;
     }
   }
 </style>
