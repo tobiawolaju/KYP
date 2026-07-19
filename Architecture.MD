@@ -6,21 +6,27 @@
 
 ```json
 {
-  "id": "uuid",
-  "input_raw": "whatever the user pasted (link/handle/text)",
-  "name": "string",
+  "id": "slug-network (e.g. kuru-testnet, kuru-mainnet)",
+  "name": "Kuru",
+  "image": "https://...",
   "chain": "monad",
-  "network": "mainnet | testnet | unknown",
+  "network": "mainnet | testnet",
+  "category": "DeFi",
+  "subcategory": "DEX",
+  "contracts": [
+    { "name": "Kuru", "address": "0x...", "type": "DEX" }
+  ],
   "links": {
     "project": "url | null",
     "twitter": "url | null",
     "discord": "url | null",
     "github": "url | null"
   },
-  "contract_address": "string | null",
   "contract_verified": "boolean | null",
-  "score": 0,
+  "score": 42,
   "score_max": 50,
+  "plain_summary": "1-3 sentence human-readable description",
+  "summary": "concise protocol overview",
   "who_its_for": "1-2 sentence string",
   "who_its_not_for": "1-2 sentence string | null",
   "use_cases": ["string", "string"],
@@ -29,17 +35,36 @@
     "community": "string | null",
     "structural": "string | null"
   },
-  "team": "string | null",
+  "forensics": {
+    "has_admin_functions": "boolean | null",
+    "admin_function_notes": "string",
+    "deployer_wallet_age": "string",
+    "deployer_prior_deploys": "number | null",
+    "top_10_holder_concentration_pct": "number | null"
+  },
+  "funding": {
+    "has_funding_info": "boolean | null",
+    "investors": ["string"],
+    "source_note": "string"
+  },
+  "founder_history": {
+    "prior_projects_found": "boolean | null",
+    "details": "string",
+    "confidence_note": "string"
+  },
+  "team": [{"name": "string", "role": "string"}],
   "team_as_of": "timestamp | null",
   "deployed_date": "timestamp | null",
   "age_summary": "string | null",
-  "summary": "2-3 sentence string",
+  "restricted_jurisdictions": ["US"],
   "created_at": "timestamp",
-  "created_by_wallet": "string"
+  "created_by_wallet": "string | null"
 }
 ```
 
-`chain` is hardcoded to `"monad"` for this build — you're not building a multi-chain research tool tonight, but the field existing now means you don't have to do a schema migration later if KYP ever expands. `network` (mainnet/testnet) stays a separate field because a protocol's research profile doesn't change based on which environment its contract is deployed to.
+**ID scheme:** `slugify(name) + "-" + network` — e.g., `kuru-testnet`, `kuru-mainnet`. This prevents collisions when the same protocol exists on both networks. The same protocol has **two separate records** — one per network — each with the correct contract address for that chain.
+
+**`contracts` array:** Each entry has `{ name, address, type }`. The `address` is the protocol's deployed contract on the specific network this record represents. This is what gets passed as `protocol_contract_address` in commitment records.
 
 ### Commitment Record
 
@@ -48,37 +73,49 @@
   "id": "uuid",
   "user_wallet": "string",
   "chain": "monad",
-  "network": "testnet",
-  "protocol_id": "uuid (fk -> research record)",
-  "protocol_contract_address": "string",
+  "network": "testnet | mainnet",
+  "protocol_id": "slug-network (fk -> protocol record)",
+  "protocol_contract_address": "0x... (protocol's contract on this network)",
   "staked_amount": "string (wei)",
   "stake_tx_hash": "string",
+  "onchain_commitment_id": "number (from Staked event)",
   "commit_timestamp": "timestamp",
   "verify_deadline": "timestamp (commit_timestamp + 216h / 9 days)",
   "status": "active | verified | slashed | withdrawn",
   "verify_tx_hash": "string | null",
   "verified_at": "timestamp | null",
   "missed_count": "number (0-3)",
-  "last_check_at": "timestamp | null"
+  "last_check_at": "timestamp | null",
+  "checks_passed": "number",
+  "last_snapshot_at": "timestamp | null"
 }
 ```
 
-`verify_deadline` is now 216 hours (9 days) — the contract's `VERIFY_WINDOW`. The backend performs up to 3 verification checks at 72h intervals (check 1 at 72h, check 2 at 144h, check 3 at 216h). `missed_count` tracks how many checks failed to find onchain engagement. After 3 misses the commitment is slashed. `status` includes `"withdrawn"` for DB-only records where the user has initiated an onchain withdrawal via `POST /withdraw`.
-
-`network` is set by the frontend at commit time based on the user's Testnet/Mainnet toggle. Each commitment records which network it was staked on — the backend uses this to route contract calls to the correct RPC and contract address.
+`protocol_id` is now network-scoped (e.g., `kuru-testnet`). `protocol_contract_address` is the protocol's deployed contract on that specific network — used **only** for engagement log filtering, never for on-chain `verify()`/`slash()` calls.
 
 ### Favourites Record
 
 ```json
 {
   "user_wallet": "string",
-  "protocol_id": "uuid (fk -> research record)",
+  "protocol_id": "slug-network (fk -> protocol record)",
   "favourited_at": "timestamp",
   "auto_favourited": "boolean"
 }
 ```
 
-`auto_favourited` tracks whether the favourite was added manually by the user or automatically (e.g. after committing to a protocol). This lets the UI distinguish bookmarked-from-research from committed-to protocols without a separate query.
+### Activity Events Record
+
+```json
+{
+  "id": "{commitment_id}_{date}",
+  "commitment_id": "string (fk -> commitment)",
+  "user_wallet": "string",
+  "protocol_contract_address": "string",
+  "event_type": "activity | no_activity | stake | verify | slash | check_missed",
+  "timestamp": "timestamp"
+}
+```
 
 ---
 
@@ -87,34 +124,43 @@
 ```mermaid
 flowchart TD
     A[User pastes link/handle] --> B[Frontend: Research screen]
-    B --> C[POST /research]
-    C --> D[Backend: Research Agent<br/>LLM + web lookup]
-    D --> E[(Research Record<br/>stored in DB)]
-    E --> F[Profile Card rendered:<br/>score, use cases, risks, who it's for]
-    F --> G{User clicks Commit?}
-    G -- No --> H[End: profile saved,<br/>viewable later]
-    G -- Yes --> I[Frontend: Commit screen<br/>stake amount input]
-    I --> J[Wallet prompts stake tx]
-    J --> K[Smart Contract:<br/>stake&#40;protocolAddress&#41;]
-    K --> L[POST /commit<br/>records tx hash]
-    L --> M[(Commitment Record<br/>status: active, missed_count: 0)]
-    M --> N[Dashboard: shows commitment<br/>with countdown to deadline]
-    N --> O[Heartbeat (30s interval):<br/>POST /worker/tick<br/>scans active commitments]
-    O --> P{Onchain check:<br/>tx from user_wallet to<br/>protocol_contract_address<br/>after commit_timestamp?}
-    P -- Yes, before 216h deadline --> Q[Contract: verify&#40;&#41;<br/>stake returned]
-    P -- No engagement found --> R[Increment missed_count<br/>Check again at next interval]
-    R --> S{missed_count == 3?}
-    S -- No --> N
-    S -- Yes --> T[Contract: slash&#40;&#41;<br/>stake forfeited]
-    Q --> U[(status: verified)]
-    T --> V[(status: slashed)]
-    U --> N
-    V --> N
+    B --> C[POST /flash-research<br/>+ network param]
+    C --> D[Backend: FlashResearcher<br/>Gemini enrichment → Firebase]
+    D --> E{Protocol exists in DB?}
+    E -- Yes, needs image --> F[Enrich: logo, links, forensics]
+    E -- Yes, has image --> G[Skip enrichment]
+    E -- No --> H[Return data only,<br/>no DB update]
+    F --> I{score === null?}
+    I -- Yes --> J[Fire DeepResearcher<br/>in background]
+    I -- No --> K[Done]
+    J --> L[DeepResearcher: Gemini analysis<br/>+ deterministic scoring → Firebase]
+    L --> K
+    G --> K
+    H --> K
+    K --> M[Profile Card rendered:<br/>score, use cases, risks]
+    M --> N{User clicks Commit?}
+    N -- No --> O[End: profile saved]
+    N -- Yes --> P[Frontend: Commit screen<br/>stake amount input]
+    P --> Q[Wallet: stake(protocolAddress)]
+    Q --> R[POST /commit<br/>records tx hash + network]
+    R --> S[(Commitment Record<br/>status: active, missed_count: 0)]
+    S --> T[Dashboard: shows commitment<br/>with countdown to deadline]
+    T --> U[Heartbeat 30s → POST /worker/tick]
+    U --> V{checkEngagement:<br/>any on-chain log from<br/>user_wallet at<br/>protocol_contract_address<br/>after commit_timestamp?}
+    V -- Yes, before 216h --> W[Contract: verify<br/>stake returned]
+    V -- No --> X[Increment missed_count]
+    X --> Y{missed_count == 3?}
+    Y -- No --> T
+    Y -- Yes --> Z[Contract: slash<br/>stake forfeited]
+    W --> AA[(status: verified)]
+    Z --> AB[(status: slashed)]
+    AA --> T
+    AB --> T
 ```
 
 ---
 
-## Sequence — Commit + Verify (the part judges will actually click through)
+## Sequence — Commit + Verify
 
 ```mermaid
 sequenceDiagram
@@ -129,25 +175,27 @@ sequenceDiagram
     F->>U: Show stake input
     U->>F: Confirm stake amount
     F->>C: stake(protocolAddress) [payable tx]
-    C-->>F: tx hash
-    F->>B: POST /commit {wallet, protocol_id, tx_hash}
-    B-->>F: Commitment record created (status: active, missed_count: 0)
+    C-->>F: tx hash + Staked event
+    F->>B: POST /commit {wallet, protocol_id, tx_hash, network}
+    B-->>F: Commitment record (status: active, missed_count: 0)
     F->>U: Redirect to Dashboard
 
     Note over U,RPC: User goes and actually interacts<br/>with the protocol in the real world<br/>(any on-chain tx counts as engagement)
 
     loop 3 checks at 72h intervals (72h, 144h, 216h)
-        HB->>B: POST /worker/tick (heartbeat trigger)<br/>lock guard + 5-min throttle
-        B->>RPC: Query any on-chain event logs from user_wallet<br/>after commit_timestamp (protocol-agnostic)
-        RPC-->>B: engagement found / not found
+        HB->>B: POST /worker/tick (heartbeat trigger)
+        Note over B: lock guard + 5-min throttle
+        B->>RPC: getLogs({ topics: [null, userAddress] })<br/>protocol-agnostic, any event type
+        RPC-->>B: event logs from user
+        B->>B: Filter by protocol_contract_address
         alt Engagement found, before 216h deadline
-            B->>C: verify(commitmentId)
+            B->>C: verify(commitmentId) → KYP contract
             C-->>B: stake returned to user
             B-->>F: status: verified
         else No engagement at this check
             B->>B: Increment missed_count
             alt missed_count == 3 (final check)
-                B->>C: slash(commitmentId)
+                B->>C: slash(commitmentId) → KYP contract
                 C-->>B: stake forfeited
                 B-->>F: status: slashed
             else missed_count < 3
@@ -164,10 +212,10 @@ sequenceDiagram
 
 | Layer | Responsibility | Talks to |
 |---|---|---|
-| Frontend (Vercel) | Research input, profile card, commit flow, dashboard | Backend API, wallet (via Privy SDK), Monad RPC (read-only for balance/tx display) |
-| Backend (Render) | `/research`, `/commit`, `/verify`, `/withdraw` endpoints; orchestrates LLM calls and RPC checks; scheduled cron for 3-strike verification loop | LLM provider, Monad RPC, Privy (wallet-only auth), DB |
-| Smart Contract (Monad Testnet + Mainnet) | `stake()`, `verify()`, `slash()` — holds funds, enforces state transitions | Called by backend (or directly by frontend wallet for `stake()`) |
-| DB (research + commitment records) | Persists profiles and commitments | Backend only |
+| Frontend (Vercel) | Research input, profile card, commit flow, dashboard, network toggle | Backend API, wallet (Privy SDK), Monad RPC (read-only) |
+| Backend (Render) | `/flash-research`, `/deep-research`, `/commit`, `/verify`, `/withdraw`, `/worker/tick` endpoints; orchestrates LLM calls and RPC checks | Gemini (LLM), Monad RPC (testnet + mainnet), Privy (wallet-only auth), Firebase RTDB |
+| Smart Contract (Monad Testnet + Mainnet) | `stake()`, `verify()`, `slash()` — holds funds, enforces state transitions | Called by backend for verify/slash; by frontend wallet for stake |
+| DB (Firebase RTDB) | Research records, commitment records, favourites, activity events | Backend only |
 
 ## Heartbeat Worker (Zero-Budget Cron)
 
@@ -197,14 +245,14 @@ Worker Logic (services/worker.js)
   │   └── if now - last_snapshot >= SNAPSHOT_INTERVAL → runSnapshot()
   │
   ▼
-Engagement check (checkEngagement):
-  1. Calculate adaptive block estimation from chain data (not hardcoded 2s)
-  2. Query getLogs with user's padded address as indexed topic
-  3. Filter results to protocol contract address only
-  → Protocol-agnostic: works with ANY on-chain protocol, no event signatures needed
+checkEngagement (protocol-agnostic):
+  1. Adaptive block estimation (fetches real chain data, not hardcoded 2s)
+  2. getLogs({ topics: [null, paddedUserAddress] }) → all user events
+  3. Filter logs by protocol_contract_address → engagement found/not found
+  → Works with ANY protocol, no event signatures or ABI needed
 
-Contract calls (callVerify / callSlash):
-  Always target the KYP contract (getNetworkConfig().contract)
+callVerify / callSlash:
+  Always target KYP contract via getNetworkConfig(commitment.network)
   → Never use protocol_contract_address for on-chain calls
 ```
 
@@ -221,127 +269,85 @@ Contract calls (callVerify / callSlash):
 - `Frontend/src/lib/Heartbeat.svelte` — 30s interval, visibility-aware, auth-gated
 - `Backend/src/routes/worker.js` — POST /worker/tick with lock guard + throttle
 - `Backend/src/services/worker.js` — Core logic (importable module)
-- `Backend/src/services/contract.js` — multi-network support (testnet + mainnet), callVerify/callSlash always target KYP contract via `getNetworkConfig()`, checkEngagement uses protocol-agnostic log scanning
+- `Backend/src/services/contract.js` — Multi-network support, protocol-agnostic engagement check
 - `Frontend/src/lib/network.svelte.js` — Testnet/Mainnet toggle state (localStorage-persisted)
 
 ## Contracts
 
-KYP uses a multi-contract, multi-network setup:
-
-- **`KYPCommitment` (Testnet)** — the original submission contract with a 216-hour verify window (`0x325215e272e0f5efb33d697c356a5ccbfaf6ecaf`). Backend performs 3 verification checks at 72h intervals.
-- **`KYPCommitment` (Mainnet)** — identical logic deployed on Monad Mainnet (`0x8bf8348963c366d9ba210ddc8574caa7522335f8`). Backend reads `KYP_CONTRACT_ADDRESS_MAINNET` env var.
-- **`KYPCommitmentDemo`** — an identical twin with a 15-minute verify window (`0x98c3e4594ecfa1c45e8056932652b04cdea64e5d`). Exists solely for capturing slash-path footage in the demo video. Not part of the actual submission.
-
-All contracts share the same ABI surface (`stake` / `verify` / `slash` / `withdrawForfeited`). The frontend provides a Testnet/Mainnet toggle (similar to the light/dark theme toggle) — switching networks changes the viem chain, KYP contract address, and which RPC the backend uses for that commitment's verification checks.
-
-## Multi-Network Architecture (Testnet + Mainnet)
-
-KYP runs on both Monad Testnet and Monad Mainnet simultaneously. The user selects which network they're on via a toggle in the navbar — the same UX pattern as the light/dark theme toggle. This is a first-class feature, not a backend-only config swap.
-
-### How the toggle works end-to-end
-
-**Frontend (`network.svelte.js`):**
-- Singleton reactive state, persisted to `localStorage`
-- `getNetwork()` returns `{ current: "testnet" | "mainnet", isMainnet: boolean }`
-- Toggle is in `Navbar.svelte` (desktop top bar + mobile drawer), next to the theme toggle
-- Switching networks triggers a re-render of all dependent components
-
-**When the user toggles networks:**
-
-| Component | What changes |
-|---|---|
-| `Protocol.svelte` (staking) | viem `chain` switches from `monadTestnet` to `monad` (chain ID 10143 → 143). KYP contract address switches from `VITE_KYP_CONTRACT_ADDRESS` to `VITE_KYP_CONTRACT_ADDRESS_MAINNET`. The `writeContract` call targets the correct chain. |
-| `Dashboard.svelte` | Re-fetches commitments via `GET /commitments?wallet=...&network=mainnet`. Only commitments on the current network appear. Activity grid and commit graphs update. Header shows "(Mainnet)" or "(Testnet)". |
-| `POST /commit` | Sends `network: "mainnet"` or `network: "testnet"` in the request body. The backend stores this in the commitment record. |
-
-**Backend (`contract.js`):**
-- Maintains separate `provider` + `signer` + `contract` instances for testnet and mainnet
-- `getNetworkConfig(network)` returns the right provider/contract for the network
-- `checkEngagement`, `callVerify`, `callSlash` all accept a `network` parameter
-- The worker reads `commitment.network` from each commitment record and routes the contract call to the correct network's RPC + contract address
-
-**Database:**
-- Each commitment record stores `network: "testnet" | "mainnet"` at commit time
-- `GET /commitments?network=mainnet` filters server-side
-- The same protocol research record is shared across networks (research doesn't change per network)
-
-### Deployed contracts
+KYP deploys identical contracts on both Monad Testnet and Monad Mainnet:
 
 | Network | Address | Chain ID | RPC |
 |---|---|---|---|
 | Testnet | `0x325215e272e0f5efb33d697c356a5ccbfaf6ecaf` | 10143 | `https://testnet-rpc.monad.xyz` |
 | Mainnet | `0x8bf8348963c366d9ba210ddc8574caa7522335f8` | 143 | `https://rpc.monad.xyz` |
 
-Both contracts share the same Solidity source (`KYPCommitment.sol`), same ABI, same verifier address (`0x37674EE795f126BC933Dc57439eb194889dA0d0E`). The only difference is which chain they're deployed to.
+Both share the same Solidity source (`KYPCommitment.sol`), same ABI, same verifier address (`0x37674EE795f126BC933Dc57439eb194889dA0d0E`). 216-hour verify window, 3-strike model.
 
-### Why this matters for the submission
+**`KYPCommitmentDemo`** (`0x98c3e4594ecfa1c45e8056932652b04cdea64e5d`) — 15-minute window twin for demo video only. Not part of the submission.
 
-Most hackathon projects are testnet-only. KYP ships on both networks from day one — the toggle is visible in the UI, the commitments are network-scoped, and the backend routes correctly to either chain. This demonstrates production-readiness: when Monad goes mainnet, KYP is already there. No migration, no schema change, no code rewrite.
+---
 
-## Explore / Protocols Route
+## Multi-Network Architecture
 
-The app exposes a `/protocols` route — an explorable directory of all researched protocols. Supports the following query filters:
+KYP runs on both Monad Testnet and Monad Mainnet. The user selects which network they're on via a segmented toggle in the navbar — the same UX pattern as the light/dark theme toggle.
 
-| Parameter | Values | Behaviour |
-|---|---|---|
-| `network` | `mainnet`, `testnet`, `unknown` | Filter by deployment environment |
-| `category` | `lending`, `dex`, `infra`, `gaming`, etc. | Filter by use-case category |
-| `score_min` | 0–50 | Lower bound of score range |
-| `score_max` | 0–50 | Upper bound of score range |
+### How the toggle works end-to-end
 
-There is intentionally **no TVL filter** — there is no reliable real-time TVL data source wired in yet, so including the filter would either be perpetually empty or misleading. It is explicitly parked as a future addition.
+**Frontend (`network.svelte.js`):**
+- Singleton reactive state, persisted to `localStorage`
+- `getNetwork()` returns `{ current: "testnet" | "mainnet", isMainnet: boolean }`
+- Toggle is in `Navbar.svelte` (desktop top bar + mobile drawer), segmented pill (active=purple, inactive=grey)
 
-**One architectural decision to make explicitly:** does `verify()`/`slash()` get called by your backend (a trusted server wallet with permission to call these functions), or does the user call `verify()` themselves and the contract does the RPC check onchain via an oracle? For a 4-day build, **backend-triggered verify/slash is the right call** — a fully trustless onchain oracle is a rabbit hole you don't have time for, and "backend checks RPC, then calls the contract" is still a real, checkable onchain verification from the judge's perspective, not a self-report.
+**When the user toggles networks:**
+
+| Component | What changes |
+|---|---|
+| `Explore.svelte` | Re-fetches `GET /protocols?network=mainnet`. Only protocols seeded for that network appear. |
+| `Dashboard.svelte` | Re-fetches both `GET /commitments?network=mainnet` and `GET /protocols?network=mainnet`. Only that network's data appears. |
+| `Protocol.svelte` (staking) | viem `chain` switches from `monadTestnet` to `monad` (chain ID 10143 → 143). KYP contract address switches. Validates `protocol.network === network.current` before allowing stake. |
+| `POST /commit` | Sends `network: "mainnet"` or `network: "testnet"`. Backend stores in commitment record. |
+| `POST /flash-research` | Sends `network` so flash researcher matches the correct protocol record. |
+
+**Backend (`contract.js`):**
+- Maintains separate `provider` + `signer` + `contract` instances for testnet and mainnet
+- `getNetworkConfig(network)` returns the right provider/contract
+- Worker reads `commitment.network` and routes every call to the correct chain
+
+**Database:**
+- Protocol records are network-scoped: `kuru-testnet` and `kuru-mainnet` are separate records with different contract addresses
+- Each commitment record stores `network` at commit time
+- `GET /commitments?network=mainnet` and `GET /protocols?network=mainnet` filter server-side
+
+### Why this matters
+
+Most hackathon projects are testnet-only. KYP ships on both networks from day one — the toggle is visible, commitments are network-scoped, and the backend routes correctly to either chain. When Monad goes mainnet, KYP is already there.
 
 ---
 
 ## Engagement Verification — Protocol-Agnostic Log Scanning
 
-The engagement check (`checkEngagement`) determines whether a user has interacted with a target protocol since their commitment. The approach is protocol-agnostic — it does not depend on specific event signatures or ABI decoding.
+The engagement check (`checkEngagement`) determines whether a user has interacted with a target protocol. The approach is protocol-agnostic — it does not depend on specific event signatures or ABI decoding.
 
 ### How it works
 
-1. **Adaptive block estimation**: Instead of assuming a fixed 2-second block time (which silently breaks if the chain is faster or slower), the system fetches two blocks from the chain (latest + ~5000 blocks back) and calculates the *actual* average block time. This gives accurate block range estimation on any chain speed.
+1. **Adaptive block estimation**: Fetches two blocks from the chain (latest + ~5000 blocks back), calculates the *actual* average block time, then estimates the correct fromBlock range. Works on any chain speed.
 
-2. **User-centric log query**: `provider.getLogs({ topics: [null, paddedUser], fromBlock, toBlock })` — this queries all on-chain event logs where the user's address appears as an indexed topic (the 1st indexed param). This returns Transfer events, Swap events, Approval events, any event the user is involved in.
+2. **User-centric log query**: `provider.getLogs({ topics: [null, paddedUser] })` — queries ALL on-chain event logs where the user's address appears as an indexed topic. Returns Transfer events, Swap events, Approval events, any interaction.
 
-3. **Protocol filter**: The results are filtered to only include logs emitted by the target protocol contract address. If any log matches, the user is considered "engaged."
-
-### Why this approach
-
-| Approach | Problem |
-|---|---|
-| Scan logs *from* protocol contract | Depends on protocol emitting specific events. Different protocols emit different events. Fragile. |
-| Query by event signature (`Transfer(address,...)`) | Only catches transfers. User might swap, lend, vote, or do other interactions. Too narrow. |
-| **Query logs *from* user address (current)** | Catches ANY on-chain interaction the user makes — transfers, swaps, approvals, calls. Protocol-agnostic. Works with every protocol on any EVM chain. |
+3. **Protocol filter**: Results are filtered to only logs emitted by the target protocol contract address (`log.address === protocol_contract_address`).
 
 ### Separation of concerns
 
-- **`protocol_contract_address`**: Used *only* for filtering log query results (the `log.address` check). Never used for `verify()`/`slash()` calls.
-- **`getNetworkConfig(network).contract`**: Used for *all* on-chain contract interactions (`verify`, `slash`). This is always the KYP contract, regardless of which protocol the user committed to.
+| Field | Used for | Never used for |
+|---|---|---|
+| `protocol_contract_address` | Filtering engagement logs (`log.address` check) | `verify()`/`slash()` calls |
+| `getNetworkConfig(network).contract` | All on-chain calls (verify, slash) | Engagement checking |
 
-This separation prevents the critical bug where `verify()` was being called on the protocol contract (e.g. Kuru) instead of the KYP contract.
-
-### RPC considerations
-
-The adaptive block estimation uses 2 extra `getBlock()` calls per verification. This is negligible compared to the log query itself (which paginates in chunks of 100 blocks). Rate limits on public Monad RPCs are not a concern at this scale.
+This prevents the critical class of bug where `verify()` gets called on the wrong contract.
 
 ---
 
 ## Multi-Network Protocol Data Model
-
-Protocols can exist on both Monad Testnet and Monad Mainnet — often with different contract addresses on each network. KYP handles this with network-scoped protocol records and network-aware seeding.
-
-### Protocol records
-
-Each protocol record has a `network` field (`"testnet"` or `"mainnet"`) and a network-scoped ID:
-
-| Network | Example ID | `contracts[0].address` |
-|---|---|---|
-| Testnet | `kuru-testnet` | `0xabc...` (testnet address) |
-| Mainnet | `kuru-mainnet` | `0xdef...` (mainnet address) |
-
-The same protocol has **two separate records** — one per network. This avoids address collisions and keeps the data model simple: `contracts[0].address` is always the correct address for the protocol's network.
 
 ### Seeding
 
@@ -356,52 +362,80 @@ node Backend/scripts/seedFirebase.js --mainnet
 The seed script:
 1. Accepts `--mainnet` flag (defaults to testnet)
 2. Downloads the appropriate CSV (`protocols-testnet.csv` or `protocols-mainnet.csv`)
-3. Deletes only protocols matching the target network (preserves the other network's data)
-4. Sets `protocol.network` and `protocol.id = slug-name-network`
-5. Uploads to Firebase
+3. Deletes only protocols matching the target network (preserves the other)
+4. Creates network-scoped IDs: `slugify(name) + "-" + network`
+5. Uploads to Firebase with `protocol.network` set correctly
 
 ### Frontend behaviour
 
 | Page | Network awareness |
 |---|---|
-| **Explore** (`Explore.svelte`) | Passes `?network=testnet` or `?network=mainnet` to `GET /protocols` based on the current toggle. Only protocols for the active network appear. |
-| **Protocol detail** (`Protocol.svelte`) | Validates `protocol.network === network.current` before allowing stake. If mismatch, shows error: "This protocol is deployed on testnet, but you're on mainnet." |
-| **Commit** | `protocol_contract_address` is set to `protocol.contracts[0].address` — which is the correct address for that network's record. |
+| **Explore** | Passes `?network=testnet\|mainnet` to `GET /protocols`. Re-fetches on toggle switch. |
+| **Dashboard** | Filters both protocols and commitments by current network. Header shows "(Mainnet)" or "(Testnet)". |
+| **Protocol detail** | Validates `protocol.network === network.current` before allowing stake. Sends network-scoped `protocol.id` to commit. |
+| **CommitDetail** | Fetches protocol by `commitment.protocol_id` (network-scoped). Works automatically. |
 
-### End-to-end flow
+### Flash Research + Deep Research
 
-```
-User toggles to "Mainnet" in navbar
-  → Explore page fetches GET /protocols?network=mainnet
-  → Only mainnet-seeded protocols appear
-  → User clicks "Kuru" (ID: kuru-mainnet)
-  → Protocol page loads kuru-mainnet record
-  → User clicks Commit → stakes on Monad Mainnet
-  → protocol_contract_address = kuru-mainnet's contract address
-  → Worker finds commitment.network === "mainnet"
-  → checkEngagement queries Monad Mainnet RPC
-  → Filters logs by kuru-mainnet contract address
-  → callVerify/callSlash target KYP mainnet contract
-```
+**FlashResearcher** matches protocols by ID (`slugified-name-network`), not by name. This prevents cross-network collisions when the same protocol exists on both networks. The frontend sends the current network with every flash research call.
+
+**DeepResearcher** operates by `protocolId` (network-scoped). No changes needed — it reads and writes the correct record automatically.
 
 ### One worker, both networks
 
-There is **one worker** that handles both networks. Each commitment carries its own `network` field — the worker uses this to:
-- Route `checkEngagement` to the correct RPC (testnet or mainnet)
-- Route `callVerify`/`callSlash` to the correct KYP contract via `getNetworkConfig(network)`
-- Filter engagement logs by the commitment's `protocol_contract_address`
+One worker handles both networks. Each commitment carries its `network` field — the worker uses this to:
+- Route `checkEngagement` to the correct RPC
+- Route `callVerify`/`callSlash` to the correct KYP contract
+- Filter engagement logs by `protocol_contract_address`
 
-No need for two separate workers — the per-commitment `network` field handles all routing.
+No separate workers needed.
 
-### Mainnet CSV format
+---
 
-Same format as the testnet CSV:
+## Firebase Data Paths
 
-```csv
-name,contract,address,ctype,cstype
-Kuru,kuru,0x...,DEX,spot
-Ambient,ambient,0x...,DEX,concentrated-liquidity
-...
-```
+| Path | Purpose | Written by | Read by |
+|---|---|---|---|
+| `/protocols` | Protocol research records (network-scoped) | Seed script, FlashResearcher, DeepResearcher | `GET /protocols`, `GET /protocols/:id` |
+| `/commitments` | Stake + verification records | `POST /commit`, worker, `POST /verify`, `POST /withdraw` | `GET /commitments`, worker |
+| `/favorites` | User bookmarks (network-scoped protocol_id) | `POST /favorites` toggle | `GET /favorites` |
+| `/activity_events` | Daily activity snapshots | Worker (`runSnapshot`) | Dashboard (future) |
 
-Drop the file at `Backend/data/protocols-mainnet.csv` or point the seed script to your CSV URL.
+---
+
+## Two-Agent Research Pipeline
+
+### Agent 1: FlashResearcher
+
+Fast enrichment on every user search. Calls Gemini, merges into Firebase with deep merge + normalization. If protocol has no score yet, fires DeepResearcher in background.
+
+**Fills:** summary, category, links, contracts[], deployed_date, age_summary, forensics, founder_history, image (favicon)
+
+**Does NOT fill:** score, risks, funding, use_cases, team, who_its_for, plain_summary (DeepResearcher handles these)
+
+### Agent 2: DeepResearcher
+
+Deep analysis triggered automatically after FlashResearcher, or on-demand via `POST /deep-research/:protocolId`. Calls Gemini for analysis, computes deterministic score from 8 weighted evidence signals.
+
+**Fills:** plain_summary, score/score_max, risks, funding, use_cases, who_its_for/who_its_not_for, team, restricted_jurisdictions, contract_verified
+
+**Scoring (8 signals, 0–50 range):**
+
+| Signal | Weight | Condition |
+|---|---|---|
+| Audit | +10 | Known auditor |
+| Team verified | +8 | Public team |
+| Contract verified | +8 | On-chain verified |
+| Funding | +6 | Has funding info |
+| Community | +3-6 | Large/medium |
+| Admin risk | +3-6 | Low/medium |
+| Liquidity | +2-4 | Deep/moderate |
+| Age | +2-4 | >60 or >180 days |
+| Concentration | -2 to +4 | Holder distribution |
+
+### Why two agents?
+
+1. **UX** — Search is instant (< 5s). Deep research takes time.
+2. **Cost** — Flash is cheap (single Gemini call). Deep is expensive.
+3. **Reliability** — Flash failing doesn't break search. Deep failing doesn't break the app.
+4. **Progressive enhancement** — Protocol works with just Flash. Deep makes it better.
