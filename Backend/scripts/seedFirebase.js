@@ -238,11 +238,11 @@ async function uploadProtocols(protocols) {
   console.log("[SEED] Verifying upload...");
   const snapshot = await ref.once("value");
   const data = snapshot.val();
-  const count = data ? Object.keys(data).length : 0;
-  if (count !== protocols.length) {
-    throw new Error(`Upload verification failed: expected ${protocols.length}, found ${count}`);
+  const uploaded = data ? Object.values(data).filter((p) => p.network === NETWORK) : [];
+  if (uploaded.length !== protocols.length) {
+    throw new Error(`Upload verification failed: expected ${protocols.length} ${NETWORK} protocols, found ${uploaded.length}`);
   }
-  console.log(`[SEED] Upload verified: ${count} protocols in database.`);
+  console.log(`[SEED] Upload verified: ${uploaded.length} ${NETWORK} protocols in database.`);
 }
 
 async function main() {

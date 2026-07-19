@@ -112,10 +112,7 @@ Rules:
     console.log("[FLASH] Gemini response:", json);
 
     try {
-      const normalize = (s) => s.toLowerCase().replace(/[\s\-_.]/g, "");
-      const queryName = normalize(json.protocolName);
-
-      const targetId = normalize(json.protocolName).replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") + "-" + network;
+      const targetId = json.protocolName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") + "-" + network;
       const existing = await getById("protocols", targetId);
 
       if (!existing) {
