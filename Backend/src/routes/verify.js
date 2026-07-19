@@ -31,15 +31,17 @@ router.get("/verify", async (req, res, next) => {
       return res.status(400).json({ error: true, message: "Deadline not passed yet — use POST /verify/check for interim checks" });
     }
 
+    const network = commitment.network || "testnet";
     const hasEngagement = await checkEngagement(
       commitment.user_wallet,
       commitment.protocol_contract_address,
-      commitment.commit_timestamp
+      commitment.commit_timestamp,
+      network
     );
 
     let result;
     if (hasEngagement) {
-      const tx = await callVerify(commitment.onchain_commitment_id);
+      const tx = await callVerify(commitment.onchain_commitment_id, commitment.protocol_contract_address, network);
       result = await update("commitments", commitment.id, {
         status: "verified",
         verify_tx_hash: tx.txHash,
@@ -47,7 +49,7 @@ router.get("/verify", async (req, res, next) => {
         last_check_at: now.toISOString(),
       });
     } else {
-      const tx = await callSlash(commitment.onchain_commitment_id);
+      const tx = await callSlash(commitment.onchain_commitment_id, commitment.protocol_contract_address, network);
       result = await update("commitments", commitment.id, {
         status: "slashed",
         verify_tx_hash: tx.txHash,
@@ -80,16 +82,18 @@ router.post("/verify/check", async (req, res, next) => {
       return res.status(400).json({ error: true, message: `Commitment already ${commitment.status}` });
     }
 
+    const network = commitment.network || "testnet";
     const hasEngagement = await checkEngagement(
       commitment.user_wallet,
       commitment.protocol_contract_address,
-      commitment.commit_timestamp
+      commitment.commit_timestamp,
+      network
     );
 
     const now = new Date();
 
     if (hasEngagement) {
-      const tx = await callVerify(commitment.onchain_commitment_id);
+      const tx = await callVerify(commitment.onchain_commitment_id, commitment.protocol_contract_address, network);
       const result = await update("commitments", commitment.id, {
         status: "verified",
         verify_tx_hash: tx.txHash,
@@ -104,7 +108,7 @@ router.post("/verify/check", async (req, res, next) => {
     const newMissedCount = commitment.missed_count + 1;
 
     if (newMissedCount >= MAX_MISSED_CHECKS) {
-      const tx = await callSlash(commitment.onchain_commitment_id);
+      const tx = await callSlash(commitment.onchain_commitment_id, commitment.protocol_contract_address, network);
       const result = await update("commitments", commitment.id, {
         status: "slashed",
         verify_tx_hash: tx.txHash,

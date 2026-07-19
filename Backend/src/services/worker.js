@@ -5,18 +5,20 @@ const CHECK_INTERVAL_MS = Number(process.env.WORKER_CHECK_INTERVAL_MS) || 72 * 6
 const SNAPSHOT_INTERVAL_MS = Number(process.env.WORKER_SNAPSHOT_INTERVAL_MS) || 24 * 60 * 60 * 1000;
 
 async function runCheck(commitment) {
-  console.log(`[WORKER] Checking commitment ${commitment.id} (wallet: ${commitment.user_wallet})`);
+  const network = commitment.network || "testnet";
+  console.log(`[WORKER] Checking commitment ${commitment.id} (wallet: ${commitment.user_wallet}, network: ${network})`);
 
   const hasEngagement = await checkEngagement(
     commitment.user_wallet,
     commitment.protocol_contract_address,
-    commitment.commit_timestamp
+    commitment.commit_timestamp,
+    network
   );
 
   const now = new Date();
 
   if (hasEngagement) {
-    const tx = await callVerify(commitment.onchain_commitment_id, commitment.protocol_contract_address);
+    const tx = await callVerify(commitment.onchain_commitment_id, commitment.protocol_contract_address, network);
     const result = await update("commitments", commitment.id, {
       status: "verified",
       verify_tx_hash: tx.txHash,
@@ -38,8 +40,9 @@ async function runCheck(commitment) {
 }
 
 async function runSlash(commitment) {
-  console.log(`[WORKER] Slashing commitment ${commitment.id} (past deadline)`);
-  const tx = await callSlash(commitment.onchain_commitment_id, commitment.protocol_contract_address);
+  const network = commitment.network || "testnet";
+  console.log(`[WORKER] Slashing commitment ${commitment.id} (past deadline, network: ${network})`);
+  const tx = await callSlash(commitment.onchain_commitment_id, commitment.protocol_contract_address, network);
   await update("commitments", commitment.id, {
     status: "slashed",
     verify_tx_hash: tx.txHash,
@@ -50,13 +53,15 @@ async function runSlash(commitment) {
 }
 
 async function runSnapshot(commitment) {
-  console.log(`[SNAPSHOT] Checking daily activity for commitment ${commitment.id}`);
+  const network = commitment.network || "testnet";
+  console.log(`[SNAPSHOT] Checking daily activity for commitment ${commitment.id} (network: ${network})`);
 
   const sinceTimestamp = commitment.last_snapshot_at || commitment.commit_timestamp;
   const hasEngagement = await checkEngagement(
     commitment.user_wallet,
     commitment.protocol_contract_address,
-    sinceTimestamp
+    sinceTimestamp,
+    network
   );
 
   const eventType = hasEngagement ? "activity" : "no_activity";

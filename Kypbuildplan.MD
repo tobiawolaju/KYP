@@ -171,7 +171,7 @@ Still TODO:
 
 ## Current status snapshot
 
-**Done:** Phase 0 (architecture), Phase 1 (contract), Phase 2 (FlashResearcher + DeepResearcher + normalization + heartbeat worker), Phase 3&4 (frontend fully built — Privy wallet connect, DeepResearcher UI, countdown banner, ScoreBadge in header, SVG link icons, scroll-to-top, Explore card cleanup, Heartbeat component), Phase 5 (worker tests 4/4 paths, DeepResearcher concurrency + failure handling verified, normalization verified)
+**Done:** Phase 0 (architecture), Phase 1 (contract), Phase 2 (FlashResearcher + DeepResearcher + normalization + heartbeat worker), Phase 3&4 (frontend fully built — Privy wallet connect, DeepResearcher UI, countdown banner, ScoreBadge in header, SVG link icons, scroll-to-top, Explore card cleanup, Heartbeat component, Testnet/Mainnet network toggle), Phase 5 (worker tests 4/4 paths, DeepResearcher concurrency + failure handling verified, normalization verified), Multi-network backend (contract.js supports testnet + mainnet RPC routing, commitment.network field flows through worker/verify/withdraw)
 
 **Verified:** Heartbeat worker tested against KYPCommitmentDemo — 4/4 paths passed (verify, slash decision, early withdraw, deadline slash). Test harness: `Backend/tests/demo-test-fast.js`
 

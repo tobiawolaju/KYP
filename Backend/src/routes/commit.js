@@ -24,7 +24,7 @@ router.get("/commitments/:id", async (req, res) => {
 });
 
 router.post("/commit", async (req, res) => {
-  const { user_wallet, protocol_id, protocol_contract_address, staked_amount, stake_tx_hash, onchain_commitment_id } = req.body;
+  const { user_wallet, protocol_id, protocol_contract_address, staked_amount, stake_tx_hash, onchain_commitment_id, network } = req.body;
 
   if (!user_wallet || !protocol_id || !protocol_contract_address || !staked_amount || !stake_tx_hash) {
     return res.status(400).json({
@@ -42,7 +42,7 @@ router.post("/commit", async (req, res) => {
     id: randomUUID(),
     user_wallet,
     chain: "monad",
-    network: "testnet",
+    network: network || "testnet",
     protocol_id,
     protocol_contract_address,
     staked_amount,

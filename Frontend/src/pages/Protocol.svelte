@@ -2,11 +2,13 @@
   import { useLocation } from "../lib/router.svelte.js";
   import Link from "../lib/Link.svelte";
   import { getWallet } from "../lib/wallet.svelte.js";
+  import { getNetwork } from "../lib/network.svelte.js";
   import { VERIFY_WINDOW_HOURS } from "../lib/constants.js";
   import { getProtocol, getFavorites, toggleFavorite as apiToggleFavorite, commitProtocol } from "../lib/api.js";
   import ScoreBadge from "../lib/ScoreBadge.svelte";
 
-  const KYP_CONTRACT = import.meta.env.VITE_KYP_CONTRACT_ADDRESS || "0x325215e272e0f5efb33d697c356a5ccbfaf6ecaf";
+  const KYP_CONTRACT_TESTNET = import.meta.env.VITE_KYP_CONTRACT_ADDRESS || "0x325215e272e0f5efb33d697c356a5ccbfaf6ecaf";
+  const KYP_CONTRACT_MAINNET = import.meta.env.VITE_KYP_CONTRACT_ADDRESS_MAINNET || KYP_CONTRACT_TESTNET;
 
   let location = useLocation();
   let id = $derived(location.pathname.split("/").pop());
@@ -16,6 +18,7 @@
   let showStakeModal = $state(false);
   let stakeAmount = $state("0.01");
   let wallet = getWallet();
+  let network = getNetwork();
   let stakeConfirmed = $state(false);
   let stakeLoading = $state(false);
   let stakeError = $state("");
@@ -180,14 +183,15 @@
       if (!ethereumProvider) throw new Error("Wallet provider not available");
 
       const { createWalletClient, custom, parseAbi, decodeEventLog, parseEther, http, createPublicClient } = await import("viem");
-      const { monadTestnet } = await import("viem/chains");
+      const { monadTestnet, monad } = await import("viem/chains");
+      const activeChain = network.isMainnet ? monad : monadTestnet;
 
       const userAddress = wallet.address;
       if (!userAddress) throw new Error("No connected wallet address");
 
       const walletClient = createWalletClient({
-        account: userAddress,
-        chain: monadTestnet,
+        account: wallet.address,
+        chain: activeChain,
         transport: custom(ethereumProvider),
       });
 
@@ -197,15 +201,16 @@
       const stakeAbi = parseAbi(["function stake(address protocolAddress) payable returns (uint256)"]);
       const stakedEventAbi = parseAbi(["event Staked(uint256 indexed commitmentId, address indexed user, address indexed protocolAddress, uint256 amount, uint256 verifyDeadline)"]);
 
+      const kypContract = network.isMainnet ? KYP_CONTRACT_MAINNET : KYP_CONTRACT_TESTNET;
       const txHash = await walletClient.writeContract({
-        address: KYP_CONTRACT,
+        address: kypContract,
         abi: stakeAbi,
         functionName: "stake",
         args: [protocolAddr],
         value: parseEther(stakeAmount),
       });
 
-      const publicClient = createPublicClient({ chain: monadTestnet, transport: http() });
+      const publicClient = createPublicClient({ chain: activeChain, transport: http() });
       const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash });
 
       let onchainCommitmentId = null;
@@ -226,6 +231,7 @@
         staked_amount: parseEther(stakeAmount).toString(),
         stake_tx_hash: receipt.transactionHash,
         onchain_commitment_id: onchainCommitmentId,
+        network: network.current,
       });
 
       let deadline = new Date(Date.now() + VERIFY_WINDOW_HOURS * 60 * 60 * 1000);

@@ -65,7 +65,7 @@
 
 `verify_deadline` is now 216 hours (9 days) — the contract's `VERIFY_WINDOW`. The backend performs up to 3 verification checks at 72h intervals (check 1 at 72h, check 2 at 144h, check 3 at 216h). `missed_count` tracks how many checks failed to find onchain engagement. After 3 misses the commitment is slashed. `status` includes `"withdrawn"` for DB-only records where the user has initiated an onchain withdrawal via `POST /withdraw`.
 
-`network` is hardcoded `"testnet"` for the hackathon build but present as a real field, not baked into logic, so switching to mainnet later is a config change, not a rewrite.
+`network` is set by the frontend at commit time based on the user's Testnet/Mainnet toggle. Each commitment records which network it was staked on — the backend uses this to route contract calls to the correct RPC and contract address.
 
 ### Favourites Record
 
@@ -166,7 +166,7 @@ sequenceDiagram
 |---|---|---|
 | Frontend (Vercel) | Research input, profile card, commit flow, dashboard | Backend API, wallet (via Privy SDK), Monad RPC (read-only for balance/tx display) |
 | Backend (Render) | `/research`, `/commit`, `/verify`, `/withdraw` endpoints; orchestrates LLM calls and RPC checks; scheduled cron for 3-strike verification loop | LLM provider, Monad RPC, Privy (wallet-only auth), DB |
-| Smart Contract (Monad Testnet) | `stake()`, `verify()`, `slash()` — holds funds, enforces state transitions | Called by backend (or directly by frontend wallet for `stake()`) |
+| Smart Contract (Monad Testnet + Mainnet) | `stake()`, `verify()`, `slash()` — holds funds, enforces state transitions | Called by backend (or directly by frontend wallet for `stake()`) |
 | DB (research + commitment records) | Persists profiles and commitments | Backend only |
 
 ## Heartbeat Worker (Zero-Budget Cron)
@@ -214,16 +214,18 @@ Contract calls use commitment.protocol_contract_address
 - `Frontend/src/lib/Heartbeat.svelte` — 30s interval, visibility-aware, auth-gated
 - `Backend/src/routes/worker.js` — POST /worker/tick with lock guard + throttle
 - `Backend/src/services/worker.js` — Core logic (importable module)
-- `Backend/src/services/contract.js` — callVerify/callSlash accept optional contract address
+- `Backend/src/services/contract.js` — multi-network support (testnet + mainnet), callVerify/callSlash accept network param
+- `Frontend/src/lib/network.svelte.js` — Testnet/Mainnet toggle state (localStorage-persisted)
 
 ## Contracts
 
-KYP uses a dual-contract setup:
+KYP uses a multi-contract, multi-network setup:
 
-- **`KYPCommitment`** — the official submission contract with a 216-hour (9-day) verify window (`0x325215e272e0f5efb33d697c356a5ccbfaf6ecaf`). Deployed once and used by all real commitments. Backend performs 3 verification checks at 72h intervals.
-- **`KYPCommitmentDemo`** — an identical twin with a 15-minute verify window (`0x98c3e4594ecfa1c45e8056932652b04cdea64e5d`). Exists solely for capturing slash-path footage in the demo video. Backend performs 3 checks at 5-minute intervals. Not part of the actual submission.
+- **`KYPCommitment` (Testnet)** — the original submission contract with a 216-hour verify window (`0x325215e272e0f5efb33d697c356a5ccbfaf6ecaf`). Backend performs 3 verification checks at 72h intervals.
+- **`KYPCommitment` (Mainnet)** — identical logic deployed on Monad Mainnet. Address filled after deployment. Backend reads `KYP_CONTRACT_ADDRESS_MAINNET` env var.
+- **`KYPCommitmentDemo`** — an identical twin with a 15-minute verify window (`0x98c3e4594ecfa1c45e8056932652b04cdea64e5d`). Exists solely for capturing slash-path footage in the demo video. Not part of the actual submission.
 
-Both contracts share the same ABI surface (`stake` / `verify` / `slash` / `withdrawForfeited`). The demo contract's shortened window makes it possible to show a full stake → wait → slash cycle without waiting 72 hours.
+All contracts share the same ABI surface (`stake` / `verify` / `slash` / `withdrawForfeited`). The frontend provides a Testnet/Mainnet toggle (similar to the light/dark theme toggle) — switching networks changes the viem chain, KYP contract address, and which RPC the backend uses for that commitment's verification checks.
 
 ## Explore / Protocols Route
 

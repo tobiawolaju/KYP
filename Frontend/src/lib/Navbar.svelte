@@ -2,11 +2,13 @@
   import Link from "./Link.svelte";
   import { useLocation } from "./router.svelte.js";
   import { getTheme, toggleTheme } from "./theme.svelte.js";
+  import { getNetwork, toggleNetwork } from "./network.svelte.js";
   import { getWallet } from "./wallet.svelte.js";
 
   let location = useLocation();
   let drawerOpen = $state(false);
   let theme = getTheme();
+  let network = getNetwork();
   let wallet = getWallet();
 
   let isHome = $derived(location.pathname === "/");
@@ -52,6 +54,10 @@
     <Link to="/protocols" class="nav-link">Explore Protocols</Link>
     <Link to="/myprotocols" class="nav-link">My Protocols</Link>
   </div>
+  <button class="network-toggle" onclick={toggleNetwork} aria-label="Toggle network">
+    <span class="material-symbols-outlined">lan</span>
+    <span class="network-label">{network.isMainnet ? "Mainnet" : "Testnet"}</span>
+  </button>
   <button class="theme-toggle" onclick={toggleTheme} aria-label="Toggle theme">
     <span class="material-symbols-outlined">{theme.dark ? "light_mode" : "dark_mode"}</span>
   </button>
@@ -77,6 +83,10 @@
       <button class="drawer-theme-toggle" onclick={toggleTheme}>
         <span class="material-symbols-outlined">{theme.dark ? "light_mode" : "dark_mode"}</span>
         {theme.dark ? "Light Mode" : "Dark Mode"}
+      </button>
+      <button class="drawer-theme-toggle" onclick={toggleNetwork}>
+        <span class="material-symbols-outlined">lan</span>
+        {network.isMainnet ? "Mainnet" : "Testnet"}
       </button>
     </div>
   </div>
@@ -191,6 +201,32 @@
   .theme-toggle .material-symbols-outlined {
     font-size: 22px;
   }
+  .network-toggle {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: none;
+    border: 1px solid var(--border-light);
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 4px 10px;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    font-family: var(--mono);
+    font-weight: 500;
+    transition: background 0.2s, color 0.2s, border-color 0.2s;
+  }
+  .network-toggle:hover {
+    background: var(--surface-hover);
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+  .network-toggle .material-symbols-outlined {
+    font-size: 16px;
+  }
+  .network-label {
+    letter-spacing: 0.3px;
+  }
   .drawer-theme-toggle {
     display: flex;
     align-items: center;
@@ -293,6 +329,9 @@
       justify-content: center;
     }
     .theme-toggle {
+      display: none;
+    }
+    .network-toggle {
       display: none;
     }
   }

@@ -65,9 +65,10 @@ Visual identity — colors and typography — is inspired by Monad's official br
 
 ### `KYPCommitment` — Official Submission (216h window, 3-strike model)
 - File: `Contract/src/KYPCommitment.sol`
-- Address: `0x325215e272e0f5efb33d697c356a5ccbfaf6ecaf`
-- Explorer: https://testnet.monadvision.com/address/0x325215e272e0f5efb33d697c356a5ccbfaf6ecaf
-- The current contract used in the KYP protocol. 216-hour verify window with 3-strike verification model.
+- **Mainnet:** `0x8bf8348963c366d9ba210ddc8574caa7522335f8`
+- **Testnet:** `0x325215e272e0f5efb33d697c356a5ccbfaf6ecaf`
+- Explorer (testnet): https://testnet.monadvision.com/address/0x325215e272e0f5efb33d697c356a5ccbfaf6ecaf
+- The current contract used in the KYP protocol. 216-hour verify window with 3-strike verification model. Frontend includes a Testnet/Mainnet toggle — switching networks changes the viem chain, contract address, and backend RPC routing.
 
 ### `KYPCommitment` — Previous Deployment (superseded)
 - Address: `0xc5ebd0c77a1fd749bc2661e82c9682a1d53136e0`

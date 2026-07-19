@@ -19,10 +19,10 @@ export function fetchCommitment(commitmentId) {
   return request(`/commitments/${commitmentId}`);
 }
 
-export function commitProtocol({ user_wallet, protocol_id, protocol_contract_address, staked_amount, stake_tx_hash, onchain_commitment_id }) {
+export function commitProtocol({ user_wallet, protocol_id, protocol_contract_address, staked_amount, stake_tx_hash, onchain_commitment_id, network }) {
   return request("/commit", {
     method: "POST",
-    body: JSON.stringify({ user_wallet, protocol_id, protocol_contract_address, staked_amount, stake_tx_hash, onchain_commitment_id }),
+    body: JSON.stringify({ user_wallet, protocol_id, protocol_contract_address, staked_amount, stake_tx_hash, onchain_commitment_id, network }),
   });
 }
 

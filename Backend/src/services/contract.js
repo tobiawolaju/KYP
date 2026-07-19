@@ -2,22 +2,39 @@ const { ethers } = require("ethers");
 const path = require("path");
 const fs = require("fs");
 
-const RPC_URL = process.env.MONAD_TESTNET_RPC;
 const PRIVATE_KEY = process.env.VERIFIER_PRIVATE_KEY;
-const CONTRACT_ADDRESS = process.env.KYP_CONTRACT_ADDRESS;
 
 // NOTE: If KYPCommitment.sol is redeployed, re-copy the updated ABI from
 // Contract/abi/KYPCommitment.json into Backend/abi/KYPCommitment.json
 const ABI_PATH = path.join(__dirname, "../../abi/KYPCommitment.json");
 const abi = JSON.parse(fs.readFileSync(ABI_PATH, "utf8"));
 
-const provider = new ethers.JsonRpcProvider(RPC_URL);
-const signer = new ethers.Wallet(PRIVATE_KEY, provider);
-const contract = new ethers.Contract(CONTRACT_ADDRESS, abi, signer);
+const networks = {
+  testnet: {
+    rpc: process.env.MONAD_TESTNET_RPC,
+    contractAddress: process.env.KYP_CONTRACT_ADDRESS,
+  },
+  mainnet: {
+    rpc: process.env.MONAD_MAINNET_RPC,
+    contractAddress: process.env.KYP_CONTRACT_ADDRESS_MAINNET,
+  },
+};
+
+function getNetworkConfig(network) {
+  const key = network === "mainnet" ? "mainnet" : "testnet";
+  const cfg = networks[key];
+  if (!cfg.rpc) throw new Error(`Missing RPC URL for ${key}`);
+  const provider = new ethers.JsonRpcProvider(cfg.rpc);
+  const signer = new ethers.Wallet(PRIVATE_KEY, provider);
+  const contract = cfg.contractAddress
+    ? new ethers.Contract(cfg.contractAddress, abi, signer)
+    : null;
+  return { provider, signer, contract, contractAddress: cfg.contractAddress };
+}
 
 const LOG_QUERY_LIMIT = 100;
 
-async function findBlockAtTimestamp(timestamp) {
+async function findBlockAtTimestamp(provider, timestamp) {
   const targetTime = Math.floor(new Date(timestamp).getTime() / 1000) - 300;
   const latestBlock = await provider.getBlockNumber();
   const latestBlockData = await provider.getBlock(latestBlock);
@@ -33,9 +50,10 @@ async function findBlockAtTimestamp(timestamp) {
   return fromBlock;
 }
 
-async function checkEngagement(userWallet, protocolAddress, sinceTimestamp) {
-  console.log(`[CONTRACT] checkEngagement: wallet=${userWallet}, protocol=${protocolAddress}, since=${sinceTimestamp}`);
-  const fromBlock = await findBlockAtTimestamp(sinceTimestamp);
+async function checkEngagement(userWallet, protocolAddress, sinceTimestamp, network) {
+  const { provider } = getNetworkConfig(network);
+  console.log(`[CONTRACT] checkEngagement: wallet=${userWallet}, protocol=${protocolAddress}, since=${sinceTimestamp}, network=${network || "testnet"}`);
+  const fromBlock = await findBlockAtTimestamp(provider, sinceTimestamp);
   const latestBlock = await provider.getBlockNumber();
   console.log(`[CONTRACT] scanning blocks ${fromBlock} to ${latestBlock}`);
   const userAddr = ethers.getAddress(userWallet);
@@ -69,11 +87,12 @@ async function checkEngagement(userWallet, protocolAddress, sinceTimestamp) {
   return matched;
 }
 
-async function callVerify(commitmentId, contractAddress) {
+async function callVerify(commitmentId, contractAddress, network) {
+  const { contract: defaultContract, contractAddress: defaultAddr } = getNetworkConfig(network);
   const target = contractAddress
-    ? new ethers.Contract(contractAddress, abi, signer)
-    : contract;
-  console.log(`[CONTRACT] callVerify: commitmentId=${commitmentId}, contract=${contractAddress || "default"}`);
+    ? new ethers.Contract(contractAddress, abi, defaultContract.runner)
+    : defaultContract;
+  console.log(`[CONTRACT] callVerify: commitmentId=${commitmentId}, contract=${contractAddress || defaultAddr}, network=${network || "testnet"}`);
   const tx = await target.verify(commitmentId);
   console.log(`[CONTRACT] verify tx sent: ${tx.hash}`);
   const receipt = await tx.wait();
@@ -81,11 +100,12 @@ async function callVerify(commitmentId, contractAddress) {
   return { txHash: receipt.hash, status: receipt.status };
 }
 
-async function callSlash(commitmentId, contractAddress) {
+async function callSlash(commitmentId, contractAddress, network) {
+  const { contract: defaultContract, contractAddress: defaultAddr } = getNetworkConfig(network);
   const target = contractAddress
-    ? new ethers.Contract(contractAddress, abi, signer)
-    : contract;
-  console.log(`[CONTRACT] callSlash: commitmentId=${commitmentId}, contract=${contractAddress || "default"}`);
+    ? new ethers.Contract(contractAddress, abi, defaultContract.runner)
+    : defaultContract;
+  console.log(`[CONTRACT] callSlash: commitmentId=${commitmentId}, contract=${contractAddress || defaultAddr}, network=${network || "testnet"}`);
   const tx = await target.slash(commitmentId);
   console.log(`[CONTRACT] slash tx sent: ${tx.hash}`);
   const receipt = await tx.wait();
@@ -94,7 +114,8 @@ async function callSlash(commitmentId, contractAddress) {
 }
 
 async function getBlockNumber(timestamp) {
+  const { provider } = getNetworkConfig("testnet");
   return provider.getBlockNumber(timestamp);
 }
 
-module.exports = { checkEngagement, callVerify, callSlash, getBlockNumber, provider, contract };
+module.exports = { checkEngagement, callVerify, callSlash, getBlockNumber, getNetworkConfig };
