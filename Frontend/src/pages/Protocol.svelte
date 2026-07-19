@@ -686,8 +686,8 @@
     color: var(--green);
   }
   .verification-badge.unverified {
-    background: #fff7ed;
-    color: #c2410c;
+    background: var(--unverified-bg);
+    color: var(--unverified);
   }
   .verification-badge .material-symbols-outlined {
     font-size: 18px;
@@ -738,8 +738,8 @@
     border-radius: var(--radius-md);
   }
   .persona-card.caution {
-    background: #fffbeb;
-    border: 1px solid #f59e0b;
+    background: var(--caution-bg);
+    border: 1px solid var(--caution-border);
   }
   .supporting-text {
     font-size: 13px;
@@ -753,8 +753,8 @@
     align-self: center;
   }
   .caution-tag {
-    background: #fffbeb;
-    color: #b45309;
+    background: var(--caution-tag-bg);
+    color: var(--caution-tag);
   }
 
   .info-section {
@@ -1005,7 +1005,7 @@
     align-items: center;
     gap: 10px;
     padding: 12px 16px;
-    background: #e8740c;
+    background: var(--deep-research-bg);
     color: #fff;
     border-radius: var(--radius-md);
     margin-bottom: 24px;

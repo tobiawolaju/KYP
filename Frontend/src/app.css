@@ -5,6 +5,13 @@
   --accent-border: rgba(124, 58, 237, 0.25);
   --amber: #F59E0B;
   --amber-bg: #FEF3C7;
+  --unverified-bg: #fff7ed;
+  --unverified: #c2410c;
+  --caution-bg: #fffbeb;
+  --caution-border: #f59e0b;
+  --caution-tag-bg: #fffbeb;
+  --caution-tag: #b45309;
+  --deep-research-bg: #e8740c;
   --rose: #EF4444;
   --rose-bg: #FEE2E2;
   --blue: #3B82F6;
@@ -129,6 +136,14 @@ input, textarea, select {
   --accent-bg: rgba(167, 139, 250, 0.15);
   --accent-border: rgba(167, 139, 250, 0.3);
   --amber-bg: rgba(245, 158, 11, 0.15);
+  --amber: #FBBF24;
+  --unverified-bg: rgba(194, 65, 12, 0.15);
+  --unverified: #FB923C;
+  --caution-bg: rgba(245, 158, 11, 0.1);
+  --caution-border: rgba(245, 158, 11, 0.4);
+  --caution-tag-bg: rgba(245, 158, 11, 0.12);
+  --caution-tag: #FBBF24;
+  --deep-research-bg: #c2410c;
   --rose-bg: rgba(239, 68, 68, 0.15);
   --blue-bg: rgba(59, 130, 246, 0.15);
   --green-bg: rgba(16, 185, 129, 0.15);
