@@ -73,7 +73,7 @@
   <div class="drawer-overlay" onclick={closeDrawer} role="presentation">
     <div class="drawer" onclick={(e) => e.stopPropagation()} onkeydown={(e) => { if (e.key === "Escape") closeDrawer(); }} role="dialog" tabindex="-1">
       <div class="drawer-header">
-        <img src="/logo.png" alt="KYP" class="logo-img drawer-logo-img" />
+        <Link to="/" class="drawer-logo-link" onclick={closeDrawer}><img src="/logo.png" alt="KYP" class="logo-img drawer-logo-img" /></Link>
         <button class="close-btn" onclick={closeDrawer} aria-label="Close">
           <span class="material-symbols-outlined">close</span>
         </button>
@@ -316,6 +316,10 @@
     align-items: center;
     justify-content: space-between;
     margin-bottom: 48px;
+  }
+  .drawer-logo-link {
+    display: inline-flex;
+    text-decoration: none;
   }
   .drawer-logo-img {
     height: 32px;
