@@ -101,7 +101,7 @@
         <button
           class="suggestion"
           class:selected={i === selectedIndex}
-          onmousedown|preventDefault={() => pickSuggestion(s.name)}
+          onmousedown={(e) => { e.preventDefault(); pickSuggestion(s.name); }}
         >
           <span class="suggestion-name">{s.name}</span>
           <span class="suggestion-cat">{s.category || ""}</span>
