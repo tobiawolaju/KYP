@@ -222,10 +222,54 @@ Contract calls use commitment.protocol_contract_address
 KYP uses a multi-contract, multi-network setup:
 
 - **`KYPCommitment` (Testnet)** — the original submission contract with a 216-hour verify window (`0x325215e272e0f5efb33d697c356a5ccbfaf6ecaf`). Backend performs 3 verification checks at 72h intervals.
-- **`KYPCommitment` (Mainnet)** — identical logic deployed on Monad Mainnet. Address filled after deployment. Backend reads `KYP_CONTRACT_ADDRESS_MAINNET` env var.
+- **`KYPCommitment` (Mainnet)** — identical logic deployed on Monad Mainnet (`0x8bf8348963c366d9ba210ddc8574caa7522335f8`). Backend reads `KYP_CONTRACT_ADDRESS_MAINNET` env var.
 - **`KYPCommitmentDemo`** — an identical twin with a 15-minute verify window (`0x98c3e4594ecfa1c45e8056932652b04cdea64e5d`). Exists solely for capturing slash-path footage in the demo video. Not part of the actual submission.
 
 All contracts share the same ABI surface (`stake` / `verify` / `slash` / `withdrawForfeited`). The frontend provides a Testnet/Mainnet toggle (similar to the light/dark theme toggle) — switching networks changes the viem chain, KYP contract address, and which RPC the backend uses for that commitment's verification checks.
+
+## Multi-Network Architecture (Testnet + Mainnet)
+
+KYP runs on both Monad Testnet and Monad Mainnet simultaneously. The user selects which network they're on via a toggle in the navbar — the same UX pattern as the light/dark theme toggle. This is a first-class feature, not a backend-only config swap.
+
+### How the toggle works end-to-end
+
+**Frontend (`network.svelte.js`):**
+- Singleton reactive state, persisted to `localStorage`
+- `getNetwork()` returns `{ current: "testnet" | "mainnet", isMainnet: boolean }`
+- Toggle is in `Navbar.svelte` (desktop top bar + mobile drawer), next to the theme toggle
+- Switching networks triggers a re-render of all dependent components
+
+**When the user toggles networks:**
+
+| Component | What changes |
+|---|---|
+| `Protocol.svelte` (staking) | viem `chain` switches from `monadTestnet` to `monad` (chain ID 10143 → 143). KYP contract address switches from `VITE_KYP_CONTRACT_ADDRESS` to `VITE_KYP_CONTRACT_ADDRESS_MAINNET`. The `writeContract` call targets the correct chain. |
+| `Dashboard.svelte` | Re-fetches commitments via `GET /commitments?wallet=...&network=mainnet`. Only commitments on the current network appear. Activity grid and commit graphs update. Header shows "(Mainnet)" or "(Testnet)". |
+| `POST /commit` | Sends `network: "mainnet"` or `network: "testnet"` in the request body. The backend stores this in the commitment record. |
+
+**Backend (`contract.js`):**
+- Maintains separate `provider` + `signer` + `contract` instances for testnet and mainnet
+- `getNetworkConfig(network)` returns the right provider/contract for the network
+- `checkEngagement`, `callVerify`, `callSlash` all accept a `network` parameter
+- The worker reads `commitment.network` from each commitment record and routes the contract call to the correct network's RPC + contract address
+
+**Database:**
+- Each commitment record stores `network: "testnet" | "mainnet"` at commit time
+- `GET /commitments?network=mainnet` filters server-side
+- The same protocol research record is shared across networks (research doesn't change per network)
+
+### Deployed contracts
+
+| Network | Address | Chain ID | RPC |
+|---|---|---|---|
+| Testnet | `0x325215e272e0f5efb33d697c356a5ccbfaf6ecaf` | 10143 | `https://testnet-rpc.monad.xyz` |
+| Mainnet | `0x8bf8348963c366d9ba210ddc8574caa7522335f8` | 143 | `https://rpc.monad.xyz` |
+
+Both contracts share the same Solidity source (`KYPCommitment.sol`), same ABI, same verifier address (`0x37674EE795f126BC933Dc57439eb194889dA0d0E`). The only difference is which chain they're deployed to.
+
+### Why this matters for the submission
+
+Most hackathon projects are testnet-only. KYP ships on both networks from day one — the toggle is visible in the UI, the commitments are network-scoped, and the backend routes correctly to either chain. This demonstrates production-readiness: when Monad goes mainnet, KYP is already there. No migration, no schema change, no code rewrite.
 
 ## Explore / Protocols Route
 
