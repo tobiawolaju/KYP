@@ -207,3 +207,40 @@ Built and live:
 **Firebase paths:** `/protocols` (network-scoped), `/commitments` (network field), `/favorites` (network-scoped protocol_id), `/activity_events`
 
 **Next up:** Demo video, submission form answers, X post, full stranger test.
+
+---
+
+## Post-Hackathon Roadmap
+
+### A. Protocol Constant Moderation Agents
+
+Autonomous agents that keep the Firebase database fresh and accurate without manual re-seeding.
+
+**New Protocol Discovery Agent:**
+- Polls [monad-crypto/protocols](https://github.com/monad-crypto/protocols) GitHub CSV on a schedule (every ~6h)
+- Monitors official Monad Discord for new protocol announcements
+- Auto-creates normalized records → fires FlashResearcher → fires DeepResearcher
+- Deduplicates by contract address + name
+
+**Protocol Update Agent:**
+- Iterates all Firebase protocols on a schedule
+- Queries CT (Crypto Twitter) per protocol for recent news: breaches, rugs, airdrops, roadmap updates, team changes
+- Merges intelligence into existing records (forensics, risks, funding, team)
+- Recalculates score if new evidence materially changes risk profile
+- Flags critical events for user-facing alerts
+
+### B. Push Notification System
+
+Email-based notifications so users don't need to check KYP daily.
+
+**Trigger events:**
+- New protocol matching a user's favourited/committed categories
+- Critical protocol events (breaches, rugs, score changes) for committed protocols
+- Commitment deadline reminders (24h and 1h before window closes)
+- Commitment status changes (verified, slashed, at risk)
+
+**Implementation:**
+- User connects email to wallet (one-time, stored in Firebase)
+- Notification agent (scheduled cron) compares user favourites/commitments against latest protocol data
+- Delivery via transactional email (Resend, Mailgun, or Firebase Extensions)
+- Daily digest or instant mode, user-configurable per category

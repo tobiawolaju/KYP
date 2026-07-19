@@ -439,3 +439,61 @@ Deep analysis triggered automatically after FlashResearcher, or on-demand via `P
 2. **Cost** — Flash is cheap (single Gemini call). Deep is expensive.
 3. **Reliability** — Flash failing doesn't break search. Deep failing doesn't break the app.
 4. **Progressive enhancement** — Protocol works with just Flash. Deep makes it better.
+
+---
+
+## Future Implementations (Post-Hackathon)
+
+### 1. Protocol Constant Moderation Agents
+
+Autonomous background agents that continuously keep the protocol database fresh and accurate.
+
+**New Protocol Discovery Agent:**
+- Polls the [monad-crypto/protocols](https://github.com/monad-crypto/protocols) GitHub CSV registry on a schedule (e.g., every 6 hours)
+- Monitors the official Monad Discord for new protocol announcements
+- When a new protocol is detected → creates a normalized record in Firebase → fires FlashResearcher → fires DeepResearcher
+- Deduplicates against existing records by contract address and name
+
+**Protocol Update Agent:**
+- Iterates over all protocols already in Firebase
+- For each protocol, queries CT (Crypto Twitter) for recent news: breaches, rug pulls, airdrops, roadmap updates, team changes
+- Merges new intelligence into the existing protocol record (forensics, risks, funding, team)
+- Updates the score if new evidence materially changes the risk profile
+- Flags critical events (e.g., "contract breach detected") for user-facing alerts
+
+**Why this matters:**
+KYP stays accurate without manual re-seeding. Protocols that rug after being indexed get flagged. New protocols appear automatically. The database is a living mirror of the Monad ecosystem, not a point-in-time snapshot.
+
+### 2. Push Notification System
+
+Email-based notifications for protocol updates and commitment deadlines.
+
+**How it works:**
+- User connects their email address to their wallet (one-time, stored in Firebase)
+- Backend runs a notification agent that checks for:
+  - **New protocols** matching a user's favourited or committed categories/protocols
+  - **Critical protocol events** (breaches, rugs, score changes) for protocols the user has committed to
+  - **Commitment deadlines** — reminder at 24h and 1h before the verify window closes
+  - **Status changes** — commitment verified, slashed, or at risk
+
+**Notification delivery:**
+- Email via a transactional provider (e.g., Resend, Mailgun, or Firebase Extensions)
+- Daily digest option (one email per day) or instant (each event)
+- User controls notification preferences per category (e.g., only DeFi alerts)
+
+**Architecture:**
+```
+Notification Agent (scheduled cron)
+  │
+  ├── Query /favorites and /commitments for all users
+  ├── Compare against latest protocol data + recent activity events
+  ├── Match: user's favourites/commitments vs. new/critical protocols
+  │
+  ▼
+Email Service (Resend / Mailgun)
+  │
+  └── Delivery to user's connected email
+```
+
+**Why this matters:**
+Users don't need to open KYP every day to stay informed. If a protocol they're committed to gets breached, they know immediately. If a new protocol in their category launches, they're first to know. This turns KYP from a tool you visit into a service that watches out for you.
