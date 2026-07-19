@@ -7,11 +7,14 @@ const router = Router();
 const VERIFY_WINDOW_MS = 216 * 60 * 60 * 1000;
 
 router.get("/commitments", async (req, res) => {
-  const { wallet } = req.query;
+  const { wallet, network } = req.query;
   if (!wallet) {
     return res.status(400).json({ error: true, message: "wallet query parameter is required" });
   }
-  const records = await query("commitments", (c) => c.user_wallet.toLowerCase() === wallet.toLowerCase());
+  let records = await query("commitments", (c) => c.user_wallet.toLowerCase() === wallet.toLowerCase());
+  if (network) {
+    records = records.filter((c) => (c.network || "testnet") === network);
+  }
   res.json(records);
 });
 

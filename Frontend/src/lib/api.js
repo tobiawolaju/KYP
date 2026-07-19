@@ -11,8 +11,10 @@ async function request(path, options = {}) {
   return body;
 }
 
-export function fetchCommitments(walletAddress) {
-  return request(`/commitments?wallet=${encodeURIComponent(walletAddress)}`);
+export function fetchCommitments(walletAddress, network) {
+  const params = new URLSearchParams({ wallet: walletAddress });
+  if (network) params.set("network", network);
+  return request(`/commitments?${params.toString()}`);
 }
 
 export function fetchCommitment(commitmentId) {

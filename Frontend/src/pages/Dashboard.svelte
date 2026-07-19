@@ -4,8 +4,10 @@
   import { getWallet } from "../lib/wallet.svelte.js";
   import { getProtocols, getFavorites } from "../lib/api.js";
   import { fetchCommitments } from "../lib/api.js";
+  import { getNetwork } from "../lib/network.svelte.js";
 
   let wallet = getWallet();
+  let network = getNetwork();
   let commitments = $state([]);
   let loading = $state(false);
   let protocols = $state([]);
@@ -16,10 +18,11 @@
   });
 
   $effect(() => {
+    const _net = network.current;
     if (wallet.authenticated && wallet.address) {
       loading = true;
       Promise.all([
-        fetchCommitments(wallet.address),
+        fetchCommitments(wallet.address, _net),
         getFavorites(wallet.address),
       ])
         .then(([commitData, favData]) => { commitments = commitData; favorites = favData; })
@@ -264,7 +267,7 @@
   </div>
 
   <div class="favorites-section">
-    <h2 class="section-title">My Protocols | {favorites.length} favourite | Committed to {commitments.length}</h2>
+    <h2 class="section-title">My Protocols | {favorites.length} favourite | Committed to {commitments.length} ({network.isMainnet ? "Mainnet" : "Testnet"})</h2>
     <div class="favorites-list">
       {#each favoriteProtocols as entry}
         <div class="fav-card">
