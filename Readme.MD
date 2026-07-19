@@ -99,6 +99,31 @@ All 4 worker paths verified against `KYPCommitmentDemo` (15-min window, 3 checks
 
 Test harness: `Backend/tests/demo-test-fast.js`
 
+## Running the Demo Test Locally
+
+The compressed-timeline test uses `KYPCommitmentDemo` (15-min window) instead of the production contract. To run it:
+
+1. **Start the backend with demo intervals:**
+   ```
+   cd Backend
+   WORKER_CHECK_INTERVAL_MS=300000 \
+   WORKER_SNAPSHOT_INTERVAL_MS=300000 \
+   WORKER_MIN_INTERVAL_MS=10000 \
+   KYP_CONTRACT_ADDRESS=0x98c3e4594ecfa1c45e8056932652b04cdea64e5d \
+   node src/server.js
+   ```
+
+2. **Run the test harness** (in a separate terminal):
+   ```
+   cd Backend
+   node tests/demo-test-fast.js
+   ```
+
+3. **Reset to production** when done — remove the env overrides or restart without them. The defaults are:
+   - `KYP_CONTRACT_ADDRESS=0x325215e272e0f5efb33d697c356a5ccbfaf6ecaf`
+   - `WORKER_CHECK_INTERVAL_MS=259200000` (72h)
+   - `WORKER_MIN_INTERVAL_MS=300000` (5min throttle)
+
 ## Roadmap (explicitly not built for this hackathon)
 
 - Google Calendar integration for commitment reminders
