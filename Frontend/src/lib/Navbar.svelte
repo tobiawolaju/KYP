@@ -54,10 +54,10 @@
     <Link to="/protocols" class="nav-link">Explore Protocols</Link>
     <Link to="/myprotocols" class="nav-link">My Protocols</Link>
   </div>
-  <button class="network-toggle" onclick={toggleNetwork} aria-label="Toggle network">
-    <span class="material-symbols-outlined">lan</span>
-    <span class="network-label">{network.isMainnet ? "Mainnet" : "Testnet"}</span>
-  </button>
+  <div class="network-pill">
+    <button class="network-option" class:active={!network.isMainnet} onclick={() => { if (network.isMainnet) toggleNetwork(); }}>Testnet</button>
+    <button class="network-option" class:active={network.isMainnet} onclick={() => { if (!network.isMainnet) toggleNetwork(); }}>Mainnet</button>
+  </div>
   <button class="theme-toggle" onclick={toggleTheme} aria-label="Toggle theme">
     <span class="material-symbols-outlined">{theme.dark ? "light_mode" : "dark_mode"}</span>
   </button>
@@ -84,10 +84,10 @@
         <span class="material-symbols-outlined">{theme.dark ? "light_mode" : "dark_mode"}</span>
         {theme.dark ? "Light Mode" : "Dark Mode"}
       </button>
-      <button class="drawer-theme-toggle" onclick={toggleNetwork}>
-        <span class="material-symbols-outlined">lan</span>
-        {network.isMainnet ? "Mainnet" : "Testnet"}
-      </button>
+      <div class="drawer-network-pill">
+        <button class="drawer-network-option" class:active={!network.isMainnet} onclick={() => { if (network.isMainnet) toggleNetwork(); }}>Testnet</button>
+        <button class="drawer-network-option" class:active={network.isMainnet} onclick={() => { if (!network.isMainnet) toggleNetwork(); }}>Mainnet</button>
+      </div>
     </div>
   </div>
 {/if}
@@ -201,31 +201,30 @@
   .theme-toggle .material-symbols-outlined {
     font-size: 22px;
   }
-  .network-toggle {
+  .network-pill {
     display: flex;
-    align-items: center;
-    gap: 4px;
-    background: none;
     border: 1px solid var(--border-light);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+  }
+  .network-option {
+    background: none;
+    border: none;
     color: var(--text-secondary);
     cursor: pointer;
-    padding: 4px 10px;
-    border-radius: var(--radius-sm);
+    padding: 4px 12px;
     font-size: 12px;
     font-family: var(--mono);
-    font-weight: 500;
-    transition: background 0.2s, color 0.2s, border-color 0.2s;
-  }
-  .network-toggle:hover {
-    background: var(--surface-hover);
-    color: var(--accent);
-    border-color: var(--accent);
-  }
-  .network-toggle .material-symbols-outlined {
-    font-size: 16px;
-  }
-  .network-label {
+    font-weight: 600;
     letter-spacing: 0.3px;
+    transition: background 0.2s, color 0.2s;
+  }
+  .network-option:hover {
+    background: var(--surface-hover);
+  }
+  .network-option.active {
+    background: var(--accent-bg);
+    color: var(--accent);
   }
   .drawer-theme-toggle {
     display: flex;
@@ -250,6 +249,32 @@
   }
   .drawer-theme-toggle .material-symbols-outlined {
     font-size: 22px;
+  }
+  .drawer-network-pill {
+    display: flex;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    margin-top: 12px;
+  }
+  .drawer-network-option {
+    flex: 1;
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 14px 12px;
+    font-size: 16px;
+    font-weight: 600;
+    font-family: var(--sans);
+    transition: background 0.2s, color 0.2s;
+  }
+  .drawer-network-option:hover {
+    background: var(--surface-hover);
+  }
+  .drawer-network-option.active {
+    background: var(--accent-bg);
+    color: var(--accent);
   }
 
   .drawer-overlay {
@@ -331,7 +356,7 @@
     .theme-toggle {
       display: none;
     }
-    .network-toggle {
+    .network-pill {
       display: none;
     }
   }
