@@ -376,17 +376,24 @@
     cursor: pointer;
     border-color: var(--accent);
   }
-  .auth-card.authenticated {
-    border-color: var(--rose);
-  }
+
+
+.auth-card.authenticated {
+  border-color: color-mix(in srgb, var(--rose) 50%, transparent);
+}
+
   .auth-card:hover:not(:disabled) {
     border-color: var(--accent);
     box-shadow: var(--shadow-sm);
     transform: translateY(-1px);
   }
-  .auth-card.authenticated:hover:not(:disabled) {
-    border-color: var(--rose);
-  }
+
+
+.auth-card.authenticated:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--rose) 50%, transparent);
+}
+
+
   .auth-card:disabled {
     cursor: wait;
     opacity: 0.75;
