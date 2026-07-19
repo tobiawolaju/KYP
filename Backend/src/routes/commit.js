@@ -34,7 +34,9 @@ router.post("/commit", async (req, res) => {
   }
 
   const now = new Date();
-  const deadline = new Date(now.getTime() + VERIFY_WINDOW_MS);
+  const deadline = req.body.verify_deadline
+    ? new Date(req.body.verify_deadline)
+    : new Date(now.getTime() + VERIFY_WINDOW_MS);
 
   const record = {
     id: randomUUID(),

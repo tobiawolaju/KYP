@@ -69,18 +69,24 @@ async function checkEngagement(userWallet, protocolAddress, sinceTimestamp) {
   return matched;
 }
 
-async function callVerify(commitmentId) {
-  console.log(`[CONTRACT] callVerify: commitmentId=${commitmentId}`);
-  const tx = await contract.verify(commitmentId);
+async function callVerify(commitmentId, contractAddress) {
+  const target = contractAddress
+    ? new ethers.Contract(contractAddress, abi, signer)
+    : contract;
+  console.log(`[CONTRACT] callVerify: commitmentId=${commitmentId}, contract=${contractAddress || "default"}`);
+  const tx = await target.verify(commitmentId);
   console.log(`[CONTRACT] verify tx sent: ${tx.hash}`);
   const receipt = await tx.wait();
   console.log(`[CONTRACT] verify tx confirmed: ${receipt.hash}, status=${receipt.status}`);
   return { txHash: receipt.hash, status: receipt.status };
 }
 
-async function callSlash(commitmentId) {
-  console.log(`[CONTRACT] callSlash: commitmentId=${commitmentId}`);
-  const tx = await contract.slash(commitmentId);
+async function callSlash(commitmentId, contractAddress) {
+  const target = contractAddress
+    ? new ethers.Contract(contractAddress, abi, signer)
+    : contract;
+  console.log(`[CONTRACT] callSlash: commitmentId=${commitmentId}, contract=${contractAddress || "default"}`);
+  const tx = await target.slash(commitmentId);
   console.log(`[CONTRACT] slash tx sent: ${tx.hash}`);
   const receipt = await tx.wait();
   console.log(`[CONTRACT] slash tx confirmed: ${receipt.hash}, status=${receipt.status}`);

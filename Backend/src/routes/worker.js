@@ -5,7 +5,7 @@ const router = Router();
 
 let workerRunning = false;
 let lastRunAt = 0;
-const MIN_INTERVAL_MS = 5 * 60 * 1000;
+const MIN_INTERVAL_MS = Number(process.env.WORKER_MIN_INTERVAL_MS) || 5 * 60 * 1000;
 
 router.post("/worker/tick", async (req, res) => {
   const now = Date.now();

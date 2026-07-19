@@ -29,7 +29,7 @@ router.post("/withdraw", async (req, res, next) => {
     }
 
     const now = new Date();
-    const tx = await callVerify(commitment.onchain_commitment_id);
+    const tx = await callVerify(commitment.onchain_commitment_id, commitment.protocol_contract_address);
 
     const result = await update("commitments", commitment.id, {
       status: "withdrawn",

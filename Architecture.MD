@@ -99,7 +99,7 @@ flowchart TD
     K --> L[POST /commit<br/>records tx hash]
     L --> M[(Commitment Record<br/>status: active, missed_count: 0)]
     M --> N[Dashboard: shows commitment<br/>with countdown to deadline]
-    N --> O[Scheduled job &#40;cron&#41;:<br/>scans active commitments<br/>at 72h / 144h / 216h intervals]
+    N --> O[Heartbeat (30s interval):<br/>POST /worker/tick<br/>scans active commitments]
     O --> P{Onchain check:<br/>tx from user_wallet to<br/>protocol_contract_address<br/>after commit_timestamp?}
     P -- Yes, before 216h deadline --> Q[Contract: verify&#40;&#41;<br/>stake returned]
     P -- No, at check interval --> R[Increment missed_count<br/>Check again at next interval]
@@ -123,7 +123,7 @@ sequenceDiagram
     participant B as Backend
     participant C as Smart Contract
     participant RPC as Monad RPC
-    participant Sched as Scheduler
+    participant HB as Heartbeat (30s)
 
     U->>F: Click "Commit" on profile card
     F->>U: Show stake input
@@ -137,7 +137,7 @@ sequenceDiagram
     Note over U,RPC: User goes and actually interacts<br/>with the protocol in the real world
 
     loop 3 checks at 72h intervals (72h, 144h, 216h)
-        Sched->>B: Cron trigger: scan active commitments<br/>at current check interval
+        HB->>B: POST /worker/tick (heartbeat trigger)<br/>lock guard + 5-min throttle
         B->>RPC: Query txs from user_wallet to protocol_contract_address<br/>after commit_timestamp
         RPC-->>B: tx found / not found
         alt Engagement found, before 216h deadline
@@ -168,6 +168,53 @@ sequenceDiagram
 | Backend (Render) | `/research`, `/commit`, `/verify`, `/withdraw` endpoints; orchestrates LLM calls and RPC checks; scheduled cron for 3-strike verification loop | LLM provider, Monad RPC, Privy (wallet-only auth), DB |
 | Smart Contract (Monad Testnet) | `stake()`, `verify()`, `slash()` — holds funds, enforces state transitions | Called by backend (or directly by frontend wallet for `stake()`) |
 | DB (research + commitment records) | Persists profiles and commitments | Backend only |
+
+## Heartbeat Worker (Zero-Budget Cron)
+
+KYP uses a frontend-driven heartbeat to trigger the commitment-check worker, avoiding paid Render Background Worker costs.
+
+### How it works
+
+```
+Frontend (Heartbeat.svelte)
+  │
+  │  every 30s (only when tab is visible + user is authenticated)
+  │
+  ▼
+POST /worker/tick
+  │
+  │  1. In-memory lock guard (no concurrent runs)
+  │  2. 5-min throttle (configurable via WORKER_MIN_INTERVAL_MS)
+  │  3. Calls runWorkerTick() → scans all active commitments
+  │
+  ▼
+Worker Logic (services/worker.js)
+  ├── For each active commitment:
+  │   ├── if now >= verify_deadline → callSlash() → status: slashed
+  │   ├── else if now - last_check >= CHECK_INTERVAL → runCheck()
+  │   │   ├── if engagement found → callVerify() → status: verified
+  │   │   └── else → increment missed_count
+  │   └── if now - last_snapshot >= SNAPSHOT_INTERVAL → runSnapshot()
+  │
+  ▼
+Contract calls use commitment.protocol_contract_address
+  (supports both production KYPCommitment and demo contract)
+```
+
+### Configuration
+
+| Env Var | Default | Purpose |
+|---------|---------|---------|
+| `WORKER_CHECK_INTERVAL_MS` | 259200000 (72h) | Time between verification checks |
+| `WORKER_SNAPSHOT_INTERVAL_MS` | 86400000 (24h) | Time between activity snapshots |
+| `WORKER_MIN_INTERVAL_MS` | 300000 (5min) | Throttle between worker runs |
+
+### Key files
+
+- `Frontend/src/lib/Heartbeat.svelte` — 30s interval, visibility-aware, auth-gated
+- `Backend/src/routes/worker.js` — POST /worker/tick with lock guard + throttle
+- `Backend/src/services/worker.js` — Core logic (importable module)
+- `Backend/src/services/contract.js` — callVerify/callSlash accept optional contract address
 
 ## Contracts
 

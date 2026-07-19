@@ -1,8 +1,8 @@
 const { query, update, insert } = require("./db");
 const { checkEngagement, callVerify, callSlash } = require("./contract");
 
-const CHECK_INTERVAL_MS = 72 * 60 * 60 * 1000;
-const SNAPSHOT_INTERVAL_MS = 24 * 60 * 60 * 1000;
+const CHECK_INTERVAL_MS = Number(process.env.WORKER_CHECK_INTERVAL_MS) || 72 * 60 * 60 * 1000;
+const SNAPSHOT_INTERVAL_MS = Number(process.env.WORKER_SNAPSHOT_INTERVAL_MS) || 24 * 60 * 60 * 1000;
 
 async function runCheck(commitment) {
   console.log(`[WORKER] Checking commitment ${commitment.id} (wallet: ${commitment.user_wallet})`);
@@ -16,7 +16,7 @@ async function runCheck(commitment) {
   const now = new Date();
 
   if (hasEngagement) {
-    const tx = await callVerify(commitment.onchain_commitment_id);
+    const tx = await callVerify(commitment.onchain_commitment_id, commitment.protocol_contract_address);
     const result = await update("commitments", commitment.id, {
       status: "verified",
       verify_tx_hash: tx.txHash,
@@ -39,7 +39,7 @@ async function runCheck(commitment) {
 
 async function runSlash(commitment) {
   console.log(`[WORKER] Slashing commitment ${commitment.id} (past deadline)`);
-  const tx = await callSlash(commitment.onchain_commitment_id);
+  const tx = await callSlash(commitment.onchain_commitment_id, commitment.protocol_contract_address);
   await update("commitments", commitment.id, {
     status: "slashed",
     verify_tx_hash: tx.txHash,
