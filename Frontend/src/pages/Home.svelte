@@ -4,9 +4,9 @@
   import VideoOverlay from "../lib/VideoOverlay.svelte";
   import { flashResearch } from "../lib/api.js";
   import { getNetwork } from "../lib/network.svelte.js";
+  import SearchBar from "../lib/SearchBar.svelte";
 
   const network = getNetwork();
-  let searchQuery = $state("");
   let showVideo = $state(false);
   let searching = $state(false);
 
@@ -23,16 +23,6 @@
       searching = false;
     }
   }
-
-  function handleTopSearch() {
-    handleSearch(searchQuery);
-  }
-
-  function handleTopKeydown(e) {
-    if (e.key === "Enter") handleTopSearch();
-  }
-
-
 </script>
 
 <div class="home-page">
@@ -64,23 +54,7 @@
     <Link to="/protocols" class="explore-btn">Explore Protocols</Link>
     <button class="how-btn" onclick={() => { showVideo = true; }}>How it works</button>
   </div>
-  <div class="search-bar">
-    <span class="material-symbols-outlined search-icon">search</span>
-    <input
-      type="text"
-      class="search-input"
-      placeholder="Search a protocol..."
-      bind:value={searchQuery}
-      onkeydown={handleTopKeydown}
-    />
-    <button class="search-btn" onclick={handleTopSearch} aria-label="Search" disabled={searching}>
-      {#if searching}
-        <span class="material-symbols-outlined spin">progress_activity</span>
-      {:else}
-        <span class="material-symbols-outlined">arrow_forward</span>
-      {/if}
-    </button>
-  </div>
+  <SearchBar onSearch={handleSearch} {searching} />
 </div>
 
 <VideoOverlay bind:open={showVideo} videoId="PKtnafFtfEo" />
@@ -216,76 +190,8 @@
     cursor: pointer;
     font-family: var(--sans);
   }
-  .search-bar {
-    display: flex;
-    align-items: center;
-    background: var(--surface);
-    border: none;
-    border-radius: 0;
-    padding: 0 0 0 14px;
-    box-shadow: var(--shadow-lg);
-    transition: border-color 0.2s, box-shadow 0.2s;
-  }
-  .search-bar:focus-within {
-    border-color: var(--accent);
-    box-shadow: var(--shadow-lg), 0 0 0 3px rgba(124, 58, 237, 0.1);
-  }
-  .search-icon {
-    font-size: 20px;
-    color: var(--text-muted);
-  }
-  .search-input {
-    flex: 1;
-    border: none;
-    background: transparent;
-    padding: 0 8px;
-    font-size: 15px;
-    color: var(--text);
-    outline: none;
-    height: 100%;
-    box-sizing: border-box;
-  }
-  .search-input::placeholder {
-    color: var(--text-muted);
-  }
-  .search-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 20vw;
-    height: 20vw;
-    border: none;
-    border-radius: 0;
-    background: var(--accent);
-    color: #fff;
-    cursor: pointer;
-    transition: opacity 0.2s;
-    flex-shrink: 0;
-  }
-  .search-btn:hover {
-    opacity: 0.9;
-  }
-  .search-btn:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
-  }
-  .spin {
-    animation: spin 1s linear infinite;
-  }
-  @keyframes spin {
-    to { transform: rotate(360deg); }
-  }
-  .search-btn .material-symbols-outlined {
-    font-size: 18px;
-  }
+
   @media (min-width: 641px) {
-    .search-btn {
-      width: 5vw;
-      height: 5vw;
-    }
-    .search-bar {
-      height: 5vw;
-    }
     :global(.explore-btn) {
       height: 5vw;
     }
