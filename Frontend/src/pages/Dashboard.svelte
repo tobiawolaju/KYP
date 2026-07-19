@@ -333,8 +333,8 @@
   </div>
 
   <Link to="/research" class="research-fab">
-    <span class="material-symbols-outlined">add</span>
-    Research New Protocol
+    Research 'DYOR'
+    <span class="material-symbols-outlined">search</span>
   </Link>
 </div>
 

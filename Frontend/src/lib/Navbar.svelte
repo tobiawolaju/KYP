@@ -17,7 +17,7 @@
   let showBackButton = $derived(!showLogo);
   let pageTitle = $derived.by(() => {
     let p = location.pathname;
-    if (p === "/research") return "Research";
+    if (p === "/research") return "Research 'DYOR'";
     if (p === "/protocols") return "Explore Protocols";
     if (p === "/myprotocols") return "My Protocols";
     if (p.startsWith("/myprotocols/commit/")) return "Commit Detail";
@@ -51,7 +51,7 @@
   {/if}
   <div class="desktop-right">
     <div class="desktop-links">
-      <Link to="/research" class="nav-link">Research</Link>
+        <Link to="/research" class="nav-link">Research 'DYOR'</Link>
       <Link to="/protocols" class="nav-link">Explore Protocols</Link>
       <Link to="/myprotocols" class="nav-link">My Protocols</Link>
     </div>
@@ -79,7 +79,7 @@
         </button>
       </div>
       <div class="drawer-links">
-        <Link to="/research" class="drawer-link" onclick={closeDrawer}>Research</Link>
+        <Link to="/research" class="drawer-link" onclick={closeDrawer}>Research 'DYOR'</Link>
         <Link to="/protocols" class="drawer-link" onclick={closeDrawer}>Explore Protocols</Link>
         <Link to="/myprotocols" class="drawer-link" onclick={closeDrawer}>My Protocols</Link>
       </div>
