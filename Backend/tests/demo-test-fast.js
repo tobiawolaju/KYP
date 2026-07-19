@@ -20,13 +20,14 @@ const fs = require("fs");
 
 const { insert, update, query, removeWhere } = require("../src/services/db");
 const { runWorkerTick } = require("../src/services/worker");
-const { checkEngagement, callVerify, callSlash, provider } = require("../src/services/contract");
+const { checkEngagement, callVerify, callSlash, getNetworkConfig } = require("../src/services/contract");
 
 const DEMO_CONTRACT = "0x98c3e4594ecfa1c45e8056932652b04cdea64e5d";
 const DEPLOYER_PRIVATE_KEY = "0x8293fc60d7e3a380951a8c4a77fd4b705c6d3234a9b3de8a307953192459526b";
 const TEST_PRIVATE_KEY = "0xc61615a8680c4cc2f7e98ac057ee5e28854c4cb7ff004524a7ba95caef315371";
 const ABI = JSON.parse(fs.readFileSync(path.join(__dirname, "../abi/KYPCommitment.json"), "utf8"));
 
+const { provider } = getNetworkConfig("testnet");
 const deployerWallet = new ethers.Wallet(DEPLOYER_PRIVATE_KEY, provider);
 const testWallet = new ethers.Wallet(TEST_PRIVATE_KEY, provider);
 const demoAsTest = new ethers.Contract(DEMO_CONTRACT, ABI, testWallet);
@@ -155,7 +156,7 @@ async function pathC() {
 
   // Withdraw = callVerify on chain (deadline not passed → returns stake)
   log("Calling verify() (simulates POST /withdraw, missed_count=1 < 2 allowed)...");
-  const tx = await callVerify(rec.onchain_commitment_id, rec.protocol_contract_address);
+  const tx = await callVerify(rec.onchain_commitment_id, "testnet");
   await update("commitments", rec.id, {
     status: "withdrawn",
     verify_tx_hash: tx.txHash,
