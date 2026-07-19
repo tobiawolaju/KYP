@@ -22,6 +22,80 @@
   let stakeError = $state("");
   let deadlineTimestamp = $state("");
 
+  let contractsExpanded = $state(false);
+
+  function hasText(value) {
+    return typeof value === "string" && value.trim().length > 0;
+  }
+
+  function hasItems(value) {
+    return Array.isArray(value) && value.length > 0;
+  }
+
+  function hasMeta(protocolData) {
+    return [protocolData?.chain, protocolData?.network, protocolData?.category, protocolData?.subcategory].some(hasText);
+  }
+
+  function hasContracts(contracts) {
+    return hasItems(contracts) && contracts.some((contract) => hasText(contract?.name) || hasText(contract?.address));
+  }
+
+  function hasTeam(team) {
+    return hasItems(team) && team.some((member) => hasText(member?.name) || hasText(member?.role));
+  }
+
+  function hasRestrictedJurisdictions(jurisdictions) {
+    return hasItems(jurisdictions) && jurisdictions.some(hasText);
+  }
+
+  function truncateAddress(address) {
+    if (!hasText(address)) return "";
+    return address.length > 14 ? `${address.slice(0, 6)}...${address.slice(-4)}` : address;
+  }
+
+  function hasLinks(links) {
+    return Boolean(links && [links.project, links.twitter, links.discord, links.github].some(hasText));
+  }
+
+  function hasRisks(risks) {
+    return Boolean(risks && [risks.contract, risks.community, risks.structural].some(hasText));
+  }
+
+  function hasForensics(forensics) {
+    if (!forensics) return false;
+    return forensics.has_admin_functions !== null
+      || hasText(forensics.admin_function_notes)
+      || hasText(forensics.deployer_wallet_age)
+      || forensics.deployer_prior_deploys !== null
+      || forensics.top_10_holder_concentration_pct !== null;
+  }
+
+  function hasFunding(funding) {
+    return Boolean(funding && funding.has_funding_info !== null);
+  }
+
+  function hasFounderHistory(founderHistory) {
+    if (!founderHistory) return false;
+    return founderHistory.prior_projects_found !== null
+      || hasText(founderHistory.details)
+      || hasText(founderHistory.confidence_note);
+  }
+
+  function derivedAgeSummary(protocolData) {
+    if (hasText(protocolData?.age_summary)) return protocolData.age_summary;
+    if (!hasText(protocolData?.deployed_date)) return "";
+    const deployed = new Date(`${protocolData.deployed_date}T00:00:00Z`);
+    if (Number.isNaN(deployed.getTime())) return "";
+    const days = Math.max(0, Math.floor((Date.now() - deployed.getTime()) / (1000 * 60 * 60 * 24)));
+    if (days < 30) return `Live for ${days} day${days === 1 ? "" : "s"}`;
+    if (days < 365) {
+      const months = Math.round((days / 30) * 10) / 10;
+      return `Live for ${months} month${months === 1 ? "" : "s"}`;
+    }
+    const years = Math.round((days / 365) * 10) / 10;
+    return `Live for ${years} year${years === 1 ? "" : "s"}`;
+  }
+
   let loadStatus = $state("idle");
   let loadError = $state("");
   let coldTimer = null;
@@ -200,95 +274,188 @@
           <ScoreBadge score={protocol.score} size="lg" />
         </div>
       </div>
-      <div class="header-meta">
-        <span class="meta-badge chain">{protocol.chain}</span>
-        {#if protocol.contracts?.[0]?.address}
-          <span class="contract-address" title={protocol.contracts[0].address}>
-            {protocol.contracts[0].address.slice(0, 6)}...{protocol.contracts[0].address.slice(-4)}
-          </span>
-        {/if}
-      </div>
     </div>
 
     <div class="profile-body">
-      <div class="info-section">
-        <h3 class="section-label">Summary</h3>
-        <p class="section-text">{protocol.summary}</p>
-      </div>
-
-      {#if protocol.who_its_for}
-        <div class="info-section">
-          <h3 class="section-label">Who It's For</h3>
-          <p class="section-text">{protocol.who_its_for}</p>
+      {#if hasText(protocol.plain_summary)}
+        <div class="plain-summary-card">
+          <p>{protocol.plain_summary}</p>
         </div>
       {/if}
 
-      {#if protocol.use_cases && protocol.use_cases.length > 0}
+      {#if hasMeta(protocol)}
+        <div class="meta-row-section">
+        {#if hasText(protocol.chain)}
+          <span class="meta-badge chain">{protocol.chain}</span>
+        {/if}
+        {#if hasText(protocol.network)}
+          <span class="meta-badge">{protocol.network}</span>
+        {/if}
+        {#if hasText(protocol.category)}
+          <span class="meta-badge">{protocol.category}</span>
+        {/if}
+        {#if hasText(protocol.subcategory)}
+          <span class="meta-badge">{protocol.subcategory}</span>
+        {/if}
+        </div>
+      {/if}
+
+      <div class="verification-badge" class:verified={protocol.contract_verified === true} class:unverified={protocol.contract_verified === false}>
+        {#if protocol.contract_verified === true}
+          <span class="material-symbols-outlined">verified</span> Verified
+        {:else if protocol.contract_verified === false}
+          <span class="material-symbols-outlined">warning</span> Unverified
+        {:else}
+          <span class="material-symbols-outlined">help</span> Verification unknown
+        {/if}
+      </div>
+
+      {#if hasContracts(protocol.contracts)}
+        <div class="info-section">
+          <h3 class="section-label">Contracts</h3>
+          <div class="contract-list">
+            {#each (contractsExpanded ? protocol.contracts : protocol.contracts.slice(0, 4)) as contract, index}
+              <div class="contract-row">
+                <span class="contract-name">{hasText(contract.name) ? contract.name : `Contract ${index + 1}`}</span>
+                {#if hasText(contract.address)}
+                  <span class="contract-address" title={contract.address}>{truncateAddress(contract.address)}</span>
+                {/if}
+              </div>
+            {/each}
+          </div>
+          {#if protocol.contracts.length > 4}
+            <button class="text-toggle" onclick={() => (contractsExpanded = !contractsExpanded)}>
+              {contractsExpanded ? "Show fewer contracts" : `Show all ${protocol.contracts.length} contracts`}
+            </button>
+          {/if}
+        </div>
+      {/if}
+
+      {#if hasText(protocol.summary)}
+        <div class="info-section">
+          <h3 class="section-label">Technical Summary</h3>
+          <p class="section-text">{protocol.summary}</p>
+        </div>
+      {/if}
+
+      {#if hasText(protocol.who_its_for) || hasText(protocol.who_its_not_for)}
+        <div class="persona-grid">
+          {#if hasText(protocol.who_its_for)}
+            <div class="info-section persona-card">
+              <h3 class="section-label">Who It's For</h3>
+              <p class="section-text">{protocol.who_its_for}</p>
+            </div>
+          {/if}
+          {#if hasText(protocol.who_its_not_for)}
+            <div class="info-section persona-card caution">
+              <h3 class="section-label">Who It's NOT For</h3>
+              <p class="section-text">{protocol.who_its_not_for}</p>
+            </div>
+          {/if}
+        </div>
+      {/if}
+
+      {#if hasItems(protocol.use_cases)}
         <div class="info-section">
           <h3 class="section-label">Use Cases</h3>
           <div class="use-cases">
             {#each protocol.use_cases as uc}
-              <span class="use-case-tag">{uc}</span>
+              {#if hasText(uc)}<span class="use-case-tag">{uc}</span>{/if}
             {/each}
           </div>
         </div>
       {/if}
 
-      {#if protocol.risks}
+      {#if hasRisks(protocol.risks)}
         <div class="risks-section">
           <h3 class="section-label">Risks</h3>
           <div class="risk-cards">
-            {#if protocol.risks.contract}
-              <div class="risk-card">
-                <div class="risk-header">
-                  <span class="risk-type">Contract</span>
-                </div>
-                <p class="risk-text">{protocol.risks.contract}</p>
-              </div>
+            {#if hasText(protocol.risks.contract)}
+              <div class="risk-card"><div class="risk-header"><span class="risk-type">Contract</span></div><p class="risk-text">{protocol.risks.contract}</p></div>
             {/if}
-            {#if protocol.risks.community}
-              <div class="risk-card">
-                <div class="risk-header">
-                  <span class="risk-type">Community</span>
-                </div>
-                <p class="risk-text">{protocol.risks.community}</p>
-              </div>
+            {#if hasText(protocol.risks.community)}
+              <div class="risk-card"><div class="risk-header"><span class="risk-type">Community</span></div><p class="risk-text">{protocol.risks.community}</p></div>
             {/if}
-            {#if protocol.risks.structural}
-              <div class="risk-card">
-                <div class="risk-header">
-                  <span class="risk-type">Structural</span>
-                </div>
-                <p class="risk-text">{protocol.risks.structural}</p>
-              </div>
+            {#if hasText(protocol.risks.structural)}
+              <div class="risk-card"><div class="risk-header"><span class="risk-type">Structural</span></div><p class="risk-text">{protocol.risks.structural}</p></div>
             {/if}
           </div>
         </div>
       {/if}
 
-      {#if protocol.links}
+      {#if hasForensics(protocol.forensics)}
+        <div class="info-section detail-card">
+          <h3 class="section-label">Onchain Forensics</h3>
+          <div class="detail-list">
+            {#if protocol.forensics.has_admin_functions !== null}
+              <p class="section-text"><strong>{protocol.forensics.has_admin_functions ? "Has admin functions" : "No admin functions found"}</strong></p>
+            {/if}
+            {#if hasText(protocol.forensics.admin_function_notes)}<p class="supporting-text">{protocol.forensics.admin_function_notes}</p>{/if}
+            {#if hasText(protocol.forensics.deployer_wallet_age)}<p class="section-text"><strong>Deployer wallet age:</strong> {protocol.forensics.deployer_wallet_age}</p>{/if}
+            {#if protocol.forensics.deployer_prior_deploys !== null}<p class="section-text"><strong>Prior deploys:</strong> {protocol.forensics.deployer_prior_deploys}</p>{/if}
+            {#if protocol.forensics.top_10_holder_concentration_pct !== null}<p class="section-text"><strong>Top 10 holder concentration:</strong> {protocol.forensics.top_10_holder_concentration_pct}%</p>{/if}
+          </div>
+        </div>
+      {/if}
+
+      {#if hasFunding(protocol.funding)}
+        <div class="info-section detail-card">
+          <h3 class="section-label">Funding</h3>
+          {#if protocol.funding.has_funding_info === true}
+            {#if hasItems(protocol.funding.investors)}<div class="use-cases">{#each protocol.funding.investors as investor}{#if hasText(investor)}<span class="use-case-tag">{investor}</span>{/if}{/each}</div>{/if}
+            {#if hasText(protocol.funding.source_note)}<p class="supporting-text">{protocol.funding.source_note}</p>{:else if !hasItems(protocol.funding.investors)}<p class="section-text">Funding information found.</p>{/if}
+          {:else if protocol.funding.has_funding_info === false}
+            <p class="section-text">No public funding information found.</p>
+            {#if hasText(protocol.funding.source_note)}<p class="supporting-text">{protocol.funding.source_note}</p>{/if}
+          {/if}
+        </div>
+      {/if}
+
+      {#if hasFounderHistory(protocol.founder_history)}
+        <div class="info-section detail-card">
+          <h3 class="section-label">Founder History</h3>
+          {#if protocol.founder_history.prior_projects_found !== null}<p class="section-text"><strong>{protocol.founder_history.prior_projects_found ? "Prior projects found" : "No prior projects found"}</strong></p>{/if}
+          {#if hasText(protocol.founder_history.details)}<p class="section-text">{protocol.founder_history.details}</p>{/if}
+          {#if hasText(protocol.founder_history.confidence_note)}<p class="supporting-text">{protocol.founder_history.confidence_note}</p>{/if}
+        </div>
+      {/if}
+
+      {#if hasTeam(protocol.team)}
+        <div class="info-section">
+          <h3 class="section-label">Team</h3>
+          <div class="team-list">{#each protocol.team as member}{#if hasText(member.name) || hasText(member.role)}<div class="team-row"><strong>{member.name}</strong>{#if hasText(member.role)}<span>{member.role}</span>{/if}</div>{/if}{/each}</div>
+          {#if hasText(protocol.team_as_of)}<p class="supporting-text">as of {protocol.team_as_of}</p>{/if}
+        </div>
+      {/if}
+
+      {#if hasRestrictedJurisdictions(protocol.restricted_jurisdictions)}
+        <div class="info-section">
+          <h3 class="section-label">Restricted Jurisdictions</h3>
+          <div class="use-cases"><span class="restricted-label">Not available in:</span>{#each protocol.restricted_jurisdictions as jurisdiction}{#if hasText(jurisdiction)}<span class="use-case-tag caution-tag">{jurisdiction}</span>{/if}{/each}</div>
+        </div>
+      {/if}
+
+      {#if hasText(derivedAgeSummary(protocol))}
+        <div class="info-section"><h3 class="section-label">Age</h3><p class="section-text">{derivedAgeSummary(protocol)}</p></div>
+      {/if}
+
+      {#if hasLinks(protocol.links)}
         <div class="links-section">
           <h3 class="section-label">Links</h3>
           <div class="link-list">
-            {#if protocol.links.project}
-              <a href={protocol.links.project} target="_blank" rel="noreferrer" class="link-item">
+            {#if hasText(protocol.links.project)}
+              <a href={protocol.links.project} target="_blank" rel="noreferrer" class="link-item" aria-label="Project website">
                 <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
               </a>
             {/if}
-            {#if protocol.links.twitter}
-              <a href={protocol.links.twitter} target="_blank" rel="noreferrer" class="link-item">
-                <svg viewBox="0 0 24 24" width="32" height="32" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
-              </a>
+            {#if hasText(protocol.links.twitter)}
+              <a href={protocol.links.twitter} target="_blank" rel="noreferrer" class="link-item" aria-label="Twitter"><svg viewBox="0 0 24 24" width="32" height="32" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
             {/if}
-            {#if protocol.links.discord}
-              <a href={protocol.links.discord} target="_blank" rel="noreferrer" class="link-item">
-                <svg viewBox="0 0 24 24" width="32" height="32" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.42 0 1.333-.947 2.418-2.157 2.418z"/></svg>
-              </a>
+            {#if hasText(protocol.links.discord)}
+              <a href={protocol.links.discord} target="_blank" rel="noreferrer" class="link-item" aria-label="Discord"><svg viewBox="0 0 24 24" width="32" height="32" fill="currentColor"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.42 0 1.333-.947 2.418-2.157 2.418z"/></svg></a>
             {/if}
-            {#if protocol.links.github}
-              <a href={protocol.links.github} target="_blank" rel="noreferrer" class="link-item">
-                <span class="material-symbols-outlined" style="font-size:32px">code</span>
-              </a>
+            {#if hasText(protocol.links.github)}
+              <a href={protocol.links.github} target="_blank" rel="noreferrer" class="link-item" aria-label="GitHub"><span class="material-symbols-outlined" style="font-size:32px">code</span></a>
             {/if}
           </div>
         </div>
@@ -468,6 +635,112 @@
     flex-direction: column;
     gap: 28px;
   }
+  .plain-summary-card {
+    padding: 18px 20px;
+    border: 1px solid var(--accent);
+    border-radius: var(--radius-lg);
+    background: var(--accent-bg);
+  }
+  .plain-summary-card p {
+    margin: 0;
+    color: var(--text);
+    font-size: 17px;
+    line-height: 1.65;
+    font-weight: 600;
+  }
+  .meta-row-section {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .verification-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    align-self: flex-start;
+    padding: 7px 12px;
+    border-radius: var(--radius-sm);
+    background: var(--surface-hover);
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .verification-badge.verified {
+    background: var(--green-bg);
+    color: var(--green);
+  }
+  .verification-badge.unverified {
+    background: #fff7ed;
+    color: #c2410c;
+  }
+  .verification-badge .material-symbols-outlined {
+    font-size: 18px;
+  }
+  .contract-list, .detail-list, .team-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .contract-row, .team-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    background: var(--surface-hover);
+    border-radius: var(--radius-sm);
+  }
+  .contract-name, .team-row strong {
+    color: var(--text);
+    font-size: 14px;
+    font-weight: 700;
+  }
+  .team-row span {
+    color: var(--text-muted);
+    font-size: 13px;
+    text-align: right;
+  }
+  .text-toggle {
+    align-self: flex-start;
+    border: none;
+    background: transparent;
+    color: var(--accent);
+    padding: 0;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .persona-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  .persona-card, .detail-card {
+    padding: 16px;
+    background: var(--surface-hover);
+    border-radius: var(--radius-md);
+  }
+  .persona-card.caution {
+    background: #fffbeb;
+    border: 1px solid #f59e0b;
+  }
+  .supporting-text {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.55;
+    margin: 0;
+  }
+  .restricted-label {
+    color: var(--text-muted);
+    font-size: 13px;
+    align-self: center;
+  }
+  .caution-tag {
+    background: #fffbeb;
+    color: #b45309;
+  }
+
   .info-section {
     display: flex;
     flex-direction: column;
