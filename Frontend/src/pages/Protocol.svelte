@@ -659,13 +659,13 @@
   }
   .plain-summary-card {
     padding: 18px 20px;
-    border: 1px solid var(--accent);
+    border: none;
     border-radius: var(--radius-lg);
-    background: var(--accent-bg);
+    background: transparent;
   }
   .plain-summary-card p {
     margin: 0;
-    color: var(--text);
+    color: var(--accent);
     font-size: 17px;
     line-height: 1.65;
     font-weight: 600;
