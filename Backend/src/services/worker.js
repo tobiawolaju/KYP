@@ -18,7 +18,7 @@ async function runCheck(commitment) {
   const now = new Date();
 
   if (hasEngagement) {
-    const tx = await callVerify(commitment.onchain_commitment_id, commitment.protocol_contract_address, network);
+    const tx = await callVerify(commitment.onchain_commitment_id, network);
     const result = await update("commitments", commitment.id, {
       status: "verified",
       verify_tx_hash: tx.txHash,
@@ -42,7 +42,7 @@ async function runCheck(commitment) {
 async function runSlash(commitment) {
   const network = commitment.network || "testnet";
   console.log(`[WORKER] Slashing commitment ${commitment.id} (past deadline, network: ${network})`);
-  const tx = await callSlash(commitment.onchain_commitment_id, commitment.protocol_contract_address, network);
+  const tx = await callSlash(commitment.onchain_commitment_id, network);
   await update("commitments", commitment.id, {
     status: "slashed",
     verify_tx_hash: tx.txHash,

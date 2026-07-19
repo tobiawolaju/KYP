@@ -102,7 +102,7 @@ flowchart TD
     N --> O[Heartbeat (30s interval):<br/>POST /worker/tick<br/>scans active commitments]
     O --> P{Onchain check:<br/>tx from user_wallet to<br/>protocol_contract_address<br/>after commit_timestamp?}
     P -- Yes, before 216h deadline --> Q[Contract: verify&#40;&#41;<br/>stake returned]
-    P -- No, at check interval --> R[Increment missed_count<br/>Check again at next interval]
+    P -- No engagement found --> R[Increment missed_count<br/>Check again at next interval]
     R --> S{missed_count == 3?}
     S -- No --> N
     S -- Yes --> T[Contract: slash&#40;&#41;<br/>stake forfeited]
@@ -134,12 +134,12 @@ sequenceDiagram
     B-->>F: Commitment record created (status: active, missed_count: 0)
     F->>U: Redirect to Dashboard
 
-    Note over U,RPC: User goes and actually interacts<br/>with the protocol in the real world
+    Note over U,RPC: User goes and actually interacts<br/>with the protocol in the real world<br/>(any on-chain tx counts as engagement)
 
     loop 3 checks at 72h intervals (72h, 144h, 216h)
         HB->>B: POST /worker/tick (heartbeat trigger)<br/>lock guard + 5-min throttle
-        B->>RPC: Query txs from user_wallet to protocol_contract_address<br/>after commit_timestamp
-        RPC-->>B: tx found / not found
+        B->>RPC: Query any on-chain event logs from user_wallet<br/>after commit_timestamp (protocol-agnostic)
+        RPC-->>B: engagement found / not found
         alt Engagement found, before 216h deadline
             B->>C: verify(commitmentId)
             C-->>B: stake returned to user
@@ -197,8 +197,15 @@ Worker Logic (services/worker.js)
   │   └── if now - last_snapshot >= SNAPSHOT_INTERVAL → runSnapshot()
   │
   ▼
-Contract calls use commitment.protocol_contract_address
-  (supports both production KYPCommitment and demo contract)
+Engagement check (checkEngagement):
+  1. Calculate adaptive block estimation from chain data (not hardcoded 2s)
+  2. Query getLogs with user's padded address as indexed topic
+  3. Filter results to protocol contract address only
+  → Protocol-agnostic: works with ANY on-chain protocol, no event signatures needed
+
+Contract calls (callVerify / callSlash):
+  Always target the KYP contract (getNetworkConfig().contract)
+  → Never use protocol_contract_address for on-chain calls
 ```
 
 ### Configuration
@@ -214,7 +221,7 @@ Contract calls use commitment.protocol_contract_address
 - `Frontend/src/lib/Heartbeat.svelte` — 30s interval, visibility-aware, auth-gated
 - `Backend/src/routes/worker.js` — POST /worker/tick with lock guard + throttle
 - `Backend/src/services/worker.js` — Core logic (importable module)
-- `Backend/src/services/contract.js` — multi-network support (testnet + mainnet), callVerify/callSlash accept network param
+- `Backend/src/services/contract.js` — multi-network support (testnet + mainnet), callVerify/callSlash always target KYP contract via `getNetworkConfig()`, checkEngagement uses protocol-agnostic log scanning
 - `Frontend/src/lib/network.svelte.js` — Testnet/Mainnet toggle state (localStorage-persisted)
 
 ## Contracts
@@ -285,3 +292,36 @@ The app exposes a `/protocols` route — an explorable directory of all research
 There is intentionally **no TVL filter** — there is no reliable real-time TVL data source wired in yet, so including the filter would either be perpetually empty or misleading. It is explicitly parked as a future addition.
 
 **One architectural decision to make explicitly:** does `verify()`/`slash()` get called by your backend (a trusted server wallet with permission to call these functions), or does the user call `verify()` themselves and the contract does the RPC check onchain via an oracle? For a 4-day build, **backend-triggered verify/slash is the right call** — a fully trustless onchain oracle is a rabbit hole you don't have time for, and "backend checks RPC, then calls the contract" is still a real, checkable onchain verification from the judge's perspective, not a self-report.
+
+---
+
+## Engagement Verification — Protocol-Agnostic Log Scanning
+
+The engagement check (`checkEngagement`) determines whether a user has interacted with a target protocol since their commitment. The approach is protocol-agnostic — it does not depend on specific event signatures or ABI decoding.
+
+### How it works
+
+1. **Adaptive block estimation**: Instead of assuming a fixed 2-second block time (which silently breaks if the chain is faster or slower), the system fetches two blocks from the chain (latest + ~5000 blocks back) and calculates the *actual* average block time. This gives accurate block range estimation on any chain speed.
+
+2. **User-centric log query**: `provider.getLogs({ topics: [null, paddedUser], fromBlock, toBlock })` — this queries all on-chain event logs where the user's address appears as an indexed topic (the 1st indexed param). This returns Transfer events, Swap events, Approval events, any event the user is involved in.
+
+3. **Protocol filter**: The results are filtered to only include logs emitted by the target protocol contract address. If any log matches, the user is considered "engaged."
+
+### Why this approach
+
+| Approach | Problem |
+|---|---|
+| Scan logs *from* protocol contract | Depends on protocol emitting specific events. Different protocols emit different events. Fragile. |
+| Query by event signature (`Transfer(address,...)`) | Only catches transfers. User might swap, lend, vote, or do other interactions. Too narrow. |
+| **Query logs *from* user address (current)** | Catches ANY on-chain interaction the user makes — transfers, swaps, approvals, calls. Protocol-agnostic. Works with every protocol on any EVM chain. |
+
+### Separation of concerns
+
+- **`protocol_contract_address`**: Used *only* for filtering log query results (the `log.address` check). Never used for `verify()`/`slash()` calls.
+- **`getNetworkConfig(network).contract`**: Used for *all* on-chain contract interactions (`verify`, `slash`). This is always the KYP contract, regardless of which protocol the user committed to.
+
+This separation prevents the critical bug where `verify()` was being called on the protocol contract (e.g. Kuru) instead of the KYP contract.
+
+### RPC considerations
+
+The adaptive block estimation uses 2 extra `getBlock()` calls per verification. This is negligible compared to the log query itself (which paginates in chunks of 100 blocks). Rate limits on public Monad RPCs are not a concern at this scale.

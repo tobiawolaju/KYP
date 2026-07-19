@@ -35,18 +35,26 @@ function getNetworkConfig(network) {
 const LOG_QUERY_LIMIT = 100;
 
 async function findBlockAtTimestamp(provider, timestamp) {
-  const targetTime = Math.floor(new Date(timestamp).getTime() / 1000) - 300;
+  const targetTime = Math.floor(new Date(timestamp).getTime() / 1000);
   const latestBlock = await provider.getBlockNumber();
   const latestBlockData = await provider.getBlock(latestBlock);
   const latestTime = latestBlockData.timestamp;
 
   if (targetTime >= latestTime) return latestBlock;
 
+  // Calculate actual block time from chain data instead of assuming 2s
+  const refBlock = Math.max(0, latestBlock - 5000);
+  const refBlockData = await provider.getBlock(refBlock);
+  const refTime = refBlockData.timestamp;
+  const blocksDiff = latestBlock - refBlock;
+  const timeDiff = latestTime - refTime;
+  const avgBlockTime = blocksDiff > 0 ? timeDiff / blocksDiff : 2;
+
   const secondsDiff = latestTime - targetTime;
-  const estimatedBlocksBack = Math.ceil(secondsDiff / 2) + 10;
+  const estimatedBlocksBack = Math.ceil(secondsDiff / avgBlockTime) + 10;
   const fromBlock = Math.max(0, latestBlock - estimatedBlocksBack);
 
-  console.log(`[CONTRACT] estimated block range: ${fromBlock} to ${latestBlock} (latest time: ${latestTime}, target: ${targetTime})`);
+  console.log(`[CONTRACT] block time: ${avgBlockTime.toFixed(1)}s, range: ${fromBlock} to ${latestBlock}`);
   return fromBlock;
 }
 
@@ -56,18 +64,19 @@ async function checkEngagement(userWallet, protocolAddress, sinceTimestamp, netw
   const fromBlock = await findBlockAtTimestamp(provider, sinceTimestamp);
   const latestBlock = await provider.getBlockNumber();
   console.log(`[CONTRACT] scanning blocks ${fromBlock} to ${latestBlock}`);
+
   const userAddr = ethers.getAddress(userWallet);
-  const protoAddr = ethers.getAddress(protocolAddress);
   const paddedUser = ethers.zeroPadValue(userAddr, 32).toLowerCase();
 
+  // Query all events where the user's address appears in any indexed param
   let allLogs = [];
   let cursor = fromBlock;
 
   while (cursor <= latestBlock) {
     const toBlock = Math.min(cursor + LOG_QUERY_LIMIT - 1, latestBlock);
-    console.log(`[CONTRACT] querying logs blocks ${cursor}..${toBlock}...`);
+    console.log(`[CONTRACT] querying user logs blocks ${cursor}..${toBlock}...`);
     const logs = await provider.getLogs({
-      address: protoAddr,
+      topics: [null, paddedUser],
       fromBlock: cursor,
       toBlock: toBlock,
     });
@@ -75,38 +84,30 @@ async function checkEngagement(userWallet, protocolAddress, sinceTimestamp, netw
     cursor = toBlock + 1;
   }
 
-  console.log(`[CONTRACT] got ${allLogs.length} total logs, scanning for user address in topics...`);
+  // Filter to only logs from the protocol contract address
+  const protoAddr = ethers.getAddress(protocolAddress).toLowerCase();
+  const matched = allLogs.some((log) => log.address.toLowerCase() === protoAddr);
 
-  const matched = allLogs.some((log) =>
-    log.topics.some(
-      (t) => t && t.toLowerCase() === paddedUser
-    )
-  );
-
-  console.log(`[CONTRACT] engagement found: ${matched}`);
+  console.log(`[CONTRACT] got ${allLogs.length} total logs from user, ${matched ? "engagement found" : "no engagement with protocol"}`);
   return matched;
 }
 
-async function callVerify(commitmentId, contractAddress, network) {
-  const { contract: defaultContract, contractAddress: defaultAddr } = getNetworkConfig(network);
-  const target = contractAddress
-    ? new ethers.Contract(contractAddress, abi, defaultContract.runner)
-    : defaultContract;
-  console.log(`[CONTRACT] callVerify: commitmentId=${commitmentId}, contract=${contractAddress || defaultAddr}, network=${network || "testnet"}`);
-  const tx = await target.verify(commitmentId);
+async function callVerify(commitmentId, network) {
+  const { contract } = getNetworkConfig(network);
+  if (!contract) throw new Error("KYP contract not configured for this network");
+  console.log(`[CONTRACT] callVerify: commitmentId=${commitmentId}, network=${network || "testnet"}`);
+  const tx = await contract.verify(commitmentId);
   console.log(`[CONTRACT] verify tx sent: ${tx.hash}`);
   const receipt = await tx.wait();
   console.log(`[CONTRACT] verify tx confirmed: ${receipt.hash}, status=${receipt.status}`);
   return { txHash: receipt.hash, status: receipt.status };
 }
 
-async function callSlash(commitmentId, contractAddress, network) {
-  const { contract: defaultContract, contractAddress: defaultAddr } = getNetworkConfig(network);
-  const target = contractAddress
-    ? new ethers.Contract(contractAddress, abi, defaultContract.runner)
-    : defaultContract;
-  console.log(`[CONTRACT] callSlash: commitmentId=${commitmentId}, contract=${contractAddress || defaultAddr}, network=${network || "testnet"}`);
-  const tx = await target.slash(commitmentId);
+async function callSlash(commitmentId, network) {
+  const { contract } = getNetworkConfig(network);
+  if (!contract) throw new Error("KYP contract not configured for this network");
+  console.log(`[CONTRACT] callSlash: commitmentId=${commitmentId}, network=${network || "testnet"}`);
+  const tx = await contract.slash(commitmentId);
   console.log(`[CONTRACT] slash tx sent: ${tx.hash}`);
   const receipt = await tx.wait();
   console.log(`[CONTRACT] slash tx confirmed: ${receipt.hash}, status=${receipt.status}`);
