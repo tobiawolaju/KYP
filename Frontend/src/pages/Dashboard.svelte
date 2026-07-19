@@ -197,11 +197,7 @@
 </script>
 
 <div class="dashboard">
-  <div class="dash-header">
-    <div class="dash-title-group">
-      <h1 class="dash-title">My Protocols</h1>
-    </div>
-  </div>
+  
 
   {#if !wallet.ready}
     <div class="loading-state">
