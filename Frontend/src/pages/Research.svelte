@@ -12,8 +12,12 @@
     if (!q || searching) return;
     searching = true;
     try {
-      await flashResearch(q, network.current);
-      navigate(`/protocols?q=${encodeURIComponent(q)}`);
+      const result = await flashResearch(q, network.current);
+      if (result?.id) {
+        navigate(`/protocol/${result.id}`);
+      } else {
+        navigate(`/protocols?q=${encodeURIComponent(q)}`);
+      }
     } catch (e) {
       navigate(`/protocols?q=${encodeURIComponent(q)}`);
     } finally {
