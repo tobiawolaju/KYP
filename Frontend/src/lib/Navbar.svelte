@@ -40,7 +40,7 @@
 
 <nav class="navbar">
   {#if showLogo}
-    <Link to="/" class="logo">KYP</Link>
+    <Link to="/" class="logo"><img src="/logo.png" alt="KYP" class="logo-img" /></Link>
   {:else}
     <button class="back-logo" onclick={goBack} aria-label="Go back">
       <span class="material-symbols-outlined">arrow_back</span>
@@ -73,7 +73,7 @@
   <div class="drawer-overlay" onclick={closeDrawer} role="presentation">
     <div class="drawer" onclick={(e) => e.stopPropagation()} onkeydown={(e) => { if (e.key === "Escape") closeDrawer(); }} role="dialog" tabindex="-1">
       <div class="drawer-header">
-        <span class="drawer-logo">KYP</span>
+        <img src="/logo.png" alt="KYP" class="logo-img drawer-logo-img" />
         <button class="close-btn" onclick={closeDrawer} aria-label="Close">
           <span class="material-symbols-outlined">close</span>
         </button>
@@ -113,16 +113,17 @@
     background: rgba(15, 15, 15, 0.85);
   }
   :global(.logo) {
-    font-family: var(--display);
-    font-size: 22px;
-    font-weight: 700;
-    color: var(--accent);
+    display: flex;
+    align-items: center;
     text-decoration: none;
-    letter-spacing: -0.5px;
     transition: opacity 0.2s;
   }
   :global(.logo:hover) {
     opacity: 0.8;
+  }
+  .logo-img {
+    height: 32px;
+    width: auto;
   }
   .back-logo {
     display: inline-flex;
@@ -316,12 +317,9 @@
     justify-content: space-between;
     margin-bottom: 48px;
   }
-  .drawer-logo {
-    font-family: var(--display);
-    font-size: 22px;
-    font-weight: 700;
-    color: var(--accent);
-    letter-spacing: -0.5px;
+  .drawer-logo-img {
+    height: 32px;
+    width: auto;
   }
   .close-btn {
     background: none;
