@@ -120,62 +120,6 @@
     })()
   );
 
-  let slashOnlyDays = $derived(
-    (() => {
-      let days = new Set();
-      for (let evt of activityEvents) {
-        if (evt.event_type === "slash") {
-          let day = normalize(evt.timestamp).getTime();
-          let hasOther = activityEvents.some(
-            (e) => e.event_type !== "slash" && normalize(e.timestamp).getTime() === day
-          );
-          if (!hasOther) days.add(day);
-        }
-      }
-      return days;
-    })()
-  );
-
-  let currentStreak = $derived(
-    (() => {
-      let check = normalize(new Date(today));
-      let streak = 0;
-      while (true) {
-        let time = check.getTime();
-        if (daysWithActivity.has(time)) {
-          streak++;
-        } else if (!slashOnlyDays.has(time)) {
-          break;
-        }
-        check.setDate(check.getDate() - 1);
-      }
-      return streak;
-    })()
-  );
-
-  let longestStreak = $derived(
-    (() => {
-      if (daysWithActivity.size === 0) return 0;
-      let sortedDays = [...daysWithActivity.keys()].sort((a, b) => a - b);
-      let best = 0;
-      let curStreak = 0;
-      let minDay = sortedDays[0];
-      let maxDay = sortedDays[sortedDays.length - 1];
-      let cur = new Date(minDay);
-      while (cur.getTime() <= maxDay) {
-        let time = cur.getTime();
-        if (daysWithActivity.has(time)) {
-          curStreak++;
-          if (curStreak > best) best = curStreak;
-        } else if (!slashOnlyDays.has(time)) {
-          curStreak = 0;
-        }
-        cur.setDate(cur.getDate() + 1);
-      }
-      return best;
-    })()
-  );
-
   function truncate(addr) {
     if (!addr) return "";
     return addr.slice(0, 6) + "..." + addr.slice(-4);
@@ -296,14 +240,6 @@
       <div class="summary-card">
         <span class="summary-label">Total Staked</span>
         <span class="summary-value mono">{wallet.authenticated ? totalStaked.toFixed(3) + " MON" : redact(8)}</span>
-      </div>
-      <div class="summary-card">
-        <span class="summary-label">Current Streak</span>
-        <span class="summary-value">{wallet.authenticated ? currentStreak + " day" + (currentStreak !== 1 ? "s" : "") : redact(6)}</span>
-      </div>
-      <div class="summary-card">
-        <span class="summary-label">Longest Streak</span>
-        <span class="summary-value">{wallet.authenticated ? longestStreak + " day" + (longestStreak !== 1 ? "s" : "") : redact(6)}</span>
       </div>
     </div>
   </div>
@@ -534,7 +470,7 @@
   }
   .summary-cards {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 12px;
   }
   .summary-card {
@@ -550,17 +486,6 @@
   .summary-card:hover {
     border-color: var(--border);
     box-shadow: var(--shadow-sm);
-  }
-  .summary-icon {
-    width: 36px;
-    height: 36px;
-    border-radius: var(--radius-sm);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .summary-icon .material-symbols-outlined {
-    font-size: 20px;
   }
   .summary-label {
     font-size: 11px;
