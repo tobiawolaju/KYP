@@ -4,6 +4,7 @@
   import Navbar from "./lib/Navbar.svelte";
   import PrivyHost from "./lib/PrivyHost.svelte";
   import Heartbeat from "./lib/Heartbeat.svelte";
+  import DisclaimerModal from "./lib/DisclaimerModal.svelte";
   import Home from "./pages/Home.svelte";
   import Research from "./pages/Research.svelte";
   import Protocol from "./pages/Protocol.svelte";
@@ -28,6 +29,7 @@
 </script>
 
 <PrivyHost />
+<DisclaimerModal />
 <Heartbeat />
 <Navbar />
 <main class="main-content">
