@@ -343,20 +343,23 @@
 <style>
   .protocol-page {
     max-width: 720px;
+    width: 100%;
     margin: 0 auto;
     padding: 32px 24px 120px;
+    overflow-x: hidden;
   }
   .floating-bar {
     position: fixed;
     bottom: 0;
     left: 0;
-    width: 100vw;
+    right: 0;
+    width: 100%;
     display: flex;
     z-index: 50;
   }
   .floating-bar .commit-btn {
-    width: 100vw;
-    flex: 0 0 100vw;
+    width: 100%;
+    flex: 1 1 auto;
     display: flex;
     align-items: center;
     justify-content: center;
