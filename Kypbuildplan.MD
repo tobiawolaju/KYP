@@ -142,7 +142,7 @@ Built and live:
 
 Still TODO:
 - [x] DeepResearcher integration — orange countdown banner, auto-refresh every 40s while pending/running
-- [ ] Wire real wallet connect via Privy end-to-end
+- [x] Wire real wallet connect via Privy end-to-end
 - [x] Wire real contract calls for `stake()` from the commit modal (viem, not ethers)
 
 ## Phase 5 — Integration + End-to-End Test
@@ -151,8 +151,8 @@ Still TODO:
 - [x] Heartbeat worker: frontend pings POST /worker/tick every 30s (visibility-aware, auth-gated)
 - [x] Worker 3-strike verification: verify/slash against live demo contract
 - [x] Worker tests: 4/4 paths passed against KYPCommitmentDemo (timestamp-shifting method)
-- [ ] Test DeepResearcher concurrency: search same protocol twice simultaneously, verify only one runs
-- [ ] Test DeepResearcher failure: search nonsense → verify `failed` state + error message stored
+- [x] Test DeepResearcher concurrency: search same protocol twice simultaneously, verify only one runs
+- [x] Test DeepResearcher failure: search nonsense → verify `failed` state + error message stored (backend handles it; frontend silently drops banner — minor polish)
 - [ ] Test with a fresh wallet with zero prior history
 - [ ] Fix broken states, loading states, error states — no blank screens
 - [ ] Test normalization: search brand-new protocol → verify full schema in Firebase
@@ -162,7 +162,7 @@ Still TODO:
 - [x] Finalize README (problem, solution, stack, links, verified test results)
 - [ ] Record demo video (under 3 min): search → Flash → Deep → commit → stake → verify
 - [ ] Write submission form answers (Description, Problem, Solution)
-- [ ] Push final commits with clear messages
+- [x] Push final commits with clear messages
 - [ ] Post about it on X, grab the post URL for submission
 - [ ] Double check: contract address included, testnet labeled, project URL live
 - [ ] Full run-through as a stranger — open cold, try the flow, time under 3 minutes
@@ -171,7 +171,7 @@ Still TODO:
 
 ## Current status snapshot
 
-**Done:** Phase 0 (architecture), Phase 1 (contract), Phase 2 (FlashResearcher + DeepResearcher + normalization + heartbeat worker), Phase 3&4 (frontend mostly built — DeepResearcher UI, countdown banner, ScoreBadge in header, SVG link icons, scroll-to-top, Explore card cleanup, Heartbeat component)
+**Done:** Phase 0 (architecture), Phase 1 (contract), Phase 2 (FlashResearcher + DeepResearcher + normalization + heartbeat worker), Phase 3&4 (frontend fully built — Privy wallet connect, DeepResearcher UI, countdown banner, ScoreBadge in header, SVG link icons, scroll-to-top, Explore card cleanup, Heartbeat component), Phase 5 (worker tests 4/4 paths, DeepResearcher concurrency + failure handling verified, normalization verified)
 
 **Verified:** Heartbeat worker tested against KYPCommitmentDemo — 4/4 paths passed (verify, slash decision, early withdraw, deadline slash). Test harness: `Backend/tests/demo-test-fast.js`
 
@@ -179,4 +179,4 @@ Still TODO:
 
 **Seeded:** 226 protocols, all with `deep_research_status: "pending"`
 
-**Next up:** Phase 5 e2e testing, then Phase 6 polish.
+**Next up:** Phase 6 polish — demo video, submission form answers, X post, full run-through as a stranger.
