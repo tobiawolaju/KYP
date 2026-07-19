@@ -325,3 +325,83 @@ This separation prevents the critical bug where `verify()` was being called on t
 ### RPC considerations
 
 The adaptive block estimation uses 2 extra `getBlock()` calls per verification. This is negligible compared to the log query itself (which paginates in chunks of 100 blocks). Rate limits on public Monad RPCs are not a concern at this scale.
+
+---
+
+## Multi-Network Protocol Data Model
+
+Protocols can exist on both Monad Testnet and Monad Mainnet — often with different contract addresses on each network. KYP handles this with network-scoped protocol records and network-aware seeding.
+
+### Protocol records
+
+Each protocol record has a `network` field (`"testnet"` or `"mainnet"`) and a network-scoped ID:
+
+| Network | Example ID | `contracts[0].address` |
+|---|---|---|
+| Testnet | `kuru-testnet` | `0xabc...` (testnet address) |
+| Mainnet | `kuru-mainnet` | `0xdef...` (mainnet address) |
+
+The same protocol has **two separate records** — one per network. This avoids address collisions and keeps the data model simple: `contracts[0].address` is always the correct address for the protocol's network.
+
+### Seeding
+
+```bash
+# Seed testnet protocols (default)
+node Backend/scripts/seedFirebase.js
+
+# Seed mainnet protocols
+node Backend/scripts/seedFirebase.js --mainnet
+```
+
+The seed script:
+1. Accepts `--mainnet` flag (defaults to testnet)
+2. Downloads the appropriate CSV (`protocols-testnet.csv` or `protocols-mainnet.csv`)
+3. Deletes only protocols matching the target network (preserves the other network's data)
+4. Sets `protocol.network` and `protocol.id = slug-name-network`
+5. Uploads to Firebase
+
+### Frontend behaviour
+
+| Page | Network awareness |
+|---|---|
+| **Explore** (`Explore.svelte`) | Passes `?network=testnet` or `?network=mainnet` to `GET /protocols` based on the current toggle. Only protocols for the active network appear. |
+| **Protocol detail** (`Protocol.svelte`) | Validates `protocol.network === network.current` before allowing stake. If mismatch, shows error: "This protocol is deployed on testnet, but you're on mainnet." |
+| **Commit** | `protocol_contract_address` is set to `protocol.contracts[0].address` — which is the correct address for that network's record. |
+
+### End-to-end flow
+
+```
+User toggles to "Mainnet" in navbar
+  → Explore page fetches GET /protocols?network=mainnet
+  → Only mainnet-seeded protocols appear
+  → User clicks "Kuru" (ID: kuru-mainnet)
+  → Protocol page loads kuru-mainnet record
+  → User clicks Commit → stakes on Monad Mainnet
+  → protocol_contract_address = kuru-mainnet's contract address
+  → Worker finds commitment.network === "mainnet"
+  → checkEngagement queries Monad Mainnet RPC
+  → Filters logs by kuru-mainnet contract address
+  → callVerify/callSlash target KYP mainnet contract
+```
+
+### One worker, both networks
+
+There is **one worker** that handles both networks. Each commitment carries its own `network` field — the worker uses this to:
+- Route `checkEngagement` to the correct RPC (testnet or mainnet)
+- Route `callVerify`/`callSlash` to the correct KYP contract via `getNetworkConfig(network)`
+- Filter engagement logs by the commitment's `protocol_contract_address`
+
+No need for two separate workers — the per-commitment `network` field handles all routing.
+
+### Mainnet CSV format
+
+Same format as the testnet CSV:
+
+```csv
+name,contract,address,ctype,cstype
+Kuru,kuru,0x...,DEX,spot
+Ambient,ambient,0x...,DEX,concentrated-liquidity
+...
+```
+
+Drop the file at `Backend/data/protocols-mainnet.csv` or point the seed script to your CSV URL.

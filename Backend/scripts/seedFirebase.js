@@ -22,7 +22,12 @@ const db = admin.database();
 const TEMPLATE = require("../data/protocols.json")[0];
 const { normalizeProtocol } = require("../src/services/protocolSchema");
 
-const CSV_URL = "https://raw.githubusercontent.com/monad-crypto/protocols/refs/heads/main/protocols-testnet.csv";
+const NETWORK = process.argv.includes("--mainnet") ? "mainnet" : "testnet";
+const CSV_URLS = {
+  testnet: "https://raw.githubusercontent.com/monad-crypto/protocols/refs/heads/main/protocols-testnet.csv",
+  mainnet: "https://raw.githubusercontent.com/monad-crypto/protocols/refs/heads/main/protocols-mainnet.csv",
+};
+const CSV_URL = CSV_URLS[NETWORK];
 
 function slugify(name) {
   return name
@@ -176,10 +181,10 @@ function normalizeProtocols(rows) {
 
   const protocols = Object.values(grouped).map((p) => {
     const protocol = resetSchema(TEMPLATE);
-    protocol.id = slugify(p.name);
+    protocol.id = slugify(p.name) + "-" + NETWORK;
     protocol.name = p.name;
     protocol.chain = "monad";
-    protocol.network = "testnet";
+    protocol.network = NETWORK;
     protocol.category = p.category;
     protocol.subcategory = p.subcategory;
     protocol.contracts = p.contracts;
@@ -194,21 +199,27 @@ async function deleteExistingProtocols() {
   const ref = db.ref("protocols");
   const snapshot = await ref.once("value");
   const data = snapshot.val();
-  const count = data ? Object.keys(data).length : 0;
-  console.log(`[SEED] Found ${count} existing protocols.`);
+  const all = data ? Object.entries(data) : [];
+  console.log(`[SEED] Found ${all.length} total protocols.`);
 
-  if (count === 0) {
+  const toDelete = all.filter(([, p]) => p.network === NETWORK);
+  console.log(`[SEED] ${toDelete.length} protocols on ${NETWORK} to delete.`);
+
+  if (toDelete.length === 0) {
     console.log("[SEED] Nothing to delete.");
     return;
   }
 
-  console.log("[SEED] Deleting...");
-  await ref.remove();
+  console.log(`[SEED] Deleting ${NETWORK} protocols...`);
+  for (const [id] of toDelete) {
+    await ref.child(id).remove();
+  }
 
   const verifySnapshot = await ref.once("value");
   const verifyData = verifySnapshot.val();
-  if (verifyData !== null) {
-    throw new Error(`Deletion failed: ${Object.keys(verifyData).length} protocols still exist.`);
+  const remaining = verifyData ? Object.values(verifyData).filter((p) => p.network === NETWORK) : [];
+  if (remaining.length > 0) {
+    throw new Error(`Deletion failed: ${remaining.length} ${NETWORK} protocols still exist.`);
   }
   console.log("[SEED] Deletion verified.");
 }
@@ -236,6 +247,8 @@ async function uploadProtocols(protocols) {
 
 async function main() {
   try {
+    console.log(`[SEED] Network: ${NETWORK}`);
+    console.log(`[SEED] CSV: ${CSV_URL}`);
     const raw = await downloadCsv();
     const rows = parseCsv(raw);
     const protocols = normalizeProtocols(rows);

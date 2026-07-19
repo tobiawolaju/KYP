@@ -216,6 +216,10 @@
       const protocolAddr = protocol.contracts?.[0]?.address;
       if (!protocolAddr) throw new Error("No contract address found for this protocol");
 
+      if (protocol.network && protocol.network !== network.current) {
+        throw new Error(`This protocol is deployed on ${protocol.network}, but you're on ${network.current}. Switch networks to commit.`);
+      }
+
       const stakeAbi = parseAbi(["function stake(address protocolAddress) payable returns (uint256)"]);
       const stakedEventAbi = parseAbi(["event Staked(uint256 indexed commitmentId, address indexed user, address indexed protocolAddress, uint256 amount, uint256 verifyDeadline)"]);
 

@@ -2,12 +2,14 @@
   import { onMount } from "svelte";
   import Link from "../lib/Link.svelte";
   import { getProtocols } from "../lib/api.js";
+  import { getNetwork } from "../lib/network.svelte.js";
 
   let allProtocols = $state([]);
   let status = $state("idle");
   let errorMsg = $state("");
   let coldTimer = null;
   let searchQuery = $state("");
+  const network = getNetwork();
 
   function loadProtocols() {
     clearTimeout(coldTimer);
@@ -16,12 +18,13 @@
     coldTimer = setTimeout(() => {
       if (status === "fetching") status = "waking";
     }, 4000);
-    getProtocols()
+    getProtocols({ network: network.current })
       .then((data) => { clearTimeout(coldTimer); allProtocols = data; status = "success"; })
       .catch((err) => { clearTimeout(coldTimer); errorMsg = err.message || "Failed to load protocols"; status = "error"; });
   }
 
   $effect(() => { loadProtocols(); });
+  $effect(() => { network.current; loadProtocols(); });
 
   let categories = $derived([...new Set(allProtocols.map((p) => p.category))]);
 
