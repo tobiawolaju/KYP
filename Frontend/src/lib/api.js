@@ -81,3 +81,7 @@ export function flashResearch(query) {
     body: JSON.stringify({ query }),
   });
 }
+
+export function tickWorker() {
+  return request("/worker/tick", { method: "POST" });
+}

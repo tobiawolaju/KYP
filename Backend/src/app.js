@@ -10,6 +10,7 @@ const protocolsRoutes = require("./routes/protocols");
 const favoritesRoutes = require("./routes/favorites");
 const flashResearchRoutes = require("./routes/flashResearch");
 const deepResearchRoutes = require("./routes/deepResearch");
+const workerRoutes = require("./routes/worker");
 
 const app = express();
 
@@ -24,6 +25,7 @@ app.use(protocolsRoutes);
 app.use(favoritesRoutes);
 app.use(flashResearchRoutes);
 app.use(deepResearchRoutes);
+app.use(workerRoutes);
 
 app.use(errorHandler);
 

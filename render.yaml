@@ -22,25 +22,3 @@ services:
         sync: false
       - key: GEMINI_API_KEY
         sync: false
-
-  - type: worker
-    name: kyp-worker
-    runtime: node
-    rootDir: Backend
-    buildCommand: npm install
-    startCommand: node src/worker.js
-    envVars:
-      - key: NODE_ENV
-        value: production
-      - key: MONAD_TESTNET_RPC
-        sync: false
-      - key: VERIFIER_PRIVATE_KEY
-        sync: false
-      - key: KYP_CONTRACT_ADDRESS
-        sync: false
-      - key: FIREBASE_SERVICE_ACCOUNT_PATH
-        value: ./serviceaccount.json
-      - key: FIREBASE_DATABASE_URL
-        sync: false
-      - key: WORKER_INTERVAL_MS
-        value: "3600000"
