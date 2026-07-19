@@ -14,7 +14,8 @@
   let favorites = $state([]);
 
   $effect(() => {
-    getProtocols().then((data) => { protocols = data; }).catch(() => {});
+    const _net = network.current;
+    getProtocols({ network: _net }).then((data) => { protocols = data; }).catch(() => {});
   });
 
   $effect(() => {

@@ -1,7 +1,7 @@
 require("dotenv").config();
 
 const { GoogleGenAI } = require("@google/genai");
-const { query, update, normalizeProtocol } = require("./db");
+const { getById, update, normalizeProtocol } = require("./db");
 const { isMeaningful, isRealImage, deepMerge, findChanges } = require("./merge");
 const { deepResearch } = require("./deepResearcher");
 
@@ -27,8 +27,8 @@ async function getLogoFromWebsite(website) {
   }
 }
 
-async function flashResearch(protocol) {
-  console.log(`[FLASH] Starting flash research for "${protocol}"`);
+async function flashResearch(protocol, network = "testnet") {
+  console.log(`[FLASH] Starting flash research for "${protocol}" (network: ${network})`);
 
   const prompt = `
 [protocol] = ${protocol}
@@ -115,19 +115,15 @@ Rules:
       const normalize = (s) => s.toLowerCase().replace(/[\s\-_.]/g, "");
       const queryName = normalize(json.protocolName);
 
-      const protocols = await query(
-        "protocols",
-        (p) => p.name && normalize(p.name) === queryName,
-      );
+      const targetId = normalize(json.protocolName).replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") + "-" + network;
+      const existing = await getById("protocols", targetId);
 
-      if (protocols.length === 0) {
+      if (!existing) {
         console.log(
-          `[FLASH] No Firebase match for "${json.protocolName}", skipping update`,
+          `[FLASH] No Firebase match for "${json.protocolName}" (id: ${targetId}), skipping update`,
         );
         return { status: "proceed", data: json };
       }
-
-      const existing = protocols[0];
       console.log(`[FLASH] Matched Firebase protocol: "${existing.name}" (id: ${existing.id})`);
 
       if (!needsResearch(existing)) {

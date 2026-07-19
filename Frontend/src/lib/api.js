@@ -77,10 +77,10 @@ export function toggleFavorite(wallet, protocol_id) {
   });
 }
 
-export function flashResearch(query) {
+export function flashResearch(query, network) {
   return request("/flash-research", {
     method: "POST",
-    body: JSON.stringify({ query }),
+    body: JSON.stringify({ query, network }),
   });
 }
 

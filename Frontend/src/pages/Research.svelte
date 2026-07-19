@@ -1,7 +1,9 @@
 <script>
   import { navigate } from "../lib/router.svelte.js";
   import { flashResearch } from "../lib/api.js";
+  import { getNetwork } from "../lib/network.svelte.js";
 
+  const network = getNetwork();
   let searchQuery = $state("");
   let searching = $state(false);
 
@@ -10,7 +12,7 @@
     if (!q || searching) return;
     searching = true;
     try {
-      await flashResearch(q);
+      await flashResearch(q, network.current);
       navigate(`/protocols?q=${encodeURIComponent(q)}`);
     } catch (e) {
       navigate(`/protocols?q=${encodeURIComponent(q)}`);

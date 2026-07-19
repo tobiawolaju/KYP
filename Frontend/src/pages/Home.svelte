@@ -3,7 +3,9 @@
   import Link from "../lib/Link.svelte";
   import VideoOverlay from "../lib/VideoOverlay.svelte";
   import { flashResearch } from "../lib/api.js";
+  import { getNetwork } from "../lib/network.svelte.js";
 
+  const network = getNetwork();
   let searchQuery = $state("");
   let showVideo = $state(false);
   let searching = $state(false);
@@ -13,7 +15,7 @@
     if (!q || searching) return;
     searching = true;
     try {
-      await flashResearch(q);
+      await flashResearch(q, network.current);
       navigate(`/protocols?q=${encodeURIComponent(q)}`);
     } catch (e) {
       navigate(`/protocols?q=${encodeURIComponent(q)}`);
