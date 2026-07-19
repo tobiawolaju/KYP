@@ -23,8 +23,7 @@
 
   let suggestions = $derived(
     searchQuery.trim().length > 0
-      ? protocols
-          .filter((p) => p.deep_research_status === "completed")
+      ?       protocols
           .filter((p) => {
             const q = searchQuery.toLowerCase();
             return p.name.toLowerCase().includes(q) || (p.category || "").toLowerCase().includes(q);

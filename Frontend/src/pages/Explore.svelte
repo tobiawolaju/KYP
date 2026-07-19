@@ -1,10 +1,13 @@
 <script>
   import { onMount } from "svelte";
   import Link from "../lib/Link.svelte";
-  import { getProtocols } from "../lib/api.js";
+  import { getProtocols, getFavorites, toggleFavorite as apiToggleFavorite } from "../lib/api.js";
   import { getNetwork } from "../lib/network.svelte.js";
+  import { getWallet } from "../lib/wallet.svelte.js";
 
+  const wallet = getWallet();
   let allProtocols = $state([]);
+  let favorites = $state(new Set());
   let status = $state("idle");
   let errorMsg = $state("");
   let coldTimer = null;
@@ -23,8 +26,30 @@
       .catch((err) => { clearTimeout(coldTimer); errorMsg = err.message || "Failed to load protocols"; status = "error"; });
   }
 
-  $effect(() => { loadProtocols(); });
-  $effect(() => { network.current; loadProtocols(); });
+  function loadFavorites() {
+    if (!wallet.authenticated) return;
+    getFavorites(wallet.address).then((favs) => {
+      favorites = new Set(favs.map((f) => f.protocol_id));
+    }).catch(() => {});
+  }
+
+  async function handleToggleFavorite(e, protocolId) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!wallet.authenticated) return;
+    try {
+      const result = await apiToggleFavorite(wallet.address, protocolId);
+      const next = new Set(favorites);
+      if (result.favorited) next.add(protocolId);
+      else next.delete(protocolId);
+      favorites = next;
+    } catch (err) {
+      console.error("Toggle favorite failed:", err);
+    }
+  }
+
+  $effect(() => { loadProtocols(); loadFavorites(); });
+  $effect(() => { network.current; loadProtocols(); loadFavorites(); });
 
   let categories = $derived([...new Set(allProtocols.map((p) => p.category))]);
 
@@ -146,20 +171,32 @@
   {:else if status === "success"}
     <div class="protocol-grid">
       {#each filtered as protocol}
-        <Link to={`/protocol/${protocol.id}`} class="protocol-card">
-          <div class="card-top">
-            <div class="card-titles">
-              {#if protocol.image}
-                <img src={protocol.image} alt={protocol.name} class="card-logo" />
-              {/if}
-              <div class="card-name-group">
-                <h3 class="card-name">{protocol.name}</h3>
-                <span class="card-category">{protocol.category}</span>
+        <div class="protocol-card-wrap">
+          <Link to={`/protocol/${protocol.id}`} class="protocol-card">
+            <div class="card-top">
+              <div class="card-titles">
+                {#if protocol.image}
+                  <img src={protocol.image} alt={protocol.name} class="card-logo" />
+                {/if}
+                <div class="card-name-group">
+                  <h3 class="card-name">{protocol.name}</h3>
+                  <span class="card-category">{protocol.category}</span>
+                </div>
               </div>
             </div>
-          </div>
-          <p class="card-summary">{protocol.plain_summary || protocol.summary}</p>
-        </Link>
+            <p class="card-summary">{protocol.plain_summary || protocol.summary}</p>
+          </Link>
+          {#if wallet.authenticated}
+            <button
+              class="fav-btn"
+              class:favorited={favorites.has(protocol.id)}
+              onclick={(e) => handleToggleFavorite(e, protocol.id)}
+              aria-label={favorites.has(protocol.id) ? "Remove favorite" : "Add favorite"}
+            >
+              {favorites.has(protocol.id) ? "\u2605" : "\u2606"}
+            </button>
+          {/if}
+        </div>
       {/each}
     </div>
 
@@ -312,6 +349,9 @@
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 16px;
   }
+  .protocol-card-wrap {
+    position: relative;
+  }
   :global(.protocol-card) {
     background: var(--surface);
     border: 1px solid var(--border-light);
@@ -328,6 +368,26 @@
     border-color: var(--accent-border);
     box-shadow: var(--shadow-md);
     transform: translateY(-2px);
+  }
+  .fav-btn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: none;
+    border: none;
+    font-size: 22px;
+    cursor: pointer;
+    color: var(--text-muted);
+    padding: 4px;
+    line-height: 1;
+    transition: color 0.15s, transform 0.15s;
+    z-index: 2;
+  }
+  .fav-btn:hover {
+    transform: scale(1.15);
+  }
+  .fav-btn.favorited {
+    color: #f59e0b;
   }
   .card-top {
     display: flex;
