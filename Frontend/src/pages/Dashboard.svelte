@@ -406,7 +406,7 @@
     </div>
   </div>
 
-  <Link to="/" class="research-fab">
+  <Link to="/research" class="research-fab">
     <span class="material-symbols-outlined">add</span>
     Research New Protocol
   </Link>
