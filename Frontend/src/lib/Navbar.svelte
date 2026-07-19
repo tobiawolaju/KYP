@@ -59,9 +59,10 @@
       <button class="network-option" class:active={!network.isMainnet} onclick={() => { if (network.isMainnet) toggleNetwork(); }}>Testnet</button>
       <button class="network-option" class:active={network.isMainnet} onclick={() => { if (!network.isMainnet) toggleNetwork(); }}>Mainnet</button>
     </div>
-    <button class="theme-toggle" onclick={toggleTheme} aria-label="Toggle theme">
-      <span class="material-symbols-outlined">{theme.dark ? "light_mode" : "dark_mode"}</span>
-    </button>
+    <div class="theme-pill">
+      <button class="theme-option" class:active={!theme.dark} onclick={() => { if (theme.dark) toggleTheme(); }}>Light</button>
+      <button class="theme-option" class:active={theme.dark} onclick={() => { if (!theme.dark) toggleTheme(); }}>Dark</button>
+    </div>
   </div>
   <button class="hamburger" onclick={toggleDrawer} aria-label="Menu">
     <span class="material-symbols-outlined">menu</span>
@@ -82,10 +83,10 @@
         <Link to="/protocols" class="drawer-link" onclick={closeDrawer}>Explore Protocols</Link>
         <Link to="/myprotocols" class="drawer-link" onclick={closeDrawer}>My Protocols</Link>
       </div>
-      <button class="drawer-theme-toggle" onclick={toggleTheme}>
-        <span class="material-symbols-outlined">{theme.dark ? "light_mode" : "dark_mode"}</span>
-        {theme.dark ? "Light Mode" : "Dark Mode"}
-      </button>
+      <div class="drawer-theme-pill">
+        <button class="drawer-theme-option" class:active={!theme.dark} onclick={() => { if (theme.dark) toggleTheme(); }}>Light</button>
+        <button class="drawer-theme-option" class:active={theme.dark} onclick={() => { if (!theme.dark) toggleTheme(); }}>Dark</button>
+      </div>
       <div class="drawer-network-pill">
         <button class="drawer-network-option" class:active={!network.isMainnet} onclick={() => { if (network.isMainnet) toggleNetwork(); }}>Testnet</button>
         <button class="drawer-network-option" class:active={network.isMainnet} onclick={() => { if (!network.isMainnet) toggleNetwork(); }}>Mainnet</button>
@@ -190,23 +191,30 @@
   .hamburger .material-symbols-outlined {
     font-size: 22px;
   }
-  .theme-toggle {
+  .theme-pill {
     display: flex;
-    align-items: center;
-    justify-content: center;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+  }
+  .theme-option {
     background: none;
     border: none;
-    color: var(--text);
+    color: var(--text-secondary);
     cursor: pointer;
-    padding: 6px;
-    border-radius: var(--radius-sm);
-    transition: background 0.2s;
+    padding: 4px 12px;
+    font-size: 12px;
+    font-family: var(--mono);
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    transition: background 0.2s, color 0.2s;
   }
-  .theme-toggle:hover {
+  .theme-option:hover {
     background: var(--surface-hover);
   }
-  .theme-toggle .material-symbols-outlined {
-    font-size: 22px;
+  .theme-option.active {
+    background: var(--accent-bg);
+    color: var(--accent);
   }
   .network-pill {
     display: flex;
@@ -233,29 +241,31 @@
     background: var(--accent-bg);
     color: var(--accent);
   }
-  .drawer-theme-toggle {
+  .drawer-theme-pill {
     display: flex;
-    align-items: center;
-    gap: 8px;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    margin-top: 12px;
+  }
+  .drawer-theme-option {
+    flex: 1;
     background: none;
     border: none;
     color: var(--text-secondary);
     cursor: pointer;
-    padding: 16px 12px;
-    font-size: 18px;
-    font-weight: 500;
+    padding: 14px 12px;
+    font-size: 16px;
+    font-weight: 600;
     font-family: var(--sans);
-    width: 100%;
-    margin-top: 24px;
-    border-top: 1px solid var(--border-light);
     transition: background 0.2s, color 0.2s;
   }
-  .drawer-theme-toggle:hover {
+  .drawer-theme-option:hover {
     background: var(--surface-hover);
-    color: var(--accent);
   }
-  .drawer-theme-toggle .material-symbols-outlined {
-    font-size: 22px;
+  .drawer-theme-option.active {
+    background: var(--accent-bg);
+    color: var(--accent);
   }
   .drawer-network-pill {
     display: flex;

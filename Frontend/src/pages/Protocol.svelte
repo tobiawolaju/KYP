@@ -175,6 +175,24 @@
     showStakeModal = true;
   }
 
+  function parseStakeError(err) {
+    const msg = err?.message || String(err);
+    if (msg.includes("ChainMismatchError") || msg.includes("does not match the target chain")) {
+      return "Network mismatch — switch to the same network on the site and in your wallet.";
+    }
+    if (msg.includes("User rejected") || msg.includes("4001")) {
+      return "Transaction rejected.";
+    }
+    if (msg.includes("insufficient funds") || msg.includes("Insufficient balance")) {
+      return "Not enough MON for this transaction.";
+    }
+    if (msg.includes("out of gas") || msg.includes("gas")) {
+      return "Transaction failed — try again.";
+    }
+    const short = msg.length > 120 ? msg.slice(0, 120) + "..." : msg;
+    return short || "Transaction failed.";
+  }
+
   async function confirmCommit() {
     stakeLoading = true;
     stakeError = "";
@@ -244,7 +262,7 @@
       stakeConfirmed = true;
     } catch (err) {
       console.error("Commit failed:", err);
-      stakeError = err.message || "Transaction failed";
+      stakeError = parseStakeError(err);
     } finally {
       stakeLoading = false;
     }
@@ -996,6 +1014,8 @@
     padding: 8px 12px;
     background: var(--rose-bg);
     border-radius: var(--radius-sm);
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
 
   .protocol-loading {
