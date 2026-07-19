@@ -7,7 +7,6 @@
   import ScoreBadge from "../lib/ScoreBadge.svelte";
 
   const KYP_CONTRACT = import.meta.env.VITE_KYP_CONTRACT_ADDRESS || "0x325215e272e0f5efb33d697c356a5ccbfaf6ecaf";
-  const STAKE_ABI = ["function stake(address protocolAddress) payable returns (uint256)"];
 
   let location = useLocation();
   let id = $derived(location.pathname.split("/").pop());
@@ -180,23 +179,38 @@
       const ethereumProvider = await wallet.getProvider();
       if (!ethereumProvider) throw new Error("Wallet provider not available");
 
-      const { BrowserProvider, Contract, parseEther, Interface } = await import("ethers");
-      const provider = new BrowserProvider(ethereumProvider);
-      const signer = await provider.getSigner();
-      const userAddress = await signer.getAddress();
+      const { createWalletClient, custom, parseAbi, decodeEventLog, parseEther, http, createPublicClient } = await import("viem");
+      const { monadTestnet } = await import("viem/chains");
 
-      const kyp = new Contract(KYP_CONTRACT, STAKE_ABI, signer);
+      const walletClient = createWalletClient({
+        chain: monadTestnet,
+        transport: custom(ethereumProvider),
+      });
+
+      const [userAddress] = await walletClient.getAddresses();
+
       const protocolAddr = protocol.contracts?.[0]?.address;
       if (!protocolAddr) throw new Error("No contract address found for this protocol");
-      const tx = await kyp.stake(protocolAddr, { value: parseEther(stakeAmount) });
-      const receipt = await tx.wait();
 
-      const iface = new Interface(["event Staked(uint256 indexed commitmentId, address indexed user, address indexed protocolAddress, uint256 amount, uint256 verifyDeadline)"]);
+      const stakeAbi = parseAbi(["function stake(address protocolAddress) payable returns (uint256)"]);
+      const stakedEventAbi = parseAbi(["event Staked(uint256 indexed commitmentId, address indexed user, address indexed protocolAddress, uint256 amount, uint256 verifyDeadline)"]);
+
+      const txHash = await walletClient.writeContract({
+        address: KYP_CONTRACT,
+        abi: stakeAbi,
+        functionName: "stake",
+        args: [protocolAddr],
+        value: parseEther(stakeAmount),
+      });
+
+      const publicClient = createPublicClient({ chain: monadTestnet, transport: http() });
+      const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash });
+
       let onchainCommitmentId = null;
       for (const log of receipt.logs) {
         try {
-          const parsed = iface.parseLog({ topics: log.topics, data: log.data });
-          if (parsed.name === "Staked") {
+          const parsed = decodeEventLog({ abi: stakedEventAbi, data: log.data, topics: log.topics });
+          if (parsed.eventName === "Staked") {
             onchainCommitmentId = Number(parsed.args.commitmentId);
             break;
           }
@@ -208,7 +222,7 @@
         protocol_id: protocol.id,
         protocol_contract_address: protocolAddr,
         staked_amount: parseEther(stakeAmount).toString(),
-        stake_tx_hash: receipt.hash,
+        stake_tx_hash: receipt.transactionHash,
         onchain_commitment_id: onchainCommitmentId,
       });
 
